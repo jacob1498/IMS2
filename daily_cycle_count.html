@@ -258,6 +258,59 @@
     .area-card:hover { border-color: #2752a7 !important; background-color: #f0f4f8; transform: translateY(-2px); }
     .editable-time { cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
     .editable-time:hover { color: #2752a7; }
+    
+    /* Sand Timer Animation */
+    .sand-timer {
+        width: 40px; height: 70px;
+        position: relative;
+        margin: 0 auto;
+        animation: hourglass-rotate 4s ease-in-out infinite;
+    }
+    .sand-timer-top, .sand-timer-bottom {
+        width: 40px; height: 35px;
+        position: absolute; left: 0;
+        overflow: hidden;
+        border: 3px solid #7f8c8d; /* Glass Frame */
+        background: rgba(236, 240, 241, 0.3); /* Glass tint */
+        box-sizing: border-box;
+    }
+    .sand-timer-top { top: 0; border-radius: 5px 5px 20px 20px; border-bottom: none; }
+    .sand-timer-bottom { bottom: 0; border-radius: 20px 20px 5px 5px; border-top: none; }
+    .sand-timer-sand-top {
+        position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;
+        width: 30px; height: 30px; background: #f39c12; border-radius: 50%;
+        animation: sand-drain-top 4s ease-in-out infinite;
+    }
+    .sand-timer-sand-bottom {
+        position: absolute; left: 50%; transform: translateX(-50%); bottom: 0;
+        width: 30px; height: 0; background: #f39c12; border-radius: 50% 50% 0 0;
+        animation: sand-fill-bottom 4s ease-in-out infinite;
+    }
+    .sand-timer-stream {
+        position: absolute; left: 50%; transform: translateX(-50%); top: 34px;
+        width: 2px; height: 0; background: #f39c12;
+        animation: sand-stream 4s ease-in-out infinite; z-index: 1;
+    }
+    @keyframes hourglass-rotate {
+        0% { transform: rotate(0deg); } 40% { transform: rotate(0deg); }
+        50% { transform: rotate(180deg); } 90% { transform: rotate(180deg); }
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes sand-drain-top {
+        0% { height: 30px; width: 30px; } 40% { height: 0; width: 0; }
+        50% { height: 0; width: 0; } 50.1% { height: 30px; width: 30px; }
+        90% { height: 0; width: 0; } 100% { height: 0; width: 0; }
+    }
+    @keyframes sand-fill-bottom {
+        0% { height: 0; width: 0; } 40% { height: 30px; width: 30px; }
+        50% { height: 30px; width: 30px; } 50.1% { height: 0; width: 0; }
+        90% { height: 30px; width: 30px; } 100% { height: 30px; width: 30px; }
+    }
+    @keyframes sand-stream {
+        0% { height: 0; } 5% { height: 35px; } 40% { height: 35px; }
+        45% { height: 0; } 50% { height: 0; } 55% { height: 35px; }
+        90% { height: 35px; } 95% { height: 0; } 100% { height: 0; }
+    }
   </style>
 </head>
 <body class="inventory-mode">
@@ -337,6 +390,9 @@
             </button>
             <button id="export-counters-btn" class="icon-btn" title="Export CSV">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </button>
+            <button id="daily-output-btn" class="icon-btn" title="Daily Output Report">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
             </button>
             <button id="archive-btn" class="icon-btn" title="Toggle Archive View" style="min-width: 100px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
@@ -603,9 +659,16 @@
     <div class="modal-content card resizable-box" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70vw; max-width: 900px; height: 85vh; display: flex; flex-direction: column; margin: 0;">
         <input type="hidden" id="hourly-date-val">
         <input type="hidden" id="hourly-shift-val">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0" id="hourly-modal-title">Hourly Output</h3>
+        <div id="hourly-header-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button id="hourly-prev-shift-btn" class="icon-btn" title="Previous Shift" style="font-weight:bold; font-size:16px; padding:2px 8px;">&lt;</button>
+                <h3 style="margin:0" id="hourly-modal-title">Hourly Output</h3>
+                <button id="hourly-next-shift-btn" class="icon-btn" title="Next Shift" style="font-weight:bold; font-size:16px; padding:2px 8px;">&gt;</button>
+            </div>
             <div>
+                <button id="hourly-back-timestamp-btn" class="icon-btn" title="Back to Timestamp" style="margin-right:5px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
                 <button id="email-hourly-btn" class="icon-btn" title="Email Report (Text)" style="margin-right:5px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </button>
@@ -629,6 +692,36 @@
         <div id="hourly-details" style="margin-top:10px; flex: 1; overflow-y: auto;">
             <!-- Hourly input fields will be generated here -->
         </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Daily Output Modal -->
+  <div id="daily-output-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card resizable-box" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70vw; max-width: 900px; height: 85vh; display: flex; flex-direction: column; margin: 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0">Total Output per Day</h3>
+            <button class="icon-btn close-modal">&times;</button>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="flex:1; min-height:0; position:relative;">
+                <canvas id="daily-output-chart"></canvas>
+            </div>
+            <div style="flex:1; overflow-y:auto; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+                <table class="excel-table" id="daily-output-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">Date</th>
+                            <th>Total Output</th>
+                            <th>Target</th>
+                            <th>Variance</th>
+                            <th>Completion %</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
   </div>
@@ -808,7 +901,10 @@
                 <div>
                     <div style="margin-bottom:10px;">
                     <label for="ts-user-id" style="font-weight:bold;">User ID / Name</label>
-                    <input type="text" id="ts-user-id" placeholder="Scan or Enter User ID" style="width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px;">
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="ts-user-id" placeholder="User ID" style="flex:1; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px;">
+                        <input type="text" id="ts-user-name-display" placeholder="Name" readonly style="flex:1; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; background:#f9f9f9;">
+                    </div>
                     </div>
                     <div style="display:flex; gap:5px; margin-bottom:10px;">
                         <button id="btn-start-count" class="icon-btn" style="flex:1; background:#2ecc71; color:white; padding:10px; font-weight:bold; justify-content:center;">Start Counting</button>
@@ -830,6 +926,7 @@
                             </select>
                             <input type="text" id="ts-filter-user" placeholder="Search User..." style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
                             <label style="font-size:12px; cursor:pointer;"><input type="checkbox" id="ts-show-active"> Active Only</label>
+                            <button id="ts-delete-selected-btn" class="icon-btn" title="Delete Selected" style="padding: 2px 6px; font-size: 12px; color:#d9534f; display:none;">Del Sel</button>
                             <button id="ts-purge-all-btn" class="icon-btn" title="Permanently Delete All Shown" style="padding: 2px 6px; font-size: 12px; background:#c0392b; color:white; border-color:#c0392b;">Purge All</button>
                             <button id="ts-export-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
                         </div>
@@ -838,6 +935,7 @@
                         <table id="timestamp-table" style="width:100%; border-collapse:collapse; font-size:12px;">
                             <thead>
                                 <tr style="background:#f9f9f9; border-bottom:1px solid #eee; position:sticky; top:0;">
+                                    <th style="padding:8px; text-align:left; width:30px;"><input type="checkbox" id="ts-select-all"></th>
                                     <th style="padding:8px; text-align:left;">User ID</th>
                                     <th style="padding:8px; text-align:left;">Name</th>
                                     <th style="padding:8px; text-align:left;">Area Type</th>
@@ -851,6 +949,21 @@
                             <tbody></tbody>
                         </table>
                     </div>
+                    <div id="ts-pagination-controls" style="display:flex; justify-content:space-between; align-items:center; padding-top:5px; margin-top:5px; border-top: 1px solid #eee;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label for="ts-rows-per-page" style="font-size:11px; color:#666;">Rows:</label>
+                            <select id="ts-rows-per-page" style="padding: 2px 4px; font-size:11px; border-radius: 4px; border: 1px solid #ccc;">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <span id="ts-page-info" style="font-size: 11px; font-weight: 600; color: #666;"></span>
+                        <div style="display:flex; gap:5px;">
+                            <button id="ts-prev-page" class="icon-btn" title="Previous" style="padding:2px 6px; font-size:12px;">‹</button>
+                            <button id="ts-next-page" class="icon-btn" title="Next" style="padding:2px 6px; font-size:12px;">›</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Table 2: Break Log -->
@@ -861,6 +974,8 @@
                              <input type="datetime-local" id="manual-break-time" style="padding:4px; font-size:11px; border:1px solid #ccc; border-radius:4px; width:130px;" title="Manual Break Time">
                              <button id="btn-break-start" class="icon-btn" style="background:#f1c40f; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">Start Break</button>
                              <button id="btn-break-end" class="icon-btn" style="background:#f39c12; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">End Break</button>
+                             <button id="break-delete-selected-btn" class="icon-btn" title="Delete Selected" style="color:#d9534f; padding:4px 8px; font-size:12px; font-weight:bold; display:none;">Del Sel</button>
+                             <button id="break-export-btn" class="icon-btn" title="Export CSV" style="padding:4px 8px; font-size:12px; font-weight:bold;">Export</button>
                              <button id="btn-break-delete-all" class="icon-btn" title="Delete All Breaks" style="color:#d9534f; padding:4px 8px; font-size:12px; font-weight:bold; margin-left:5px;">🗑 All</button>
                         </div>
                     </div>
@@ -868,9 +983,11 @@
                         <table id="break-log-table" style="width:100%; font-size:12px; border-collapse:collapse;">
                             <thead>
                                 <tr style="background:#f9f9f9; position:sticky; top:0;">
+                                    <th style="padding:5px; text-align:left; width:30px;"><input type="checkbox" id="break-select-all"></th>
                                     <th style="padding:5px; text-align:left;">User</th>
                                     <th style="padding:5px; text-align:left;">Name</th>
                                     <th style="padding:5px; text-align:left;">Shift</th>
+                                    <th style="padding:5px; text-align:left;">Role</th>
                                     <th style="padding:5px; text-align:left;">Break Out</th>
                                     <th style="padding:5px; text-align:left;">Break In</th>
                                     <th style="padding:5px; text-align:left;">Duration</th>
@@ -969,6 +1086,8 @@
     if(!sessionStorage.getItem('dms_auth_v1')) window.location.href = 'index.html';
 
     document.addEventListener('DOMContentLoaded', () => {
+        let tsCurrentPage = 1;
+        let tsItemsPerPage = 20;
         const countersForm = document.getElementById('daily-counters-form');
         const countersTableBody = document.querySelector('#daily-counters-table tbody');
         const cancelCounterEditBtn = document.getElementById('cancel-counter-edit-btn');
@@ -1028,6 +1147,11 @@
         const monitorExportBtn = document.getElementById('monitor-export-btn');
         const monitorSnapshotBtn = document.getElementById('monitor-snapshot-btn');
         
+        const dailyOutputBtn = document.getElementById('daily-output-btn');
+        const hourlyPrevBtn = document.getElementById('hourly-prev-shift-btn');
+        const hourlyNextBtn = document.getElementById('hourly-next-shift-btn');
+        const hourlyBackTimestampBtn = document.getElementById('hourly-back-timestamp-btn');
+
         // Timestamp Modal
         const timestampBtn = document.getElementById('counter-timestamp-btn');
         const timestampModal = document.getElementById('timestamp-modal');
@@ -1043,6 +1167,8 @@
         const tsShiftFilter = document.getElementById('ts-shift-filter');
         const tsExportInactiveBtn = document.getElementById('ts-export-inactive-btn');
         const tsPurgeAllBtn = document.getElementById('ts-purge-all-btn');
+        const tsDeleteSelectedBtn = document.getElementById('ts-delete-selected-btn');
+        const tsSelectAll = document.getElementById('ts-select-all');
         const tsShowActive = document.getElementById('ts-show-active');
         const tsAnalyticsDateFilter = document.getElementById('ts-analytics-date-filter');
         
@@ -1052,6 +1178,10 @@
         const ecPalletGroup = document.getElementById('ec-pallet-group');
         const ecSaveBtn = document.getElementById('ec-save-btn');
         const ecCancelBtn = document.getElementById('ec-cancel-btn');
+
+        const breakDeleteSelectedBtn = document.getElementById('break-delete-selected-btn');
+        const breakExportBtn = document.getElementById('break-export-btn');
+        const breakSelectAll = document.getElementById('break-select-all');
 
         const editTimeModal = document.getElementById('edit-time-modal');
         const cancelEditTimeBtn = document.getElementById('cancel-edit-time-btn');
@@ -1391,6 +1521,9 @@
                         if (globalSubAreas.length > 0) {
                             shiftAtt = shiftAtt.filter(a => globalSubAreas.includes(a.area));
                         }
+                        
+                        // Exclude 'Temporary slide to Other task' from Actual count
+                        shiftAtt = shiftAtt.filter(a => a.status !== 'Temporary slide to Other task');
                         
                         const act = shiftAtt.length;
                         const pct = Math.round((act / req) * 100);
@@ -1795,6 +1928,142 @@
         }
         window.openHourlyModal = openHourlyModal;
 
+        // Daily Output Modal Logic
+        const dailyOutputModal = document.getElementById('daily-output-modal');
+        let dailyOutputChart = null;
+
+        if (dailyOutputBtn) {
+            dailyOutputBtn.addEventListener('click', () => {
+                dailyOutputModal.classList.remove('hidden');
+                renderDailyOutput();
+            });
+        }
+
+        function renderDailyOutput() {
+            const counters = getCountersData();
+            const attendance = getAttendanceData();
+            
+            // Load actuals map for fallback
+            let cycleCounts = [];
+            try { cycleCounts = JSON.parse(localStorage.getItem(STORAGE_KEY_CC) || '[]'); } catch(e){}
+            const actualsMap = {};
+            cycleCounts.forEach(c => {
+                const ts = c.createdDate || c.date;
+                if(ts) {
+                    const info = getShiftFromTimestamp(ts);
+                    if (!info.date || !info.shift) return;
+                    const key = `${info.date}|${info.shift}`;
+                    actualsMap[key] = (actualsMap[key] || 0) + 1;
+                }
+            });
+
+            // Aggregate by Date
+            const dailyData = {};
+
+            counters.forEach(item => {
+                const date = item.date;
+                if (!dailyData[date]) dailyData[date] = { output: 0, target: 0 };
+
+                // Calculate Actual
+                let act = 0;
+                if (item.hourlyActuals) {
+                    act = Object.values(item.hourlyActuals).reduce((a, b) => a + (Number(b)||0), 0);
+                } else {
+                    act = actualsMap[`${date}|${item.shift}`] || 0;
+                }
+                dailyData[date].output += act;
+
+                // Calculate Target
+                let shiftAtt = attendance.filter(a => a.date === item.date && a.shift === item.shift);
+                if (typeof globalSubAreas !== 'undefined' && globalSubAreas.length > 0) {
+                    shiftAtt = shiftAtt.filter(a => globalSubAreas.includes(a.area));
+                }
+                shiftAtt = shiftAtt.filter(a => a.status !== 'Temporary slide to Other task');
+                const headcount = shiftAtt.length;
+                
+                const rate = Number(item.standardRate) || 0;
+                let target = 0;
+                
+                if (item.hourlyTargets && Object.keys(item.hourlyTargets).length > 0) {
+                    target = Object.values(item.hourlyTargets).reduce((a, b) => a + (Number(b)||0), 0);
+                } else {
+                    target = rate > 0 ? (headcount * rate) : (Number(item.targetOutput) || 0);
+                }
+                
+                dailyData[date].target += target;
+            });
+
+            const sortedDates = Object.keys(dailyData).sort();
+            const labels = [];
+            const outputs = [];
+            const targets = [];
+
+            const tbody = document.querySelector('#daily-output-table tbody');
+            tbody.innerHTML = '';
+
+            sortedDates.forEach(date => {
+                const d = dailyData[date];
+                labels.push(date);
+                outputs.push(d.output);
+                targets.push(d.target);
+
+                const variance = d.output - d.target;
+                const varColor = variance >= 0 ? '#2ecc71' : '#e74c3c';
+                const pct = d.target > 0 ? Math.round((d.output / d.target) * 100) : (d.output > 0 ? 100 : 0);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="text-align:left;">${date}</td><td>${d.output}</td><td>${d.target}</td><td style="color:${varColor}; font-weight:bold;">${(variance > 0 ? '+' : '') + variance}</td><td>${pct}%</td>`;
+                tbody.appendChild(tr);
+            });
+
+            const ctx = document.getElementById('daily-output-chart');
+            if (dailyOutputChart) dailyOutputChart.destroy();
+            
+            dailyOutputChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Total Output', data: outputs, backgroundColor: '#3498db', order: 2 },
+                        { label: 'Target', data: targets, type: 'line', borderColor: '#e74c3c', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.1, order: 1 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // Hourly Navigation Logic
+        const shiftOrder = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+        if(hourlyPrevBtn) {
+            hourlyPrevBtn.addEventListener('click', () => {
+                const date = document.getElementById('hourly-date-val').value;
+                const currentShift = document.getElementById('hourly-shift-val').value;
+                let idx = shiftOrder.indexOf(currentShift);
+                if(idx === -1) return;
+                let prevIdx = idx - 1;
+                if(prevIdx < 0) prevIdx = shiftOrder.length - 1;
+                openHourlyModal(date, shiftOrder[prevIdx]);
+            });
+        }
+        if(hourlyNextBtn) {
+            hourlyNextBtn.addEventListener('click', () => {
+                const date = document.getElementById('hourly-date-val').value;
+                const currentShift = document.getElementById('hourly-shift-val').value;
+                let idx = shiftOrder.indexOf(currentShift);
+                if(idx === -1) return;
+                let nextIdx = idx + 1;
+                if(nextIdx >= shiftOrder.length) nextIdx = 0;
+                openHourlyModal(date, shiftOrder[nextIdx]);
+            });
+        }
+
+        if(hourlyBackTimestampBtn) {
+            hourlyBackTimestampBtn.addEventListener('click', () => {
+                hourlyModal.classList.add('hidden');
+                timestampModal.classList.remove('hidden');
+            });
+        }
+
         // Table Column Resizing Logic
         function makeTableResizable(table) {
             if(!table) return;
@@ -1832,7 +2101,7 @@
 
         // Make Hourly Modal Draggable
         const hourlyModalContent = document.querySelector('#hourly-modal .modal-content');
-        const hourlyModalHeader = document.querySelector('#hourly-modal-title').parentElement; // The header div
+        const hourlyModalHeader = document.getElementById('hourly-header-bar'); // The header div
         if(hourlyModalContent && hourlyModalHeader) {
             hourlyModalHeader.style.cursor = 'move';
             hourlyModalHeader.addEventListener('mousedown', function(e) {
@@ -4038,13 +4307,30 @@
                 const tB = b.startLog ? b.startLog.timestamp : (b.endLog ? b.endLog.timestamp : '');
                 return new Date(tB) - new Date(tA);
             });
+
+            // Pagination Logic
+            const totalItems = filteredSessions.length;
+            const totalPages = Math.ceil(totalItems / tsItemsPerPage) || 1;
+            if (tsCurrentPage > totalPages) tsCurrentPage = totalPages;
+            if (tsCurrentPage < 1) tsCurrentPage = 1;
+            
+            const paginatedSessions = filteredSessions.slice((tsCurrentPage - 1) * tsItemsPerPage, tsCurrentPage * tsItemsPerPage);
+            
+            // Update Controls
+            const tsPageInfo = document.getElementById('ts-page-info');
+            if(tsPageInfo) {
+                tsPageInfo.textContent = `Page ${tsCurrentPage} of ${totalPages} (${totalItems})`;
+                document.getElementById('ts-prev-page').disabled = tsCurrentPage <= 1;
+                document.getElementById('ts-next-page').disabled = tsCurrentPage >= totalPages;
+            }
             
             timestampTableBody.innerHTML = '';
             if(filteredSessions.length === 0) {
                 timestampTableBody.innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">No logs for today.</td></tr>';
+                if(tsSelectAll) tsSelectAll.checked = false;
             } else {
                 const now = new Date();
-                filteredSessions.forEach(session => {
+                paginatedSessions.forEach(session => {
                     const userId = session.userId;
                     // Lookup Name
                     let sessionDate = '';
@@ -4112,8 +4398,10 @@
                     
                     const idsToDelete = [session.startLog?.id, session.endLog?.id, ...(session.breaks || []).flatMap(b => [b.start.id, b.end.id])].filter(x=>x).join(',');
                     const deleteAction = `<button class="icon-btn" onclick="deleteSession('${idsToDelete}')" title="Permanently Delete Session" style="color:#d9534f;">&times;</button>`;
+                    const rowIds = idsToDelete; // Store all related IDs for row selection
 
                     tr.innerHTML = `
+                        <td style="padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">${userId}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">${name}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">${areaTypeDisplay}</td>
@@ -4128,6 +4416,7 @@
                     timestampTableBody.appendChild(tr);
                 });
             }
+            updateTsDeleteButton();
             
             // Calculate Total Duration
             const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
@@ -4148,6 +4437,22 @@
             renderTsAnalytics(sessions, analyticsDate);
             renderBreakLogTable(logsToProcess, attendance);
             renderInactiveUsersTable(sessions, attendance);
+        }
+        
+        function updateTsDeleteButton() {
+            const count = document.querySelectorAll('.ts-row-checkbox:checked').length;
+            if(tsDeleteSelectedBtn) tsDeleteSelectedBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        
+        if(tsSelectAll) {
+            tsSelectAll.addEventListener('change', (e) => {
+                document.querySelectorAll('.ts-row-checkbox').forEach(cb => cb.checked = e.target.checked);
+                updateTsDeleteButton();
+            });
+        }
+        
+        if(timestampTableBody) {
+            timestampTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('ts-row-checkbox')) updateTsDeleteButton(); });
         }
 
         function renderTsAnalytics(sessions, date) {
@@ -4203,23 +4508,37 @@
             
             // Find Most/Least Frequent
             let mostFreqUser = '-'; let mostFreqCount = 0;
+            let mostFreqName = '-';
             let leastFreqUser = '-'; let leastFreqCount = Infinity;
+            let leastFreqName = '-';
             
             Object.entries(userStarts).forEach(([user, count]) => {
-                if (count > mostFreqCount) { mostFreqCount = count; mostFreqUser = user; }
-                if (count < leastFreqCount) { leastFreqCount = count; leastFreqUser = user; }
+                if (count > mostFreqCount) { 
+                    mostFreqCount = count; mostFreqUser = user; 
+                    const att = attendance.find(a => a.userId === user);
+                    if(att) mostFreqName = att.name;
+                }
+                if (count < leastFreqCount) { 
+                    leastFreqCount = count; leastFreqUser = user; 
+                    const att = attendance.find(a => a.userId === user);
+                    if(att) leastFreqName = att.name;
+                }
             });
             if (leastFreqCount === Infinity) leastFreqCount = 0;
 
             // Build User List Table
-            let userListHtml = '<div style="margin-top:10px; max-height:150px; overflow-y:auto; border:1px solid #eee;"><table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f9f9f9;"><th style="padding:4px; text-align:left;">User</th><th style="padding:4px; text-align:right;">Starts</th></tr></thead><tbody>';
+            let userListHtml = '<div style="margin-top:10px; max-height:150px; overflow-y:auto; border:1px solid #eee;"><table style="width:100%; font-size:12px; border-collapse:collapse;"><thead><tr style="background:#f9f9f9;"><th style="padding:4px; text-align:left;">User</th><th style="padding:4px; text-align:left;">Name</th><th style="padding:4px; text-align:right;">Starts</th></tr></thead><tbody>';
             const sortedUsers = Object.entries(userStarts).sort((a,b) => b[1] - a[1]);
             sortedUsers.forEach(([u, c]) => {
-                userListHtml += `<tr><td style="padding:4px; border-bottom:1px solid #eee;">${u}</td><td style="padding:4px; border-bottom:1px solid #eee; text-align:right;">${c}</td></tr>`;
+                const att = attendance.find(a => a.userId === u);
+                const name = att ? att.name : '-';
+                userListHtml += `<tr><td style="padding:4px; border-bottom:1px solid #eee;">${u}</td><td style="padding:4px; border-bottom:1px solid #eee;">${name}</td><td style="padding:4px; border-bottom:1px solid #eee; text-align:right;">${c}</td></tr>`;
             });
             userListHtml += '</tbody></table></div>';
 
             const avgDuration = completedSessions > 0 ? Math.round(totalDuration / completedSessions) : 0;
+            const totalH = Math.floor(totalDuration / 60);
+            const totalM = totalDuration % 60;
 
             // Render HTML
             let html = `
@@ -4254,11 +4573,11 @@
                     <h5 style="margin:0 0 8px 0; color:#2752a7;">Session Insights</h5>
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
                         <span>Most Frequent Start:</span>
-                        <strong>${mostFreqUser} (${mostFreqCount})</strong>
+                        <strong>${mostFreqUser} | ${mostFreqName} (${mostFreqCount})</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
                         <span>Least Frequent Start:</span>
-                        <strong>${leastFreqUser} (${leastFreqCount})</strong>
+                        <strong>${leastFreqUser} | ${leastFreqName} (${leastFreqCount})</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
                         <span>Avg. Duration:</span>
@@ -4283,8 +4602,58 @@
                         <li>Total Hours Logged: <strong>${Math.round(totalDuration/60)}h</strong></li>
                     </ul>
                 </div>
+                <div style="text-align:center; margin-top:20px;">
+                    <div class="sand-timer" title="Shift Countdown">
+                        <div class="sand-timer-top"><div class="sand-timer-sand-top"></div></div>
+                        <div class="sand-timer-bottom"><div class="sand-timer-sand-bottom"></div></div>
+                        <div class="sand-timer-stream"></div>
+                    </div>
+                    <div id="shift-countdown-display" style="margin-top:8px; font-weight:bold; color:#e74c3c; font-size:18px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">--h --m --s</div>
+                    <div id="shift-countdown-label" style="font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px;">Shift Remaining</div>
+                </div>
             `;
             container.innerHTML = html;
+            
+            if (!window.shiftTimerInterval) {
+                const updateTimer = () => {
+                    const el = document.getElementById('shift-countdown-display');
+                    const labelEl = document.getElementById('shift-countdown-label');
+                    if (!el) return;
+                    
+                    const now = new Date();
+                    const h = now.getHours();
+                    let end = new Date(now);
+                    let shiftName = '';
+                    
+                    if (h >= 6 && h < 14) {
+                        shiftName = '1st Shift';
+                        end.setHours(14, 0, 0, 0);
+                    } else if (h >= 14 && h < 22) {
+                        shiftName = '2nd Shift';
+                        end.setHours(22, 0, 0, 0);
+                    } else {
+                        shiftName = '3rd Shift';
+                        if (h >= 22) {
+                            end.setDate(end.getDate() + 1);
+                            end.setHours(6, 0, 0, 0);
+                        } else {
+                            end.setHours(6, 0, 0, 0);
+                        }
+                    }
+                    
+                    let diff = end - now;
+                    if (diff < 0) diff = 0;
+                    
+                    const hh = Math.floor(diff / 3600000);
+                    const mm = Math.floor((diff % 3600000) / 60000);
+                    const ss = Math.floor((diff % 60000) / 1000);
+                    
+                    el.textContent = `${hh}h ${mm}m ${ss}s`;
+                    if(labelEl) labelEl.textContent = `${shiftName} Ends`;
+                };
+                window.shiftTimerInterval = setInterval(updateTimer, 1000);
+                updateTimer();
+            }
         }
         
         function openEditTimeModal(logId) {
@@ -4332,6 +4701,7 @@
             
             if(breaks.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="padding:10px; text-align:center; color:#999;">No breaks recorded.</td></tr>';
+                if(breakSelectAll) breakSelectAll.checked = false;
                 return;
             }
 
@@ -4339,6 +4709,7 @@
                 const att = attendanceData.find(a => a.userId === b.userId) || {};
                 const name = att.name || '-';
                 const shift = att.shift ? att.shift.split('-')[0] : '-';
+                const role = att.role || '-';
                 
                 const start = new Date(b.start);
                 const end = b.end ? new Date(b.end) : now;
@@ -4362,12 +4733,30 @@
                 const endStr = b.end ? `<span class="editable-time" data-log-id="${b.endId}">${new Date(b.end).toLocaleTimeString()}</span>` : '-';
 
                 const deleteBtn = `<button class="icon-btn" onclick="deleteBreak('${b.startId}', '${b.endId}')" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px;">&times;</button>`;
+                const rowIds = [b.startId, b.endId].filter(x=>x).join(',');
 
                 const tr = document.createElement('tr');
                 if (rowStyle) tr.style.cssText = rowStyle;
-                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${b.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${shift}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${startStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${endStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${durationDisplay}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${deleteBtn}</td>`;
+                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left;"><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${b.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${shift}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${role}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${startStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${endStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${durationDisplay}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${deleteBtn}</td>`;
                 tbody.appendChild(tr);
             });
+            updateBreakDeleteButton();
+        }
+        
+        function updateBreakDeleteButton() {
+            const count = document.querySelectorAll('.break-row-checkbox:checked').length;
+            if(breakDeleteSelectedBtn) breakDeleteSelectedBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        
+        if(breakSelectAll) {
+            breakSelectAll.addEventListener('change', (e) => {
+                document.querySelectorAll('.break-row-checkbox').forEach(cb => cb.checked = e.target.checked);
+                updateBreakDeleteButton();
+            });
+        }
+        
+        if(document.getElementById('break-log-table')) {
+            document.getElementById('break-log-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
         }
 
         function renderInactiveUsersTable(sessions, attendanceData) {
@@ -4494,6 +4883,10 @@
                 if (typeof globalSubAreas !== 'undefined' && globalSubAreas.length > 0) {
                     shiftAtt = shiftAtt.filter(a => globalSubAreas.includes(a.area));
                 }
+
+                // Exclude 'Temporary slide to Other task' from Actual count
+                shiftAtt = shiftAtt.filter(a => a.status !== 'Temporary slide to Other task');
+
                 const actCounters = shiftAtt.length;
 
                 if (shiftOutput[item.shift] !== undefined) {
@@ -4605,6 +4998,11 @@
                     alert(`User ${userId} has an active counting session. Please End Counting before starting a break.`);
                     return;
                 }
+            } else if (action === 'End Break') {
+                if (!lastLog || lastLog.action !== 'Start Break') {
+                    alert(`User ${userId} is not on break. Cannot End Break.`);
+                    return;
+                }
             } else if (action === 'End') {
                 if (!lastLog || (lastLog.action === 'End')) {
                     const actName = action === 'End' ? 'End Counting' : action;
@@ -4708,6 +5106,8 @@
             if (customUserId) {
             } else {
                 tsUserIdInput.value = '';
+                const nameDisplay = document.getElementById('ts-user-name-display');
+                if(nameDisplay) nameDisplay.value = '';
                 tsUserIdInput.focus();
             }
             if(manualBreakInput) manualBreakInput.value = ''; // Clear manual input
@@ -4781,6 +5181,8 @@
                 showToast(`End Count recorded for ${userId}. Data saved.`);
                 endCountModal.classList.add('hidden');
                 tsUserIdInput.value = '';
+                const nameDisplay = document.getElementById('ts-user-name-display');
+                if(nameDisplay) nameDisplay.value = '';
                 tsUserIdInput.focus();
             });
         }
@@ -4815,6 +5217,67 @@
             renderTimestamps();
             showToast('Break permanently deleted');
         };
+        
+        if(tsDeleteSelectedBtn) {
+            tsDeleteSelectedBtn.addEventListener('click', () => {
+                if(!confirm('Permanently delete selected sessions?')) return;
+                const checkboxes = document.querySelectorAll('.ts-row-checkbox:checked');
+                let idsToDelete = [];
+                checkboxes.forEach(cb => idsToDelete.push(...cb.dataset.ids.split(',')));
+                let data = getTimestamps();
+                data = data.filter(d => !idsToDelete.includes(d.id));
+                saveTimestamps(data);
+                renderTimestamps();
+                showToast(`${checkboxes.length} sessions deleted`);
+            });
+        }
+        
+        if(breakDeleteSelectedBtn) {
+            breakDeleteSelectedBtn.addEventListener('click', () => {
+                if(!confirm('Permanently delete selected breaks?')) return;
+                const checkboxes = document.querySelectorAll('.break-row-checkbox:checked');
+                let idsToDelete = [];
+                checkboxes.forEach(cb => idsToDelete.push(...cb.dataset.ids.split(',')));
+                let data = getTimestamps();
+                data = data.filter(d => !idsToDelete.includes(d.id));
+                saveTimestamps(data);
+                renderTimestamps();
+                showToast(`${checkboxes.length} breaks deleted`);
+            });
+        }
+        
+        if(breakExportBtn) {
+            breakExportBtn.addEventListener('click', () => {
+                const tbody = document.querySelector('#break-log-table tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                if(rows.length === 0 || rows[0].textContent.includes('No breaks')) { alert('No breaks to export'); return; }
+                
+                const csvRows = [['User', 'Name', 'Shift', 'Role', 'Break Out', 'Break In', 'Duration']];
+                rows.forEach(tr => {
+                    const cols = tr.querySelectorAll('td');
+                    if(cols.length > 7) {
+                        csvRows.push([
+                            `"${cols[1].textContent}"`,
+                            `"${cols[2].textContent}"`,
+                            `"${cols[3].textContent}"`,
+                            `"${cols[4].textContent}"`,
+                            `"${cols[5].textContent}"`,
+                            `"${cols[6].textContent}"`,
+                            `"${cols[7].textContent}"`
+                        ].join(','));
+                    }
+                });
+                
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `break_log.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
 
         if(document.getElementById('btn-break-delete-all')) {
             document.getElementById('btn-break-delete-all').addEventListener('click', () => {
@@ -5151,10 +5614,29 @@
         });
         if(btnEndCount) btnEndCount.addEventListener('click', () => logTimestamp('End'));
         if(btnTimeOut) btnTimeOut.addEventListener('click', () => logTimestamp('Time Out'));
-        if(tsFilterUser) tsFilterUser.addEventListener('input', renderTimestamps);
-        if(tsShiftFilter) tsShiftFilter.addEventListener('change', renderTimestamps);
-        if(tsShowActive) tsShowActive.addEventListener('change', renderTimestamps);
-        if(tsAnalyticsDateFilter) tsAnalyticsDateFilter.addEventListener('change', renderTimestamps);
+        if(tsFilterUser) tsFilterUser.addEventListener('input', () => { tsCurrentPage = 1; renderTimestamps(); });
+        if(tsShiftFilter) tsShiftFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
+        if(tsShowActive) tsShowActive.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
+        if(tsAnalyticsDateFilter) tsAnalyticsDateFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
+        
+        // Pagination Listeners for Timestamp Table
+        const tsPaginationControls = document.getElementById('ts-pagination-controls');
+        if (tsPaginationControls) {
+            tsPaginationControls.addEventListener('click', (e) => {
+                if (e.target.closest('#ts-prev-page') && !e.target.closest('#ts-prev-page').disabled) {
+                    tsCurrentPage--;
+                    renderTimestamps();
+                } else if (e.target.closest('#ts-next-page') && !e.target.closest('#ts-next-page').disabled) {
+                    tsCurrentPage++;
+                    renderTimestamps();
+                }
+            });
+            document.getElementById('ts-rows-per-page').addEventListener('change', (e) => {
+                tsItemsPerPage = parseInt(e.target.value);
+                tsCurrentPage = 1;
+                renderTimestamps();
+            });
+        }
         
         const breakLogTable = document.getElementById('break-log-table');
         if (breakLogTable) {
@@ -5162,6 +5644,22 @@
                 const target = e.target;
                 if (target.classList.contains('editable-time')) {
                     openEditTimeModal(target.dataset.logId);
+                }
+            });
+        }
+
+        if(tsUserIdInput) {
+            tsUserIdInput.addEventListener('input', () => {
+                const uid = tsUserIdInput.value.trim();
+                const nameDisplay = document.getElementById('ts-user-name-display');
+                if(nameDisplay) {
+                    if(uid) {
+                        const attData = getAttendanceData();
+                        const userRecord = attData.find(a => a.userId === uid);
+                        nameDisplay.value = userRecord ? `Name: ${userRecord.name} | Role: ${userRecord.role || '-'}` : '';
+                    } else {
+                        nameDisplay.value = '';
+                    }
                 }
             });
         }

@@ -38,7 +38,7 @@
         flex: 1; position: relative; width: 100%; min-height: 0;
     }
     /* Ensure modal is on top of navbar (z-index 9999) */
-    .modal { z-index: 10001 !important; }
+    .modal { z-index: 10001; }
     
     /* Fix tooltips inside modal to appear below buttons */
     .modal-content .icon-btn[data-tooltip]::after {
@@ -378,6 +378,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <div style="display:flex; align-items:center; gap:10px;">
             <h2 style="margin:0;">Manage Daily Counters</h2>
+            <button id="counters-flip-to-summary" class="icon-btn" title="View Statistics" style="background:#6f42c1; color:white; font-size:12px; padding:4px 8px;">View Stats</button>
             <button class="icon-btn expand-toggle-btn" title="Collapse" style="padding:4px; border:none; background:transparent; color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></button>
         </div>
         <div style="display:flex; gap:5px;">
@@ -400,6 +401,9 @@
         </div>
       </div>
       <div class="card-content">
+      <div id="counters-flip-container" class="flip-container">
+        <div class="flip-inner">
+            <div class="flip-front">
 
       <!-- Form -->
       <form id="daily-counters-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #eef2f6;">
@@ -467,6 +471,16 @@
         <div style="display:flex; gap:8px;">
             <button id="counters-prev-page" class="icon-btn" title="Previous">‹</button>
             <button id="counters-next-page" class="icon-btn" title="Next">›</button>
+        </div>
+      </div>
+            </div>
+            <div class="flip-back" style="padding:20px; background:#fff; border:1px solid #eee; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3 style="margin:0; color:#2752a7;">Performance Statistics</h3>
+                    <button id="counters-flip-to-table" class="icon-btn" title="Back to Table">↩ Back to Table</button>
+                </div>
+                <div id="counters-summary-content"></div>
+            </div>
         </div>
       </div>
     </div>
@@ -1009,11 +1023,12 @@
                         <table id="inactive-users-table" style="width:100%; font-size:12px; border-collapse:collapse;">
                             <thead>
                                 <tr style="background:#f9f9f9; position:sticky; top:0;">
-                                    <th style="padding:5px; text-align:left;">User</th>
-                                    <th style="padding:5px; text-align:left;">Name</th>
-                                    <th style="padding:5px; text-align:left;">Shift</th>
-                                    <th style="padding:5px; text-align:left;">Role</th>
-                                    <th style="padding:5px; text-align:left;">Last End Count</th>
+                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('userId')">User <span class="sort-icon"></span></th>
+                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('name')">Name <span class="sort-icon"></span></th>
+                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('shift')">Shift <span class="sort-icon"></span></th>
+                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('role')">Role <span class="sort-icon"></span></th>
+                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('lastEnd')">Last End Count <span class="sort-icon"></span></th>
+                                    <th style="padding:5px; text-align:center; width:40px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -1153,6 +1168,19 @@
         const hourlyBackTimestampBtn = document.getElementById('hourly-back-timestamp-btn');
 
         // Timestamp Modal
+        let cachedInactiveArgs = null;
+        let inactiveSort = { field: 'status', dir: 'asc' };
+
+        window.sortInactiveTable = function(field) {
+            if (inactiveSort.field === field) {
+                inactiveSort.dir = inactiveSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                inactiveSort.field = field;
+                inactiveSort.dir = 'asc';
+            }
+            if (cachedInactiveArgs) renderInactiveUsersTable(...cachedInactiveArgs);
+        };
+
         const timestampBtn = document.getElementById('counter-timestamp-btn');
         const timestampModal = document.getElementById('timestamp-modal');
         const tsUserIdInput = document.getElementById('ts-user-id');
@@ -2652,12 +2680,13 @@
 
                 const printWindow = window.open('', '_blank');
                 printWindow.document.write('<html><head><title>Attendance Report</title>');
-                printWindow.document.write('<style>body{font-family:sans-serif;font-size:12px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:6px;text-align:left;} th{background:#f0f0f0;} .sig{height:40px;}</style>');
+                printWindow.document.write('<style>@page { size: letter; margin: 0.25in; } body{font-family:sans-serif;font-size:11px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:4px;text-align:left;} th{background:#f0f0f0;} .sig{height:30px;}</style>');
+                printWindow.document.write('<style>@page { size: letter landscape; margin: 0.25in; } body{font-family:sans-serif;font-size:11px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:4px;text-align:left;} th{background:#f0f0f0;} .sig{height:30px;}</style>');
                 printWindow.document.write('</head><body>');
                 printWindow.document.write('<h2>Attendance Report</h2>');
                 printWindow.document.write(`<p>Generated: ${new Date().toLocaleString()}</p>`);
                 printWindow.document.write('<table><thead><tr>');
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Area', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status', 'Signature'];
+                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Status', 'Signature'];
                 headers.forEach(h => printWindow.document.write(`<th>${h}</th>`));
                 printWindow.document.write('</tr></thead><tbody>');
 
@@ -2668,17 +2697,10 @@
                     printWindow.document.write(`<td>${item.shift}</td>`);
                     printWindow.document.write(`<td>${item.name}</td>`);
                     printWindow.document.write(`<td>${item.role || '-'}</td>`);
-                    printWindow.document.write(`<td>${item.area || '-'}</td>`);
-                    printWindow.document.write(`<td>${item.timeIn || ''}</td>`);
-                    printWindow.document.write(`<td>${item.breakOut || ''}</td>`);
-                    printWindow.document.write(`<td>${item.breakIn || ''}</td>`);
-                    printWindow.document.write(`<td>${getDuration(item.breakOut, item.breakIn)}</td>`);
-                    printWindow.document.write(`<td>${item.status || ''}</td>`);
                     printWindow.document.write(`<td>${item.timeIn || ''}</td>`);
                     printWindow.document.write(`<td>${item.breakOut || ''}</td>`);
                     printWindow.document.write(`<td>${item.breakIn || ''}</td>`);
                     printWindow.document.write(`<td>${item.timeOut || ''}</td>`);
-                    printWindow.document.write(`<td>${getDuration(item.breakOut, item.breakIn)}</td>`);
                     printWindow.document.write(`<td>${item.status || ''}</td>`);
                     printWindow.document.write('<td class="sig"></td>'); // Empty signature cell
                     printWindow.document.write('</tr>');
@@ -3022,7 +3044,7 @@
 
         if (exportAttBtn) {
             exportAttBtn.addEventListener('click', () => {
-                const data = getAttendanceData();
+                const data = getFilteredAttendanceData();
                 if (data.length === 0) { alert('No attendance records to export.'); return; }
                 const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Area', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
                 const rows = [headers.join(',')];
@@ -4397,8 +4419,23 @@
                     }
                     
                     const idsToDelete = [session.startLog?.id, session.endLog?.id, ...(session.breaks || []).flatMap(b => [b.start.id, b.end.id])].filter(x=>x).join(',');
-                    const deleteAction = `<button class="icon-btn" onclick="deleteSession('${idsToDelete}')" title="Permanently Delete Session" style="color:#d9534f;">&times;</button>`;
+                    const deleteAction = `<button class="icon-btn delete-action-btn" onclick="deleteSession('${idsToDelete}')" title="Permanently Delete Session" style="color:#d9534f; opacity:0; transition:opacity 0.2s;">&times;</button>`;
                     const rowIds = idsToDelete; // Store all related IDs for row selection
+                    
+                    let quickAction = '';
+                    if (!session.endLog) {
+                        if (session.currentBreakStart) {
+                            // On Break -> End Break
+                            quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End Break', null, '${userId}')" title="End Break" style="color:#f39c12; margin-right:4px; opacity:0; transition:opacity 0.2s;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            </button>`;
+                        } else {
+                            // Active -> End Counting
+                            quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End', null, '${userId}')" title="End Counting" style="color:#e74c3c; margin-right:4px; opacity:0; transition:opacity 0.2s;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                            </button>`;
+                        }
+                    }
 
                     tr.innerHTML = `
                         <td style="padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>
@@ -4410,9 +4447,20 @@
                         <td style="padding:8px; border-bottom:1px solid #eee; color:#e74c3c; font-weight:bold;">${endStr}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee; ${isHigh ? 'color:#e74c3c; font-weight:bold;' : (duration==='Active'?'color:#2ecc71;font-weight:bold':'')}">${duration}</td>
                         <td style="padding:8px; border-bottom:1px solid #eee;">
+                            ${quickAction}
                             ${deleteAction}
                         </td>
                     `;
+                    
+                    tr.onmouseenter = () => { 
+                        tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '1'); 
+                        tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '1'); 
+                    };
+                    tr.onmouseleave = () => { 
+                        tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '0'); 
+                        tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '0'); 
+                    };
+
                     timestampTableBody.appendChild(tr);
                 });
             }
@@ -4434,9 +4482,10 @@
                 end: s.endLog.timestamp
             }));
             renderTimestampChart(chartSessions);
-            renderTsAnalytics(sessions, analyticsDate);
+            renderTsAnalytics(sessions, analyticsDate, logsToProcess);
             renderBreakLogTable(logsToProcess, attendance);
-            renderInactiveUsersTable(sessions, attendance);
+            cachedInactiveArgs = [sessions, attendance, logsToProcess];
+            renderInactiveUsersTable(sessions, attendance, logsToProcess);
         }
         
         function updateTsDeleteButton() {
@@ -4455,7 +4504,7 @@
             timestampTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('ts-row-checkbox')) updateTsDeleteButton(); });
         }
 
-        function renderTsAnalytics(sessions, date) {
+        function renderTsAnalytics(sessions, date, logs) {
             const container = document.getElementById('ts-analytics-content');
             if(!container) return;
             container.innerHTML = '';
@@ -4488,6 +4537,29 @@
                 }
             });
 
+            // Calculate On-Break Users
+            const onBreakUserIds = new Set();
+            const userLastAction = {};
+            logs.forEach(l => {
+                if (!l.deleted) userLastAction[l.userId] = l.action;
+            });
+            Object.entries(userLastAction).forEach(([uid, action]) => {
+                if (action === 'Start Break') onBreakUserIds.add(uid);
+            });
+
+            // Calculate Inactive Users (Full counters only, not active, not on break)
+            let inactiveCount = 0;
+            const filterShift = tsShiftFilter ? tsShiftFilter.value : '';
+            attendance.forEach(a => {
+                if (a.status === 'Full counter') {
+                    if (filterShift && !a.shift.includes(filterShift)) return;
+                    if (a.timeOut) return; // Already timed out
+                    if (!activeUserIds.has(a.userId) && !onBreakUserIds.has(a.userId)) {
+                        inactiveCount++;
+                    }
+                }
+            });
+
             // 2. Session Stats
             const userStarts = {};
             let totalDuration = 0;
@@ -4505,6 +4577,13 @@
                 }
                 if (s.breaks) totalBreaks += s.breaks.length;
             });
+
+            // Calculate Unique Users with Breaks (from logs directly to catch all)
+            const usersWithBreaks = new Set();
+            logs.forEach(l => {
+                if (l.action === 'Start Break') usersWithBreaks.add(l.userId);
+            });
+            const uniqueBreakUsers = usersWithBreaks.size;
             
             // Find Most/Least Frequent
             let mostFreqUser = '-'; let mostFreqCount = 0;
@@ -4600,6 +4679,8 @@
                         <li>Total Breaks Taken: <strong>${totalBreaks}</strong></li>
                         <li>Completed Sessions: <strong>${completedSessions}</strong></li>
                         <li>Total Hours Logged: <strong>${Math.round(totalDuration/60)}h</strong></li>
+                        <li>Total Inactive Users: <strong style="color:${inactiveCount > 0 ? '#e74c3c' : '#2ecc71'}">${inactiveCount}</strong></li>
+                        <li>Unique Users w/ Breaks: <strong>${uniqueBreakUsers}</strong></li>
                     </ul>
                 </div>
                 <div style="text-align:center; margin-top:20px;">
@@ -4732,12 +4813,16 @@
                 const startStr = `<span class="editable-time" data-log-id="${b.startId}">${start.toLocaleTimeString()}</span>`;
                 const endStr = b.end ? `<span class="editable-time" data-log-id="${b.endId}">${new Date(b.end).toLocaleTimeString()}</span>` : '-';
 
-                const deleteBtn = `<button class="icon-btn" onclick="deleteBreak('${b.startId}', '${b.endId}')" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px;">&times;</button>`;
+                const deleteBtn = `<button class="icon-btn delete-break-btn" onclick="deleteBreak('${b.startId}', '${b.endId}')" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px; opacity:0; transition:opacity 0.2s;">&times;</button>`;
                 const rowIds = [b.startId, b.endId].filter(x=>x).join(',');
 
                 const tr = document.createElement('tr');
                 if (rowStyle) tr.style.cssText = rowStyle;
                 tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left;"><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${b.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${shift}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${role}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${startStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${endStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${durationDisplay}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${deleteBtn}</td>`;
+                
+                tr.onmouseenter = () => { tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '1'); };
+                tr.onmouseleave = () => { tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '0'); };
+                
                 tbody.appendChild(tr);
             });
             updateBreakDeleteButton();
@@ -4759,7 +4844,7 @@
             document.getElementById('break-log-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
         }
 
-        function renderInactiveUsersTable(sessions, attendanceData) {
+        function renderInactiveUsersTable(sessions, attendanceData, logs) {
             const tbody = document.querySelector('#inactive-users-table tbody');
             if(!tbody) return;
             tbody.innerHTML = '';
@@ -4785,6 +4870,14 @@
                     }
                 }
             });
+
+            // Determine users currently on break
+            const onBreakUserIds = new Set();
+            const userLastAction = {};
+            logs.forEach(l => { if (!l.deleted) userLastAction[l.userId] = l.action; });
+            Object.entries(userLastAction).forEach(([uid, action]) => {
+                if (action === 'Start Break') onBreakUserIds.add(uid);
+            });
             
             const inactiveList = [];
             
@@ -4792,7 +4885,7 @@
                 if (filterShift && !att.shift.includes(filterShift)) return;
                 if (att.timeOut) return; // Skip if already timed out
                 if (!activeUserIds.has(att.userId)) {
-                    // Not currently active
+                    // Not currently active session
                     let lastEnd = '-';
                     let status = 'Not Started';
                     
@@ -4800,6 +4893,9 @@
                         lastEnd = new Date(userLastEnd[att.userId]).toLocaleTimeString();
                         status = 'Inactive';
                     }
+
+                    // If on break, do not add to inactive list
+                    if (onBreakUserIds.has(att.userId)) return;
                     
                     inactiveList.push({
                         userId: att.userId,
@@ -4812,9 +4908,16 @@
                 }
             });
             
-            if(inactiveList.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="padding:10px; text-align:center; color:#999;">No inactive users found.</td></tr>'; return; }
+            if(inactiveList.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="padding:10px; text-align:center; color:#999;">No inactive users found.</td></tr>'; return; }
             
             // Sort: Not Started first
+            if (inactiveSort.field) {
+                inactiveList.sort((a,b) => {
+                    const valA = (a[inactiveSort.field] || '').toString().toLowerCase();
+                    const valB = (b[inactiveSort.field] || '').toString().toLowerCase();
+                    return inactiveSort.dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+            }
             inactiveList.sort((a,b) => {
                 if (a.status === 'Not Started' && b.status !== 'Not Started') return -1;
                 if (a.status !== 'Not Started' && b.status === 'Not Started') return 1;
@@ -4824,9 +4927,33 @@
             inactiveList.forEach(u => {
                 const tr = document.createElement('tr');
                 const color = u.status === 'Not Started' ? '#e74c3c' : '#333';
-                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.shift || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.role || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.lastEnd}</td>`;
+                
+                const startBtn = `<button class="icon-btn quick-start-btn" 
+                    onclick="document.getElementById('ts-user-id').value = '${u.userId}'; document.getElementById('ts-user-id').dispatchEvent(new Event('input')); logTimestamp('Start', null, '${u.userId}')" 
+                    title="Quick Start Count" 
+                    style="color:#2ecc71; padding:2px; opacity:0; transition:opacity 0.2s; margin-right:4px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </button>`;
+
+                const breakBtn = `<button class="icon-btn quick-start-btn" 
+                    onclick="document.getElementById('ts-user-id').value = '${u.userId}'; document.getElementById('ts-user-id').dispatchEvent(new Event('input')); logTimestamp('Start Break', null, '${u.userId}')" 
+                    title="Quick Break" 
+                    style="color:#3498db; padding:2px; opacity:0; transition:opacity 0.2s;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                </button>`;
+
+                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.shift || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.role || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.lastEnd}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:center; white-space:nowrap;">${startBtn}${breakBtn}</td>`;
+                
+                tr.onmouseenter = () => { tr.querySelectorAll('.quick-start-btn').forEach(b => b.style.opacity = '1'); };
+                tr.onmouseleave = () => { tr.querySelectorAll('.quick-start-btn').forEach(b => b.style.opacity = '0'); };
+                
                 tbody.appendChild(tr);
             });
+            
+            // Update sort icons
+            document.querySelectorAll('#inactive-users-table th .sort-icon').forEach(el => el.textContent = '');
+            const activeTh = document.querySelector(`#inactive-users-table th[onclick*="'${inactiveSort.field}'"] .sort-icon`);
+            if(activeTh) activeTh.textContent = inactiveSort.dir === 'asc' ? '↑' : '↓';
         }
 
         function renderCountersSummary() {
@@ -4869,6 +4996,7 @@
             };
             let total24Output = 0;
             let total24Counters = 0;
+            let total24Target = 0;
 
             data.forEach(item => {
                 let act = 0;
@@ -4895,6 +5023,16 @@
                 }
                 total24Output += act;
                 total24Counters += actCounters;
+                
+                // Calculate Target for stats
+                const rate = Number(item.standardRate) || 0;
+                let target = 0;
+                if (item.hourlyTargets && Object.keys(item.hourlyTargets).length > 0) {
+                    target = Object.values(item.hourlyTargets).reduce((a, b) => a + (Number(b)||0), 0);
+                } else {
+                    target = rate > 0 ? (actCounters * rate) : (Number(item.targetOutput) || 0);
+                }
+                total24Target += target;
             });
 
             let html = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
@@ -4913,6 +5051,37 @@
                 <div class="stat-card" style="border-color:#2752a7;">
                     <div class="stat-value" style="color:#2752a7;">${total24Output} <span style="font-size:14px; color:#666; font-weight:normal;">items</span></div>
                     <div class="stat-label">Total 24hrs (${total24Counters} counters)</div>
+                </div>
+            </div>`;
+            
+            // Additional Stats
+            const avgProductivity = total24Counters > 0 ? Math.round(total24Output / total24Counters) : 0;
+            const targetPct = total24Target > 0 ? Math.round((total24Output / total24Target) * 100) : 0;
+            const variance = total24Output - total24Target;
+            
+            let topShift = '-';
+            let topShiftVal = -1;
+            Object.entries(shiftOutput).forEach(([k,v]) => {
+                if(v > topShiftVal) { topShiftVal = v; topShift = k.split('-')[0]; }
+            });
+            
+            html += `
+            <div style="margin-top:20px; border-top:1px solid #eee; padding-top:20px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#2ecc71;">${avgProductivity}</div>
+                    <div class="stat-label">Avg Items / Person</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:${targetPct >= 100 ? '#2ecc71' : '#f1c40f'};">${targetPct}%</div>
+                    <div class="stat-label">Target Achievement</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:${variance >= 0 ? '#2ecc71' : '#e74c3c'};">${variance > 0 ? '+' : ''}${variance}</div>
+                    <div class="stat-label">Total Variance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color:#3498db;">${topShift}</div>
+                    <div class="stat-label">Top Performing Shift</div>
                 </div>
             </div>`;
             
@@ -5112,6 +5281,7 @@
             }
             if(manualBreakInput) manualBreakInput.value = ''; // Clear manual input
         }
+        window.logTimestamp = logTimestamp;
 
         // End Count Modal Logic
         if (ecAreaType) {

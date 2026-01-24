@@ -29,6 +29,7 @@
   <style>
     /* Card content expand/collapse */
     .card-content.hidden { display: none; }
+    .section-content.hidden { display: none !important; }
     /* Resizable box */
     .resizable-box {
         resize: both; overflow: auto; min-width: 300px; min-height: 200px;
@@ -368,6 +369,9 @@
       </button>
       <button id="counter-timestamp-btn" class="icon-btn" title="Counter Timestamp" style="margin-left: 5px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Timestamp
+      </button>
+      <button id="reports-menu-btn" class="icon-btn" title="Reports" style="margin-left: 5px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Reports
       </button>
       <div style="display:flex; align-items:center; gap:5px; margin-left:10px; border-left:1px solid #ccc; padding-left:10px;">
           <input type="checkbox" id="auto-refresh-check" title="Auto Refresh every 15s">
@@ -930,7 +934,10 @@
                 <!-- Table 1: Today's Logs -->
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:400px;">
                     <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <h4 style="margin:0;">Today's Logs</h4>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                            <h4 style="margin:0;">Today's Logs</h4>
+                        </div>
                         <div style="display:flex; gap:5px; align-items:center;">
                             <select id="ts-shift-filter" style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                                 <option value="">All Shifts</option>
@@ -940,11 +947,13 @@
                             </select>
                             <input type="text" id="ts-filter-user" placeholder="Search User..." style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
                             <label style="font-size:12px; cursor:pointer;"><input type="checkbox" id="ts-show-active"> Active Only</label>
+                            <label style="font-size:12px; cursor:pointer; margin-left:5px;"><input type="checkbox" id="ts-show-long-active"> > 1hr</label>
                             <button id="ts-delete-selected-btn" class="icon-btn" title="Delete Selected" style="padding: 2px 6px; font-size: 12px; color:#d9534f; display:none;">Del Sel</button>
                             <button id="ts-purge-all-btn" class="icon-btn" title="Permanently Delete All Shown" style="padding: 2px 6px; font-size: 12px; background:#c0392b; color:white; border-color:#c0392b;">Purge All</button>
                             <button id="ts-export-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
                         </div>
                     </div>
+                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
                         <table id="timestamp-table" style="width:100%; border-collapse:collapse; font-size:12px;">
                             <thead>
@@ -978,13 +987,24 @@
                             <button id="ts-next-page" class="icon-btn" title="Next" style="padding:2px 6px; font-size:12px;">›</button>
                         </div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- Table 2: Break Log -->
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:300px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <h4 style="margin:0;">Break Log</h4>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                            <h4 style="margin:0;">Break Log</h4>
+                        </div>
                         <div style="display:flex; gap:5px;">
+                             <select id="break-shift-filter" style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; width: 80px;">
+                                <option value="">All Shifts</option>
+                                <option value="1st Shift">1st Shift</option>
+                                <option value="2nd Shift">2nd Shift</option>
+                                <option value="3rd Shift">3rd Shift</option>
+                             </select>
+                             <label style="font-size:12px; cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="break-show-active"> Active</label>
                              <input type="datetime-local" id="manual-break-time" style="padding:4px; font-size:11px; border:1px solid #ccc; border-radius:4px; width:130px;" title="Manual Break Time">
                              <button id="btn-break-start" class="icon-btn" style="background:#f1c40f; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">Start Break</button>
                              <button id="btn-break-end" class="icon-btn" style="background:#f39c12; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">End Break</button>
@@ -993,6 +1013,7 @@
                              <button id="btn-break-delete-all" class="icon-btn" title="Delete All Breaks" style="color:#d9534f; padding:4px 8px; font-size:12px; font-weight:bold; margin-left:5px;">🗑 All</button>
                         </div>
                     </div>
+                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
                         <table id="break-log-table" style="width:100%; font-size:12px; border-collapse:collapse;">
                             <thead>
@@ -1012,13 +1033,18 @@
                         </table>
                     </div>
                 </div>
+                </div>
 
                 <!-- Table 3: Inactive Users -->
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:300px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <h4 style="margin:0;">Inactive Users</h4>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                            <h4 style="margin:0;">Inactive Users</h4>
+                        </div>
                         <button id="ts-export-inactive-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
                     </div>
+                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
                         <table id="inactive-users-table" style="width:100%; font-size:12px; border-collapse:collapse;">
                             <thead>
@@ -1034,6 +1060,7 @@
                             <tbody></tbody>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -1055,16 +1082,43 @@
     <div class="modal-content card" style="max-width: 400px; margin: 150px auto; text-align: center;">
         <h3 style="margin-top:0">Select Area</h3>
         <div style="display:flex; gap:15px; justify-content:center; margin-top:20px;">
-            <div class="card area-card" data-area="Reserved" style="cursor:pointer; padding:20px; border:2px solid #eee; width:120px; transition:all 0.2s;">
+            <div class="card area-card" data-bin-type="Reserved" style="cursor:pointer; padding:20px; border:2px solid #eee; width:120px; transition:all 0.2s;">
                 <div style="font-size:30px;">📦</div>
                 <div style="font-weight:bold; margin-top:10px;">Reserved Bin</div>
             </div>
-            <div class="card area-card" data-area="Pick Bin" style="cursor:pointer; padding:20px; border:2px solid #eee; width:120px; transition:all 0.2s;">
+            <div class="card area-card" data-bin-type="Pick Bin" style="cursor:pointer; padding:20px; border:2px solid #eee; width:120px; transition:all 0.2s;">
                 <div style="font-size:30px;">🛒</div>
                 <div style="font-weight:bold; margin-top:10px;">Pick Bin</div>
             </div>
         </div>
         <button id="cancel-start-area-btn" class="icon-btn" style="margin-top:20px; border:1px solid #ccc;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Warehouse Area Selection Modal -->
+  <div id="warehouse-area-modal" class="modal hidden" style="z-index: 10016;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 500px; margin: 150px auto; text-align: center;">
+        <h3 style="margin-top:0">Select Warehouse Area</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; justify-content:center; margin-top:20px;">
+            <div class="card area-card" data-warehouse-area="Coldroom" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">❄️</div>
+                <div style="font-weight:bold; margin-top:10px;">Coldroom</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Ecom 2" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🌐</div>
+                <div style="font-weight:bold; margin-top:10px;">Ecom 2</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Storage" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🗄️</div>
+                <div style="font-weight:bold; margin-top:10px;">Storage</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Pallet Picking" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🏗️</div>
+                <div style="font-weight:bold; margin-top:10px;">Pallet Picking</div>
+            </div>
+        </div>
+        <button id="cancel-warehouse-area-btn" class="icon-btn" style="margin-top:20px; border:1px solid #ccc;">Back</button>
     </div>
   </div>
 
@@ -1075,22 +1129,89 @@
         <h3 style="margin-top:0">End Count Details</h3>
         <div style="margin-bottom:10px;">
             <label style="font-weight:bold; display:block; margin-bottom:5px;">Area Type:</label>
-            <select id="ec-area-type" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                <option value="Reserved">Reserved</option>
-                <option value="Pick Bin">Pick Bin</option>
-            </select>
+            <input type="text" id="ec-area-type" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; background-color: #f9f9f9;" readonly>
         </div>
         <div id="ec-pallet-group" style="margin-bottom:10px;">
             <label style="font-weight:bold; display:block; margin-bottom:5px;">Pallets Completed:</label>
-            <input type="number" id="ec-pallets" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" value="0" min="0">
+            <input type="number" id="ec-pallets" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="0" min="0">
         </div>
         <div style="margin-bottom:15px;">
             <label style="font-weight:bold; display:block; margin-bottom:5px;">SKUs (Items) Counted:</label>
-            <input type="number" id="ec-skus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" value="0" min="0">
+            <input type="number" id="ec-skus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="0" min="0">
         </div>
         <div style="text-align:right; display:flex; gap:10px; justify-content:flex-end;">
             <button id="ec-cancel-btn" class="icon-btn" style="border:1px solid #ccc;">Cancel</button>
             <button id="ec-save-btn" class="icon-btn" style="background:#2752a7; color:white;">Submit</button>
+        </div>
+    </div>
+  </div>
+
+  <!-- Warehouse Area Selection Modal -->
+  <div id="warehouse-area-modal" class="modal hidden" style="z-index: 10016;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 500px; margin: 150px auto; text-align: center;">
+        <h3 style="margin-top:0">Select Warehouse Area</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; justify-content:center; margin-top:20px;">
+            <div class="card area-card" data-warehouse-area="Coldroom" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🌡️</div>
+                <div style="font-weight:bold; margin-top:10px;">Coldroom</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Ecom 2" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🏢</div>
+                <div style="font-weight:bold; margin-top:10px;">Ecom 2</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Storage" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🏭</div>
+                <div style="font-weight:bold; margin-top:10px;">Storage</div>
+            </div>
+            <div class="card area-card" data-warehouse-area="Pallet Picking" style="cursor:pointer; padding:20px; border:2px solid #eee; transition:all 0.2s;">
+                <div style="font-size:30px;">🪵</div>
+                <div style="font-weight:bold; margin-top:10px;">Pallet Picking</div>
+            </div>
+        </div>
+        <button id="cancel-warehouse-area-btn" class="icon-btn" style="margin-top:20px; border:1px solid #ccc;">Back</button>
+    </div>
+  </div>
+
+  <!-- Reports Selection Modal -->
+  <div id="reports-modal" class="modal hidden" style="z-index: 10020;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 400px; margin: 100px auto; text-align: center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0">Select Report</h3>
+            <button class="icon-btn close-modal">&times;</button>
+        </div>
+        <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; justify-content:center; background:#f9f9f9; padding:10px; border-radius:4px;">
+            <div style="text-align:left;">
+                <label style="font-size:11px; display:block; font-weight:bold;">From</label>
+                <input type="date" id="rep-start-date" style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            </div>
+            <div style="text-align:left;">
+                <label style="font-size:11px; display:block; font-weight:bold;">To</label>
+                <input type="date" id="rep-end-date" style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+            </div>
+        </div>
+        <div style="display:grid; gap:10px;">
+            <button id="rep-sessions-btn" class="icon-btn" style="justify-content:flex-start; padding:10px; width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px; width:18px; height:18px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Counter Sessions (CSV)
+            </button>
+            <button id="rep-attendance-btn" class="icon-btn" style="justify-content:flex-start; padding:10px; width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px; width:18px; height:18px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Attendance List (CSV)
+            </button>
+            <button id="rep-breaklog-btn" class="icon-btn" style="justify-content:flex-start; padding:10px; width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px; width:18px; height:18px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Break Logs (CSV)
+            </button>
+            <button id="rep-daily-output-btn" class="icon-btn" style="justify-content:flex-start; padding:10px; width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px; width:18px; height:18px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                Daily Output Report (View)
+            </button>
+            <button id="rep-inactive-btn" class="icon-btn" style="justify-content:flex-start; padding:10px; width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:10px; width:18px; height:18px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                Inactive Users (CSV)
+            </button>
         </div>
     </div>
   </div>
@@ -1166,6 +1287,15 @@
         const hourlyPrevBtn = document.getElementById('hourly-prev-shift-btn');
         const hourlyNextBtn = document.getElementById('hourly-next-shift-btn');
         const hourlyBackTimestampBtn = document.getElementById('hourly-back-timestamp-btn');
+        
+        // Reports Modal
+        const reportsMenuBtn = document.getElementById('reports-menu-btn');
+        const reportsModal = document.getElementById('reports-modal');
+        const repAttendanceBtn = document.getElementById('rep-attendance-btn');
+        const repBreaklogBtn = document.getElementById('rep-breaklog-btn');
+        const repDailyOutputBtn = document.getElementById('rep-daily-output-btn');
+        const repInactiveBtn = document.getElementById('rep-inactive-btn');
+        const repSessionsBtn = document.getElementById('rep-sessions-btn');
 
         // Timestamp Modal
         let cachedInactiveArgs = null;
@@ -1198,6 +1328,7 @@
         const tsDeleteSelectedBtn = document.getElementById('ts-delete-selected-btn');
         const tsSelectAll = document.getElementById('ts-select-all');
         const tsShowActive = document.getElementById('ts-show-active');
+        const tsShowLongActive = document.getElementById('ts-show-long-active');
         const tsAnalyticsDateFilter = document.getElementById('ts-analytics-date-filter');
         
         // End Count Modal Elements
@@ -1210,6 +1341,8 @@
         const breakDeleteSelectedBtn = document.getElementById('break-delete-selected-btn');
         const breakExportBtn = document.getElementById('break-export-btn');
         const breakSelectAll = document.getElementById('break-select-all');
+        const breakShiftFilter = document.getElementById('break-shift-filter');
+        const breakShowActive = document.getElementById('break-show-active');
 
         const editTimeModal = document.getElementById('edit-time-modal');
         const cancelEditTimeBtn = document.getElementById('cancel-edit-time-btn');
@@ -1246,17 +1379,247 @@
         }
         // Start Area Modal Logic
         const startAreaModal = document.getElementById('start-area-modal');
+        const warehouseAreaModal = document.getElementById('warehouse-area-modal');
         const cancelStartAreaBtn = document.getElementById('cancel-start-area-btn');
+        const cancelWarehouseAreaBtn = document.getElementById('cancel-warehouse-area-btn');
+        let selectedBinType = '';
         
-        document.querySelectorAll('.area-card').forEach(card => {
+        document.querySelectorAll('#start-area-modal .area-card').forEach(card => {
             card.addEventListener('click', () => {
-                const area = card.dataset.area;
+                selectedBinType = card.dataset.binType;
                 startAreaModal.classList.add('hidden');
-                logTimestamp('Start', area);
+                
+                // Hide Pallet Picking if Reserved Bin is selected
+                const palletCard = document.querySelector('#warehouse-area-modal .area-card[data-warehouse-area="Pallet Picking"]');
+                if(palletCard) {
+                    palletCard.style.display = (selectedBinType === 'Reserved') ? 'none' : 'block';
+                }
+
+                if(warehouseAreaModal) warehouseAreaModal.classList.remove('hidden');
+                else logTimestamp('Start', selectedBinType);
+            });
+        });
+
+        document.querySelectorAll('#warehouse-area-modal .area-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const warehouseArea = card.dataset.warehouseArea;
+                const finalArea = `${selectedBinType} - ${warehouseArea}`;
+                warehouseAreaModal.classList.add('hidden');
+                logTimestamp('Start', finalArea);
             });
         });
         
         if(cancelStartAreaBtn) cancelStartAreaBtn.addEventListener('click', () => startAreaModal.classList.add('hidden'));
+        if(cancelWarehouseAreaBtn) cancelWarehouseAreaBtn.addEventListener('click', () => {
+            warehouseAreaModal.classList.add('hidden');
+            startAreaModal.classList.remove('hidden');
+        });
+
+        // Reports Modal Logic
+        if(reportsMenuBtn) {
+            reportsMenuBtn.addEventListener('click', () => {
+                // Set default dates if empty
+                if(!document.getElementById('rep-start-date').value) {
+                    document.getElementById('rep-start-date').value = new Date().toISOString().split('T')[0];
+                }
+                if(!document.getElementById('rep-end-date').value) {
+                    document.getElementById('rep-end-date').value = new Date().toISOString().split('T')[0];
+                }
+                reportsModal.classList.remove('hidden');
+            });
+        }
+        
+        if(repAttendanceBtn) {
+            repAttendanceBtn.addEventListener('click', () => {
+                const startVal = document.getElementById('rep-start-date').value;
+                const endVal = document.getElementById('rep-end-date').value;
+                const start = startVal ? new Date(startVal) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = endVal ? new Date(endVal) : null;
+                if(end) end.setHours(23,59,59,999);
+
+                let data = getAttendanceData();
+                if(start || end) {
+                    data = data.filter(item => {
+                        const d = new Date(item.date);
+                        return (!start || d >= start) && (!end || d <= end);
+                    });
+                }
+                exportAttendanceCSV(data);
+                reportsModal.classList.add('hidden');
+            });
+        }
+        
+        if(repDailyOutputBtn) {
+            repDailyOutputBtn.addEventListener('click', () => {
+                if(dailyOutputBtn) dailyOutputBtn.click();
+                reportsModal.classList.add('hidden');
+            });
+        }
+        
+        if(repInactiveBtn) {
+            repInactiveBtn.addEventListener('click', () => {
+                if(tsExportInactiveBtn) tsExportInactiveBtn.click();
+                reportsModal.classList.add('hidden');
+            });
+        }
+        
+        if(repBreaklogBtn) {
+            repBreaklogBtn.addEventListener('click', () => {
+                const startVal = document.getElementById('rep-start-date').value;
+                const endVal = document.getElementById('rep-end-date').value;
+                const start = startVal ? new Date(startVal) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = endVal ? new Date(endVal) : null;
+                if(end) end.setHours(23,59,59,999);
+
+                const logs = getTimestamps();
+                const attendance = getAttendanceData();
+                // Filter logs for breaks
+                const breaks = [];
+                const openBreaks = {};
+                logs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                logs.forEach(log => {
+                    const d = new Date(log.timestamp);
+                    if(start && d < start) return;
+                    if(end && d > end) return;
+
+                    if (log.userId && !log.deleted) {
+                        if (log.action === 'Start Break') openBreaks[log.userId] = log;
+                        else if (log.action === 'End Break' && openBreaks[log.userId]) {
+                            breaks.push({ userId: log.userId, start: openBreaks[log.userId].timestamp, end: log.timestamp });
+                            delete openBreaks[log.userId];
+                        }
+                    }
+                });
+                // Add open breaks
+                Object.keys(openBreaks).forEach(uid => {
+                     breaks.push({ userId: uid, start: openBreaks[uid].timestamp, end: null });
+                });
+                
+                if(breaks.length === 0) { alert('No breaks to export.'); return; }
+                
+                const csvRows = [['User', 'Name', 'Shift', 'Role', 'Break Out', 'Break In', 'Duration']];
+                breaks.forEach(b => {
+                    const att = attendance.find(a => a.userId === b.userId) || {};
+                    const name = att.name || '-';
+                    const shift = att.shift ? att.shift.split('-')[0] : '-';
+                    const role = att.role || '-';
+                    const start = new Date(b.start).toLocaleTimeString();
+                    const end = b.end ? new Date(b.end).toLocaleTimeString() : '-';
+                    
+                    let duration = '-';
+                    if(b.end) {
+                        const diff = new Date(b.end) - new Date(b.start);
+                        duration = Math.floor(diff/60000) + ' min';
+                    }
+                    
+                    csvRows.push([
+                        `"${b.userId}"`, `"${name}"`, `"${shift}"`, `"${role}"`, `"${start}"`, `"${end}"`, `"${duration}"`
+                    ].join(','));
+                });
+                
+                const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'break_log_report.csv';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                
+                reportsModal.classList.add('hidden');
+            });
+        }
+
+        if(repSessionsBtn) {
+            repSessionsBtn.addEventListener('click', () => {
+                const startVal = document.getElementById('rep-start-date').value;
+                const endVal = document.getElementById('rep-end-date').value;
+                const start = startVal ? new Date(startVal) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = endVal ? new Date(endVal) : null;
+                if(end) end.setHours(23,59,59,999);
+
+                let data = getTimestamps();
+                const attendance = getAttendanceData();
+
+                // Reconstruct sessions
+                data.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                const sessions = [];
+                const openSessions = {};
+                
+                data.forEach(log => {
+                    if (log.deleted) return;
+                    // Filter by date range based on log timestamp
+                    const d = new Date(log.timestamp);
+                    if(start && d < start) return;
+                    if(end && d > end) return;
+
+                    if (log.action === 'Start') {
+                        if (openSessions[log.userId]) sessions.push(openSessions[log.userId]);
+                        openSessions[log.userId] = { userId: log.userId, startLog: log, endLog: null, breaks: [] };
+                    } else if (log.action === 'Start Break') {
+                        if (openSessions[log.userId]) openSessions[log.userId].currentBreakStart = log;
+                    } else if (log.action === 'End Break') {
+                        if (openSessions[log.userId] && openSessions[log.userId].currentBreakStart) {
+                            const bStart = new Date(openSessions[log.userId].currentBreakStart.timestamp);
+                            const bEnd = new Date(log.timestamp);
+                            openSessions[log.userId].breaks.push({ duration: (bEnd - bStart)/60000 });
+                            openSessions[log.userId].currentBreakStart = null;
+                        }
+                    } else if (log.action === 'End') {
+                        if (openSessions[log.userId]) {
+                            const session = openSessions[log.userId];
+                            session.endLog = log;
+                            sessions.push(session);
+                            delete openSessions[log.userId];
+                        } else {
+                            sessions.push({ userId: log.userId, startLog: null, endLog: log, breaks: [] });
+                        }
+                    }
+                });
+                Object.values(openSessions).forEach(s => sessions.push(s));
+
+                if(sessions.length === 0) { alert('No sessions found in selected range.'); return; }
+                
+                const headers = ['User ID', 'Name', 'Area Type', 'Shift', 'Start Time', 'End Time', 'Duration', 'Status', 'Pallets', 'SKUs'];
+                const rows = [headers.join(',')];
+                
+                sessions.forEach(s => {
+                    const ts = s.startLog ? s.startLog.timestamp : (s.endLog ? s.endLog.timestamp : null);
+                    let sessionDate = ts ? new Date(ts).toISOString().split('T')[0] : '';
+                    let attRecord = attendance.find(a => a.userId === s.userId && a.date === sessionDate);
+                    if (!attRecord) attRecord = attendance.find(a => a.userId === s.userId);
+                    
+                    const name = attRecord ? attRecord.name : '';
+                    let shift = attRecord ? attRecord.shift : (s.startLog ? getShiftFromTimestamp(s.startLog.timestamp).shift : '');
+                    const area = s.startLog ? (s.startLog.areaType || '-') : '-';
+
+                    const startStr = s.startLog ? new Date(s.startLog.timestamp).toLocaleString() : '-';
+                    const endStr = s.endLog ? new Date(s.endLog.timestamp).toLocaleString() : '-';
+                    const pallets = s.endLog ? (s.endLog.pallets || 0) : 0;
+                    const skus = s.endLog ? (s.endLog.skus || 0) : 0;
+                    
+                    let duration = '-';
+                    const totalBreakMins = s.breaks ? s.breaks.reduce((acc, b) => acc + b.duration, 0) : 0;
+                    if (s.startLog && s.endLog) {
+                        const diff = new Date(s.endLog.timestamp) - new Date(s.startLog.timestamp);
+                        const mins = Math.round((diff / 60000) - totalBreakMins);
+                        duration = `${mins} min`;
+                    } else if (s.startLog) {
+                        const diff = new Date() - new Date(s.startLog.timestamp);
+                        duration = `Active (${Math.floor(diff/60000)}m)`;
+                    }
+
+                    rows.push([`"${s.userId}"`, `"${name}"`, `"${area}"`, `"${shift}"`, `"${startStr}"`, `"${endStr}"`, `"${duration}"`, s.endLog ? 'Completed' : 'Active', pallets, skus].join(','));
+                });
+                
+                const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url; link.download = 'counter_sessions_report.csv';
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                reportsModal.classList.add('hidden');
+            });
+        }
 
         // Counters Flip Logic
         const countersFlipContainer = document.getElementById('counters-flip-container');
@@ -3044,25 +3407,28 @@
 
         if (exportAttBtn) {
             exportAttBtn.addEventListener('click', () => {
-                const data = getFilteredAttendanceData();
-                if (data.length === 0) { alert('No attendance records to export.'); return; }
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Area', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
-                const rows = [headers.join(',')];
-                
-                data.forEach(item => {
-                    const dur = getDuration(item.breakOut, item.breakIn);
-                    const row = [
-                        item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
-                    ];
-                    rows.push(row.join(','));
-                });
-                
-                const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; a.download = 'attendance_sheet.csv';
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                exportAttendanceCSV(getFilteredAttendanceData());
             });
+        }
+
+        function exportAttendanceCSV(data) {
+            if (data.length === 0) { alert('No attendance records to export.'); return; }
+            const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Area', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
+            const rows = [headers.join(',')];
+            
+            data.forEach(item => {
+                const dur = getDuration(item.breakOut, item.breakIn);
+                const row = [
+                    item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
+                ];
+                rows.push(row.join(','));
+            });
+            
+            const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'attendance_sheet.csv';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
 
         if (attendanceTableBody) {
@@ -4232,6 +4598,7 @@
             const filterShift = tsShiftFilter ? tsShiftFilter.value : '';
             const filterUser = tsFilterUser ? tsFilterUser.value.toLowerCase() : '';
             const showActiveOnly = tsShowActive ? tsShowActive.checked : false;
+            const showLongActive = tsShowLongActive ? tsShowLongActive.checked : false;
             
             // Analytics Date
             let analyticsDate = tsAnalyticsDateFilter ? tsAnalyticsDateFilter.value : '';
@@ -4321,6 +4688,15 @@
 
             if (showActiveOnly) {
                 filteredSessions = filteredSessions.filter(s => !s.endLog);
+            }
+            
+            if (showLongActive) {
+                const now = new Date();
+                filteredSessions = filteredSessions.filter(s => {
+                    if (s.endLog) return false; // Must be active
+                    const diff = now - new Date(s.startLog.timestamp);
+                    return (diff / 60000) > 60; // Greater than 60 mins
+                });
             }
 
             // Sort descending (newest first)
@@ -4777,16 +5153,30 @@
             Object.keys(openBreaks).forEach(uid => {
                  breaks.push({ userId: uid, start: openBreaks[uid].timestamp, end: null, startId: openBreaks[uid].id, endId: null });
             });
-
-            breaks.sort((a,b) => new Date(b.start) - new Date(a.start));
             
-            if(breaks.length === 0) {
+            // Filters
+            const filterShift = breakShiftFilter ? breakShiftFilter.value : '';
+            const showActive = breakShowActive ? breakShowActive.checked : false;
+            
+            const filteredBreaks = breaks.filter(b => {
+                if (showActive && b.end) return false;
+                if (filterShift) {
+                    const att = attendanceData.find(a => a.userId === b.userId) || {};
+                    const shift = att.shift || '';
+                    if (!shift.includes(filterShift)) return false;
+                }
+                return true;
+            });
+
+            filteredBreaks.sort((a,b) => new Date(b.start) - new Date(a.start));
+            
+            if(filteredBreaks.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="padding:10px; text-align:center; color:#999;">No breaks recorded.</td></tr>';
                 if(breakSelectAll) breakSelectAll.checked = false;
                 return;
             }
 
-            breaks.forEach(b => {
+            filteredBreaks.forEach(b => {
                 const att = attendanceData.find(a => a.userId === b.userId) || {};
                 const name = att.name || '-';
                 const shift = att.shift ? att.shift.split('-')[0] : '-';
@@ -5221,14 +5611,13 @@
                 const area = startLog ? (startLog.areaType || 'Reserved') : 'Reserved';
 
                 // Open Modal
-                document.getElementById('ec-pallets').value = '0';
-                document.getElementById('ec-skus').value = '0';
+                document.getElementById('ec-pallets').value = '';
+                document.getElementById('ec-skus').value = '';
                 
-                const areaSelect = document.getElementById('ec-area-type');
-                areaSelect.value = area;
-                areaSelect.disabled = true;
+                const areaInput = document.getElementById('ec-area-type');
+                areaInput.value = area;
                 
-                if (area === 'Pick Bin') {
+                if (area && area.startsWith('Pick Bin')) {
                     ecPalletGroup.style.display = 'none';
                     document.getElementById('ec-pallets').value = 0;
                 } else {
@@ -5297,17 +5686,6 @@
         window.logTimestamp = logTimestamp;
 
         // End Count Modal Logic
-        if (ecAreaType) {
-            ecAreaType.addEventListener('change', () => {
-                if (ecAreaType.value === 'Pick Bin') {
-                    ecPalletGroup.style.display = 'none';
-                    document.getElementById('ec-pallets').value = 0;
-                } else {
-                    ecPalletGroup.style.display = 'block';
-                }
-            });
-        }
-
         if (ecCancelBtn) {
             ecCancelBtn.addEventListener('click', () => {
                 endCountModal.classList.add('hidden');
@@ -5319,11 +5697,17 @@
                 const userId = endCountModal.dataset.userId;
                 const pallets = parseInt(document.getElementById('ec-pallets').value) || 0;
                 const skus = parseInt(document.getElementById('ec-skus').value) || 0;
+                const areaType = document.getElementById('ec-area-type').value;
                 const now = new Date();
+
+                // Validation
+                if (areaType && areaType.startsWith('Reserved') && pallets === 0) {
+                    alert('Pallets Completed cannot be zero for Reserved area.');
+                    return;
+                }
 
                 // 1. Log Timestamp
                 const data = getTimestamps();
-                const areaType = document.getElementById('ec-area-type').value;
                 data.push({
                     id: Date.now().toString(),
                     userId: userId,
@@ -5800,6 +6184,7 @@
         if(tsFilterUser) tsFilterUser.addEventListener('input', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsShiftFilter) tsShiftFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsShowActive) tsShowActive.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
+        if(tsShowLongActive) tsShowLongActive.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsAnalyticsDateFilter) tsAnalyticsDateFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         
         // Pagination Listeners for Timestamp Table
@@ -5830,6 +6215,9 @@
                 }
             });
         }
+        
+        if(breakShiftFilter) breakShiftFilter.addEventListener('change', () => renderTimestamps());
+        if(breakShowActive) breakShowActive.addEventListener('change', () => renderTimestamps());
 
         if(tsUserIdInput) {
             tsUserIdInput.addEventListener('input', () => {
@@ -5846,6 +6234,26 @@
                 }
             });
         }
+
+        // Toggle Section Logic for Timestamp Modal Tables
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.toggle-section-btn');
+            if (btn) {
+                const card = btn.closest('.card');
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
     });
   </script>
 </body>

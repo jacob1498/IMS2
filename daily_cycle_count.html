@@ -312,6 +312,34 @@
         45% { height: 0; } 50% { height: 0; } 55% { height: 35px; }
         90% { height: 35px; } 95% { height: 0; } 100% { height: 0; }
     }
+
+    /* Excel-like Report Table */
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px; /* Smaller font */
+        border: 1px solid #ccc;
+    }
+    .report-table th, .report-table td {
+        border: 1px solid #ccc; /* Grid lines */
+        padding: 4px 6px; /* Compact padding */
+        text-align: left;
+    }
+    .report-table th {
+        background-color: #f0f0f0;
+        font-weight: 600;
+        color: #333;
+        white-space: nowrap;
+    }
+    .report-table tbody tr:nth-child(even) { background-color: #fafafa; }
+    .report-table tr:hover { background-color: #eef6ff; }
+    
+    /* Dark mode overrides */
+    body.dark-mode .report-table { border-color: #444; }
+    body.dark-mode .report-table th, body.dark-mode .report-table td { border-color: #444; color: #e0e0e0; }
+    body.dark-mode .report-table th { background-color: #2c2c2c; }
+    body.dark-mode .report-table tbody tr:nth-child(even) { background-color: #1f1f1f; }
+    body.dark-mode .report-table tr:hover { background-color: #333; }
   </style>
 </head>
 <body class="inventory-mode">
@@ -331,6 +359,7 @@
     <ul class="sidebar-menu">
       <li><button onclick="window.location.href='homepage.html'"><span class="menu-text">Homepage</span></button></li>
       <li><button onclick="window.location.href='cycle_count.html'" class="active"><span class="menu-text">Inventory Tracker</span></button></li>
+      <li><button onclick="window.location.href='all_ic_attendance.html'">All IC Attendance</button></li>
     </ul>
   </nav>
 
@@ -529,23 +558,23 @@
       </div>
       <div class="card-content">
       <div style="overflow-x: auto;">
-          <table id="attendance-table" style="width:100%; border-collapse: collapse;">
+          <table id="attendance-table" class="report-table">
               <thead>
-                  <tr style="background: #f9fbfd; border-bottom: 1px solid #eee;">
-                      <th style="padding: 12px; text-align: left; width: 40px;"><input type="checkbox" id="select-all-att" title="Select All"></th>
-                      <th class="sortable" data-sort="date" style="padding: 12px; text-align: left;">Date <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="userId" style="padding: 12px; text-align: left;">User ID <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="shift" style="padding: 12px; text-align: left;">Shift <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="name" style="padding: 12px; text-align: left;">Name <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="role" style="padding: 12px; text-align: left;">Role <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="area" style="padding: 12px; text-align: left;">Area <span class="sort-icon"></span></th>
-                      <th style="padding: 12px; text-align: left;">Time In</th>
-                      <th style="padding: 12px; text-align: left;">Break Out</th>
-                      <th style="padding: 12px; text-align: left;">Break In</th>
-                      <th style="padding: 12px; text-align: left;">Time Out</th>
-                      <th class="sortable" data-sort="duration" style="padding: 12px; text-align: left;">Duration <span class="sort-icon"></span></th>
-                      <th style="padding: 12px; text-align: left;">Status</th>
-                      <th style="padding: 12px; text-align: left;">Action</th>
+                  <tr>
+                      <th style="width: 40px;"><input type="checkbox" id="select-all-att" title="Select All"></th>
+                      <th class="sortable" data-sort="date">Date <span class="sort-icon"></span></th>
+                      <th class="sortable" data-sort="userId">User ID <span class="sort-icon"></span></th>
+                      <th class="sortable" data-sort="shift">Shift <span class="sort-icon"></span></th>
+                      <th class="sortable" data-sort="name">Name <span class="sort-icon"></span></th>
+                      <th class="sortable" data-sort="role">Role <span class="sort-icon"></span></th>
+                      <th class="sortable" data-sort="area">Area <span class="sort-icon"></span></th>
+                      <th>Time In</th>
+                      <th>Break Out</th>
+                      <th>Break In</th>
+                      <th>Time Out</th>
+                      <th class="sortable" data-sort="duration">Duration <span class="sort-icon"></span></th>
+                      <th>Status</th>
+                      <th>Action</th>
                   </tr>
               </thead>
               <tbody></tbody>
@@ -597,7 +626,8 @@
                 </div>
                 <div>
                     <label for="att-name">Counter Name</label>
-                    <input type="text" id="att-name" required placeholder="Enter Name" style="width:100%">
+                    <input type="text" id="att-name" required placeholder="Enter Name" style="width:100%" list="att-name-list" autocomplete="off">
+                    <datalist id="att-name-list"></datalist>
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -955,18 +985,18 @@
                     </div>
                     <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
-                        <table id="timestamp-table" style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <table id="timestamp-table" class="report-table">
                             <thead>
-                                <tr style="background:#f9f9f9; border-bottom:1px solid #eee; position:sticky; top:0;">
-                                    <th style="padding:8px; text-align:left; width:30px;"><input type="checkbox" id="ts-select-all"></th>
-                                    <th style="padding:8px; text-align:left;">User ID</th>
-                                    <th style="padding:8px; text-align:left;">Name</th>
-                                    <th style="padding:8px; text-align:left;">Area Type</th>
-                                    <th style="padding:8px; text-align:left;">Shift</th>
-                                    <th style="padding:8px; text-align:left;">Start Time</th>
-                                    <th style="padding:8px; text-align:left;">End Time</th>
-                                    <th style="padding:8px; text-align:left;">Duration</th>
-                                    <th style="padding:8px; text-align:left;">Actions</th>
+                                <tr style="position:sticky; top:0;">
+                                    <th style="width:30px;"><input type="checkbox" id="ts-select-all"></th>
+                                    <th class="sortable" data-sort="userId">User ID <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="resolvedName">Name <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="resolvedArea">Area Type <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="resolvedShift">Shift <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="startTime">Start Time <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="endTime">End Time <span class="sort-icon"></span></th>
+                                    <th class="sortable" data-sort="durationVal">Duration <span class="sort-icon"></span></th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -1015,18 +1045,18 @@
                     </div>
                     <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
-                        <table id="break-log-table" style="width:100%; font-size:12px; border-collapse:collapse;">
+                        <table id="break-log-table" class="report-table">
                             <thead>
-                                <tr style="background:#f9f9f9; position:sticky; top:0;">
-                                    <th style="padding:5px; text-align:left; width:30px;"><input type="checkbox" id="break-select-all"></th>
-                                    <th style="padding:5px; text-align:left;">User</th>
-                                    <th style="padding:5px; text-align:left;">Name</th>
-                                    <th style="padding:5px; text-align:left;">Shift</th>
-                                    <th style="padding:5px; text-align:left;">Role</th>
-                                    <th style="padding:5px; text-align:left;">Break Out</th>
-                                    <th style="padding:5px; text-align:left;">Break In</th>
-                                    <th style="padding:5px; text-align:left;">Duration</th>
-                                    <th style="padding:5px; text-align:left;">Action</th>
+                                <tr style="position:sticky; top:0;">
+                                    <th style="width:30px;"><input type="checkbox" id="break-select-all"></th>
+                                    <th>User</th>
+                                    <th>Name</th>
+                                    <th>Shift</th>
+                                    <th>Role</th>
+                                    <th>Break Out</th>
+                                    <th>Break In</th>
+                                    <th>Duration</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -1046,15 +1076,15 @@
                     </div>
                     <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
-                        <table id="inactive-users-table" style="width:100%; font-size:12px; border-collapse:collapse;">
+                        <table id="inactive-users-table" class="report-table">
                             <thead>
-                                <tr style="background:#f9f9f9; position:sticky; top:0;">
-                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('userId')">User <span class="sort-icon"></span></th>
-                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('name')">Name <span class="sort-icon"></span></th>
-                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('shift')">Shift <span class="sort-icon"></span></th>
-                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('role')">Role <span class="sort-icon"></span></th>
-                                    <th style="padding:5px; text-align:left; cursor:pointer;" onclick="sortInactiveTable('lastEnd')">Last End Count <span class="sort-icon"></span></th>
-                                    <th style="padding:5px; text-align:center; width:40px;">Action</th>
+                                <tr style="position:sticky; top:0;">
+                                    <th style="cursor:pointer;" onclick="sortInactiveTable('userId')">User <span class="sort-icon"></span></th>
+                                    <th style="cursor:pointer;" onclick="sortInactiveTable('name')">Name <span class="sort-icon"></span></th>
+                                    <th style="cursor:pointer;" onclick="sortInactiveTable('shift')">Shift <span class="sort-icon"></span></th>
+                                    <th style="cursor:pointer;" onclick="sortInactiveTable('role')">Role <span class="sort-icon"></span></th>
+                                    <th style="cursor:pointer;" onclick="sortInactiveTable('lastEnd')">Last End Count <span class="sort-icon"></span></th>
+                                    <th style="text-align:center; width:40px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -1668,6 +1698,8 @@
         let countersItemsPerPage = 7;
         let attSortField = 'date';
         let attSortDirection = 'desc';
+        let tsSortField = 'startTime';
+        let tsSortDirection = 'desc';
 
         // Restore Filters & Button State
         if(uiState.globalStartDate && globalStartDate) globalStartDate.value = uiState.globalStartDate;
@@ -3010,20 +3042,20 @@
             paginatedData.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="padding:12px;border-bottom:1px solid #eee"><input type="checkbox" class="att-row-checkbox" data-id="${item.id}"></td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.date}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.userId || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.shift}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.name}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.role || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.area || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.timeIn || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.breakOut || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.breakIn || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.timeOut || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee; font-weight:bold; color:#555;">${getDuration(item.breakOut, item.breakIn)}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">${item.status || '-'}</td>
-                    <td style="padding:12px;border-bottom:1px solid #eee">
+                    <td><input type="checkbox" class="att-row-checkbox" data-id="${item.id}"></td>
+                    <td>${item.date}</td>
+                    <td>${item.userId || '-'}</td>
+                    <td>${item.shift}</td>
+                    <td>${item.name}</td>
+                    <td>${item.role || '-'}</td>
+                    <td>${item.area || '-'}</td>
+                    <td>${item.timeIn || '-'}</td>
+                    <td>${item.breakOut || '-'}</td>
+                    <td>${item.breakIn || '-'}</td>
+                    <td>${item.timeOut || '-'}</td>
+                    <td style="font-weight:bold; color:#555;">${getDuration(item.breakOut, item.breakIn)}</td>
+                    <td>${item.status || '-'}</td>
+                    <td>
                         <button class="icon-btn edit-att-btn" data-id="${item.id}" title="Edit" style="margin-right:5px">✎</button>
                         <button class="icon-btn delete-att-btn" data-id="${item.id}" title="Delete" style="color:#d9534f">&times;</button>
                     </td>
@@ -3305,6 +3337,50 @@
             });
         }
 
+        // Auto-fill User ID based on Name selection
+        const attNameInput = document.getElementById('att-name');
+        if (attNameInput) {
+            attNameInput.addEventListener('input', () => {
+                const val = attNameInput.value.trim();
+                if (!val) return;
+                const data = getAttendanceData();
+                // Find most recent entry for this name to get User ID and Role
+                const user = data.slice().reverse().find(d => d.name && d.name.toLowerCase() === val.toLowerCase());
+                if (user) {
+                    if (user.userId) document.getElementById('att-user-id').value = user.userId;
+                    if (user.role) document.getElementById('att-role').value = user.role;
+                }
+            });
+        }
+
+        // Auto-fill Name and Role based on User ID
+        const attUserIdInput = document.getElementById('att-user-id');
+        if (attUserIdInput) {
+            attUserIdInput.addEventListener('input', () => {
+                const val = attUserIdInput.value.trim();
+                if (!val) return;
+                const data = getAttendanceData();
+                const user = data.slice().reverse().find(d => d.userId && d.userId.toLowerCase() === val.toLowerCase());
+                if (user) {
+                    if (user.name) document.getElementById('att-name').value = user.name;
+                    if (user.role) document.getElementById('att-role').value = user.role;
+                }
+            });
+        }
+
+        function updateAttNameDatalist() {
+            const list = document.getElementById('att-name-list');
+            if (!list) return;
+            list.innerHTML = '';
+            const data = getAttendanceData();
+            const uniqueNames = [...new Set(data.map(d => d.name).filter(n => n))].sort();
+            uniqueNames.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                list.appendChild(opt);
+            });
+        }
+
         // Attendance Modal Logic
         if (addAttBtn) {
             addAttBtn.addEventListener('click', () => {
@@ -3327,6 +3403,7 @@
                 const num = String(Math.floor(Math.random() * 100)).padStart(2, '0');
                 document.getElementById('att-user-id').value = letter + num;
 
+                updateAttNameDatalist();
                 attModal.classList.remove('hidden');
             });
         }
@@ -3374,18 +3451,30 @@
                 };
                 if(!newEntry.name) return;
 
-                // Duplicate check: User ID must be unique per date (across all shifts)
-                const existing = getAttendanceData().find(a => 
+                // Duplicate check: User ID and Name must be unique for the same shift
+                const attendanceData = getAttendanceData();
+                const existingId = attendanceData.find(a => 
                     a.date === newEntry.date && 
+                    a.shift === newEntry.shift &&
                     a.userId === newEntry.userId &&
                     a.id !== newEntry.id
                 );
-                if (existing) {
-                    alert(`User ID ${newEntry.userId} is already assigned to ${existing.shift} on ${newEntry.date}.`);
+                if (existingId) {
+                    alert(`User ID ${newEntry.userId} is already assigned to this shift on ${newEntry.date}.`);
+                    return;
+                }
+                const existingName = attendanceData.find(a => 
+                    a.date === newEntry.date && 
+                    a.shift === newEntry.shift &&
+                    a.name === newEntry.name &&
+                    a.id !== newEntry.id
+                );
+                if (existingName) {
+                    alert(`Name "${newEntry.name}" is already assigned to this shift on ${newEntry.date}.`);
                     return;
                 }
 
-                let data = getAttendanceData();
+                let data = attendanceData;
                 if (editId) {
                     const idx = data.findIndex(x => x.id === editId);
                     if (idx > -1) data[idx] = newEntry;
@@ -4699,11 +4788,49 @@
                 });
             }
 
-            // Sort descending (newest first)
+            // Pre-calculate fields for sorting and display
+            const now = new Date();
+            filteredSessions.forEach(s => {
+                const ts = s.startLog ? s.startLog.timestamp : (s.endLog ? s.endLog.timestamp : null);
+                let sessionDate = '';
+                if (ts) {
+                    const d = new Date(ts);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    sessionDate = `${year}-${month}-${day}`;
+                }
+                let attRecord = attendance.find(a => a.userId === s.userId && a.date === sessionDate);
+                if (!attRecord) attRecord = attendance.find(a => a.userId === s.userId);
+                
+                s.resolvedName = attRecord ? attRecord.name : '-';
+                s.resolvedShift = attRecord && attRecord.shift ? attRecord.shift : (s.startLog ? getShiftFromTimestamp(s.startLog.timestamp).shift : '-');
+                s.resolvedArea = s.startLog ? (s.startLog.areaType || '-') : '-';
+                s.startTime = s.startLog ? s.startLog.timestamp : (s.endLog ? s.endLog.timestamp : '');
+                s.endTime = s.endLog ? s.endLog.timestamp : '';
+                
+                // Duration calculation
+                let durationMins = 0;
+                const totalBreakMins = s.breaks ? s.breaks.reduce((acc, b) => acc + b.duration, 0) : 0;
+                if (s.startLog && s.endLog) {
+                    const diff = new Date(s.endLog.timestamp) - new Date(s.startLog.timestamp);
+                    durationMins = Math.round((diff / 60000) - totalBreakMins);
+                } else if (s.startLog) {
+                    const diff = now - new Date(s.startLog.timestamp);
+                    durationMins = Math.floor(diff / 60000);
+                }
+                s.durationVal = durationMins;
+            });
+
+            // Sort
             filteredSessions.sort((a,b) => {
-                const tA = a.startLog ? a.startLog.timestamp : (a.endLog ? a.endLog.timestamp : '');
-                const tB = b.startLog ? b.startLog.timestamp : (b.endLog ? b.endLog.timestamp : '');
-                return new Date(tB) - new Date(tA);
+                let valA = a[tsSortField];
+                let valB = b[tsSortField];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return tsSortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return tsSortDirection === 'asc' ? 1 : -1;
+                return 0;
             });
 
             // Pagination Logic
@@ -4722,6 +4849,11 @@
                 document.getElementById('ts-next-page').disabled = tsCurrentPage >= totalPages;
             }
             
+            // Update sort icons
+            document.querySelectorAll('#timestamp-table th.sortable .sort-icon').forEach(icon => icon.textContent = '');
+            const activeHeader = document.querySelector(`#timestamp-table th[data-sort="${tsSortField}"]`);
+            if(activeHeader) activeHeader.querySelector('.sort-icon').textContent = tsSortDirection === 'asc' ? '↑' : '↓';
+
             timestampTableBody.innerHTML = '';
             if(filteredSessions.length === 0) {
                 timestampTableBody.innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">No logs for today.</td></tr>';
@@ -4730,63 +4862,33 @@
                 const now = new Date();
                 paginatedSessions.forEach(session => {
                     const userId = session.userId;
-                    // Lookup Name
-                    let sessionDate = '';
-                    let areaTypeDisplay = '-';
-                    const ts = session.startLog ? session.startLog.timestamp : (session.endLog ? session.endLog.timestamp : null);
-                    if (ts) {
-                            const d = new Date(ts);
-                            const year = d.getFullYear();
-                            const month = String(d.getMonth() + 1).padStart(2, '0');
-                            const day = String(d.getDate()).padStart(2, '0');
-                            sessionDate = `${year}-${month}-${day}`;
-                    }
-                    let attRecord = attendance.find(a => a.userId === userId && a.date === sessionDate);
-                    if (!attRecord) attRecord = attendance.find(a => a.userId === userId);
-                    const name = attRecord ? attRecord.name : '-';
-                    if (session.startLog && session.startLog.areaType) {
-                        areaTypeDisplay = session.startLog.areaType;
-                    }
+                    const name = session.resolvedName;
+                    const areaTypeDisplay = session.resolvedArea;
+                    const shiftDisplay = session.resolvedShift.split('-')[0];
 
                     const datePrefix = (session.startLog) ? new Date(session.startLog.timestamp).toLocaleDateString() + ' ' : '';
                     const startStr = session.startLog ? `<span class="editable-time" data-log-id="${session.startLog.id}">${datePrefix + new Date(session.startLog.timestamp).toLocaleTimeString()}</span>` : '-';
                     const endStr = session.endLog ? `<span class="editable-time" data-log-id="${session.endLog.id}">${new Date(session.endLog.timestamp).toLocaleTimeString()}</span>` : '-';
                     
-                    // Determine Shift
-                    let shiftDisplay = '-';
-                    if (attRecord && attRecord.shift) {
-                        shiftDisplay = attRecord.shift.split('-')[0];
-                        session.shift = attRecord.shift;
-                    } else {
-                        const shiftInfo = session.startLog ? getShiftFromTimestamp(session.startLog.timestamp) : { shift: '-' };
-                        shiftDisplay = shiftInfo.shift.split('-')[0] || '-';
-                        session.shift = shiftInfo.shift;
-                    }
-
                     let duration = '-';
                     let isHigh = false;
-                    let durationMins = 0;
+                    const durationMins = session.durationVal;
                     
-                    const totalBreakMins = session.breaks ? session.breaks.reduce((acc, b) => acc + b.duration, 0) : 0;
-
-                    if (session.startLog && session.endLog) {
-                        const diff = new Date(session.endLog.timestamp) - new Date(session.startLog.timestamp);
-                        const grossMins = diff / 60000;
-                        durationMins = Math.round(grossMins - totalBreakMins);
+                    if (session.endLog) {
                         duration = `${durationMins} min`;
                         if (durationMins >= 30) isHigh = true;
                     } else if (session.startLog) {
-                        const diff = now - new Date(session.startLog.timestamp);
-                        const runningMins = Math.floor(diff / 60000);
-                        duration = `Active (${runningMins}m)`;
-                        if (runningMins > 60) {
+                        duration = `Active (${durationMins}m)`;
+                        if (durationMins > 60) {
                             duration += ' ⚠️ > 1hr';
                             isHigh = true; 
                         }
                     }
-
+                    
                     // Add duration to session object for chart
                     session.duration = durationMins;
+                    // Ensure shift is set for chart
+                    session.shift = session.resolvedShift;
                     
                     const tr = document.createElement('tr');
                     if ((session.startLog && session.startLog.deleted) || (session.endLog && session.endLog.deleted)) {
@@ -4814,15 +4916,15 @@
                     }
 
                     tr.innerHTML = `
-                        <td style="padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>
-                        <td style="padding:8px; border-bottom:1px solid #eee;">${userId}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee;">${name}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee;">${areaTypeDisplay}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee;">${shiftDisplay}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee; color:#2ecc71; font-weight:bold;">${startStr}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee; color:#e74c3c; font-weight:bold;">${endStr}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee; ${isHigh ? 'color:#e74c3c; font-weight:bold;' : (duration==='Active'?'color:#2ecc71;font-weight:bold':'')}">${duration}</td>
-                        <td style="padding:8px; border-bottom:1px solid #eee;">
+                        <td><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>
+                        <td>${userId}</td>
+                        <td>${name}</td>
+                        <td>${areaTypeDisplay}</td>
+                        <td>${shiftDisplay}</td>
+                        <td style="color:#2ecc71; font-weight:bold;">${startStr}</td>
+                        <td style="color:#e74c3c; font-weight:bold;">${endStr}</td>
+                        <td style="${isHigh ? 'color:#e74c3c; font-weight:bold;' : (duration==='Active'?'color:#2ecc71;font-weight:bold':'')}">${duration}</td>
+                        <td>
                             ${quickAction}
                             ${deleteAction}
                         </td>
@@ -4879,6 +4981,20 @@
         if(timestampTableBody) {
             timestampTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('ts-row-checkbox')) updateTsDeleteButton(); });
         }
+
+        // Timestamp Sorting Listeners
+        document.querySelectorAll('#timestamp-table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.dataset.sort;
+                if (tsSortField === field) {
+                    tsSortDirection = tsSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    tsSortField = field;
+                    tsSortDirection = 'asc';
+                }
+                renderTimestamps();
+            });
+        });
 
         function renderTsAnalytics(sessions, date, logs) {
             const container = document.getElementById('ts-analytics-content');
@@ -5215,7 +5331,7 @@
 
                 const tr = document.createElement('tr');
                 if (rowStyle) tr.style.cssText = rowStyle;
-                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left;"><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${b.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${shift}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${role}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${startStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${endStr}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${durationDisplay}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left;">${endBreakBtn}${deleteBtn}</td>`;
+                tr.innerHTML = `<td><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td>${b.userId}</td><td>${name}</td><td>${shift}</td><td>${role}</td><td>${startStr}</td><td>${endStr}</td><td>${durationDisplay}</td><td>${endBreakBtn}${deleteBtn}</td>`;
                 
                 tr.onmouseenter = () => { 
                     tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '1'); 
@@ -5345,7 +5461,7 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
                 </button>`;
 
-                tr.innerHTML = `<td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.userId}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.name}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.shift || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.role || '-'}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:left; color:${color}">${u.lastEnd}</td><td style="padding:5px; border-bottom:1px solid #eee; text-align:center; white-space:nowrap;">${startBtn}${breakBtn}</td>`;
+                tr.innerHTML = `<td style="color:${color}">${u.userId}</td><td style="color:${color}">${u.name}</td><td style="color:${color}">${u.shift || '-'}</td><td style="color:${color}">${u.role || '-'}</td><td style="color:${color}">${u.lastEnd}</td><td style="text-align:center; white-space:nowrap;">${startBtn}${breakBtn}</td>`;
                 
                 tr.onmouseenter = () => { tr.querySelectorAll('.quick-start-btn').forEach(b => b.style.opacity = '1'); };
                 tr.onmouseleave = () => { tr.querySelectorAll('.quick-start-btn').forEach(b => b.style.opacity = '0'); };

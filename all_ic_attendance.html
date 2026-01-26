@@ -71,6 +71,24 @@
     body.dark-mode .att-tab.active { border-color: #444; border-bottom-color: #1e1e1e; background: #1e1e1e; color: #fff; }
     body.dark-mode .att-tabs { border-bottom-color: #444; }
 
+    /* Summary Cards */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .summary-card { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eef2f6; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .summary-value { font-size: 24px; font-weight: bold; color: #2752a7; }
+    .summary-label { font-size: 12px; color: #6c757d; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Flip Card Styles */
+    .flip-container { perspective: 1000px; position: relative; margin-top: 20px; height: 80vh; min-height: 600px; }
+    .flip-inner { transition: transform 0.6s; transform-style: preserve-3d; position: relative; width: 100%; height: 100%; }
+    .flip-container.flipped .flip-inner { transform: rotateY(180deg); }
+    .flip-front, .flip-back { 
+        backface-visibility: hidden; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+        border-radius: 8px; 
+        display: flex; flex-direction: column;
+    }
+    .flip-front { z-index: 2; transform: rotateY(0deg); }
+    .flip-back { transform: rotateY(180deg); }
+
     /* Floating Action Button */
     .fab-btn {
       position: fixed;
@@ -153,38 +171,70 @@
       <button id="reports-menu-btn" class="icon-btn" title="Reports" style="margin-left: 5px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Reports
       </button>
+      <button id="set-requirements-btn" class="icon-btn" title="Set Requirements" style="margin-left: 5px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Requirements
+      </button>
       <div style="display:flex; align-items:center; gap:5px; margin-left:10px; border-left:1px solid #ccc; padding-left:10px;">
           <input type="checkbox" id="auto-refresh-check" title="Auto Refresh every 15s">
           <label for="auto-refresh-check" style="font-size:13px; cursor:pointer;">Auto Refresh</label>
       </div>
     </div>
 
-    <div class="card resizable-box" id="attendance-card" style="margin-top: 20px; min-height: 600px;">
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-value" id="summary-1st">0</div>
+            <div class="summary-label">1st Shift</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="summary-2nd">0</div>
+            <div class="summary-label">2nd Shift</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="summary-3rd">0</div>
+            <div class="summary-label">3rd Shift</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="summary-total">0</div>
+            <div class="summary-label">Total Attendance</div>
+        </div>
+    </div>
+
+    <div class="flip-container" id="attendance-flip-container">
+      <div class="flip-inner">
+      <div class="flip-front card resizable-box" id="attendance-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <div style="display:flex; align-items:center; gap:10px;">
             <h2 style="margin:0;">Attendance Sheet</h2>
+            <button id="view-chart-btn" class="icon-btn" title="View Analysis" style="background:#6f42c1; color:white; font-size:12px; padding:4px 8px;">View Analysis</button>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <select id="att-filter-role" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
                 <option value="">All Roles</option>
                 <option value="IC Support">IC Support</option>
-                <option value="IC Back up">IC Back up</option>
-                <option value="Cycle Counter">Cycle Counter</option>
-                <option value="Other">Other</option>
             </select>
-            <select id="att-filter-area" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
-                <option value="">All Sub Roles</option>
-                <option value="Cycle Counter">Cycle Counter</option>
-                <option value="TL">TL</option>
-                <option value="OIC">OIC</option>
-                <option value="Encoder">Encoder</option>
-                <option value="SBD Checker">SBD Checker</option>
-                <option value="RTV">RTV</option>
-                <option value="Damaged Checker">Damaged Checker</option>
-                <option value="B1T1 Checker">B1T1 Checker</option>
-                <option value="Validator">Validator</option>
-                <option value="HVI Support">HVI Support</option>
-            </select>
+            <div id="att-filter-area-wrapper" style="position:relative; display:inline-block;">
+                <button id="att-filter-area-btn" style="padding:6px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; min-width:150px; text-align:left; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="att-filter-area-text">All Sub Roles</span>
+                    <span style="font-size:10px; margin-left:5px;">▼</span>
+                </button>
+                <div id="att-filter-area-dropdown" style="display:none; position:absolute; top:100%; left:0; background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; z-index:1000; min-width:200px; box-shadow:0 4px 8px rgba(0,0,0,0.1); max-height:300px; overflow-y:auto;">
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="Cycle Counter"> Cycle Counter</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="TL"> TL</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="OIC"> OIC</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="Encoder"> Encoder</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="SBD Checker"> SBD Checker</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="RTV"> RTV</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="Damaged Checker"> Damaged Checker</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="B1T1 Checker"> B1T1 Checker</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="Validator"> Validator</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="HVI Support"> HVI Support</label>
+                    <label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" class="att-area-cb" value="Projects"> Projects</label>
+                    <div style="border-top:1px solid #eee; margin-top:5px; padding-top:5px; text-align:right;">
+                        <button id="att-filter-area-clear" style="padding:4px 8px; background:#eee; color:#333; border:none; border-radius:4px; font-size:12px; margin-right:5px;">Clear</button>
+                        <button id="att-filter-area-apply" style="padding:4px 8px; background:#2752a7; color:white; border:none; border-radius:4px; font-size:12px;">Apply</button>
+                    </div>
+                </div>
+            </div>
             <input type="text" id="att-search" placeholder="Search name..." style="padding:6px; border:1px solid #ccc; border-radius:4px;">
             <button id="print-att-btn" class="icon-btn" title="Print List">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -200,14 +250,14 @@
             </button>
         </div>
       </div>
-      <div class="card-content">
+      <div class="card-content" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
       <div class="att-tabs">
           <button class="att-tab active" data-shift="">All Shifts</button>
           <button class="att-tab" data-shift="1st Shift-(6am-2pm)">1st Shift</button>
           <button class="att-tab" data-shift="2nd Shift-(2pm-10pm)">2nd Shift</button>
           <button class="att-tab" data-shift="3rd Shift-(10pm-6am)">3rd Shift</button>
       </div>
-      <div style="overflow-x: auto;">
+      <div style="overflow: auto; flex: 1;">
           <table id="attendance-table" class="report-table">
               <thead>
                   <tr>
@@ -223,11 +273,16 @@
                       <th>Break In</th>
                       <th>Time Out</th>
                       <th class="sortable" data-sort="duration">Duration <span class="sort-icon"></span></th>
-                      <th>Status</th>
+                      <th>Notes</th>
                       <th>Action</th>
                   </tr>
               </thead>
               <tbody></tbody>
+              <tfoot>
+                  <tr style="background-color: #f8f9fa; font-weight: bold; border-top: 2px solid #eef2f6;">
+                      <td colspan="14" style="text-align: right; padding: 10px;">Total Records: <span id="att-total-count">0</span></td>
+                  </tr>
+              </tfoot>
           </table>
       </div>
       <div id="att-pagination-controls" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-top: 1px solid #eee;">
@@ -242,6 +297,18 @@
         </div>
       </div>
       </div>
+    </div>
+
+    <div class="flip-back card resizable-box" style="padding:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Sub Role Analysis</h2>
+            <button id="view-table-btn" class="icon-btn" title="Back to Table">↩ Back to Table</button>
+        </div>
+        <div id="sub-role-dashboard" style="flex:1; position:relative; min-height:0; overflow:auto;">
+            <!-- Analysis content -->
+        </div>
+    </div>
+    </div>
     </div>
   </main>
 
@@ -285,9 +352,6 @@
                     <label for="att-role">Role</label>
                     <select id="att-role" style="width:100%">
                         <option value="IC Support">IC Support</option>
-                        <option value="IC Back up">IC Back up</option>
-                        <option value="Cycle Counter">Cycle Counter</option>
-                        <option value="Other">Other</option>
                     </select>
                 </div>
                 <div>
@@ -303,6 +367,7 @@
                         <option value="Validator">Validator</option>
                         <option value="HVI Support">HVI Support</option>
                         <option value="Cycle Counter">Cycle Counter</option>
+                        <option value="Projects">Projects</option>
                     </select>
                 </div>
             </div>
@@ -326,11 +391,8 @@
                     </div>
                 </div>
                 <div>
-                    <label for="att-status">Status</label>
-                    <select id="att-status" style="width:100%">
-                        <option value="Full counter">Full counter</option>
-                        <option value="Temporary slide to Other task">Temporary slide to Other task</option>
-                    </select>
+                    <label for="att-notes">Notes (Optional)</label>
+                    <input type="text" id="att-notes" style="width:100%" placeholder="Enter notes">
                 </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -382,10 +444,19 @@
                         <input type="text" id="ts-user-name-display" placeholder="Name" readonly style="flex:1; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; background:#f9f9f9;">
                     </div>
                     </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                        <button id="btn-start-count" class="icon-btn" style="background:#2ecc71; color:white; padding:10px; font-weight:bold; justify-content:center;">Time In / Start</button>
+                        <button id="btn-time-out" class="icon-btn" style="background:#34495e; color:white; padding:10px; font-weight:bold; justify-content:center;">Time Out</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-bottom:5px;">
+                        <button id="btn-break-start-main" class="icon-btn" style="background:#f1c40f; color:white; padding:10px; font-weight:bold; justify-content:center;">Break Out</button>
+                        <button id="btn-break-end-main" class="icon-btn" style="background:#f39c12; color:white; padding:10px; font-weight:bold; justify-content:center;">Break In</button>
+                    </div>
                     <div style="display:flex; gap:5px; margin-bottom:10px;">
                         <button id="btn-start-count" class="icon-btn" style="flex:1; background:#2ecc71; color:white; padding:10px; font-weight:bold; justify-content:center;">Start Counting</button>
                         <button id="btn-end-count" class="icon-btn" style="flex:1; background:#e74c3c; color:white; padding:10px; font-weight:bold; justify-content:center;">End Counting</button>
                         <button id="btn-time-out" class="icon-btn" style="flex:1; background:#34495e; color:white; padding:10px; font-weight:bold; justify-content:center;">Time Out</button>
+                        <button id="btn-end-count" class="icon-btn" style="flex:1; background:#e74c3c; color:white; padding:10px; font-weight:bold; justify-content:center;">End Task (Session)</button>
                     </div>
                 </div>
 
@@ -653,6 +724,34 @@
     </div>
   </div>
 
+  <!-- Requirements Modal -->
+  <div id="req-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 800px; margin: 50px auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0">Set Shift Requirements (Daily)</h3>
+            <button class="icon-btn close-modal">&times;</button>
+        </div>
+        <div style="overflow-x:auto; max-height: 60vh;">
+            <table class="report-table" id="req-table">
+                <thead>
+                    <tr>
+                        <th>Sub Role</th>
+                        <th>1st Shift</th>
+                        <th>2nd Shift</th>
+                        <th>3rd Shift</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div style="text-align:right; margin-top:15px;">
+            <button id="export-req-btn" class="icon-btn" style="background: #fff; color: #333; border: 1px solid #ccc; padding: 8px 16px; margin-right: 5px;">Export CSV</button>
+            <button id="save-req-btn" class="icon-btn" style="background: #2752a7; color: white; padding: 8px 16px;">Save Requirements</button>
+        </div>
+    </div>
+  </div>
+
   <!-- Floating Add Button -->
   <button id="fab-add-att" class="fab-btn" title="Add Attendance">+</button>
 
@@ -682,7 +781,6 @@
         const printAttBtn = document.getElementById('print-att-btn');
         const attSearchInput = document.getElementById('att-search');
         const attFilterRole = document.getElementById('att-filter-role');
-        const attFilterArea = document.getElementById('att-filter-area');
         const deleteSelectedAttBtn = document.getElementById('delete-selected-att-btn');
         const selectAllAtt = document.getElementById('select-all-att');
         const fabAddBtn = document.getElementById('fab-add-att');
@@ -697,6 +795,8 @@
         const timestampModal = document.getElementById('timestamp-modal');
         const tsUserIdInput = document.getElementById('ts-user-id');
         const btnStartCount = document.getElementById('btn-start-count');
+        const btnBreakStartMain = document.getElementById('btn-break-start-main');
+        const btnBreakEndMain = document.getElementById('btn-break-end-main');
         const btnEndCount = document.getElementById('btn-end-count');
         const btnBreakStart = document.getElementById('btn-break-start');
         const btnBreakEnd = document.getElementById('btn-break-end');
@@ -720,6 +820,15 @@
         const repInactiveBtn = document.getElementById('rep-inactive-btn');
         const repSessionsBtn = document.getElementById('rep-sessions-btn');
         
+        // Requirements
+        const reqModal = document.getElementById('req-modal');
+        const setReqBtn = document.getElementById('set-requirements-btn');
+        const saveReqBtn = document.getElementById('save-req-btn');
+        const exportReqBtn = document.getElementById('export-req-btn');
+        const viewChartBtn = document.getElementById('view-chart-btn');
+        const viewTableBtn = document.getElementById('view-table-btn');
+        const flipContainer = document.getElementById('attendance-flip-container');
+
         // Start Area Modal
         const startAreaModal = document.getElementById('start-area-modal');
         const warehouseAreaModal = document.getElementById('warehouse-area-modal');
@@ -795,7 +904,7 @@
 
         // --- Attendance Logic ---
         
-        function getFilteredAttendanceData() {
+        function getFilteredAttendanceData(ignoreShift = false) {
             let data = getAttendanceData();
             if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
@@ -816,8 +925,11 @@
                 );
             }
             if (attFilterRole && attFilterRole.value) data = data.filter(item => item.role === attFilterRole.value);
-            if (attFilterArea && attFilterArea.value) data = data.filter(item => item.area === attFilterArea.value);
-            if (currentShiftFilter) data = data.filter(item => item.shift === currentShiftFilter);
+            const selectedAreas = Array.from(document.querySelectorAll('.att-area-cb:checked')).map(cb => cb.value);
+            if (selectedAreas.length > 0) {
+                data = data.filter(item => selectedAreas.includes(item.area));
+            }
+            if (!ignoreShift && currentShiftFilter) data = data.filter(item => item.shift === currentShiftFilter);
             
             data.sort((a, b) => {
                 let valA = a[attSortField] || '';
@@ -833,6 +945,52 @@
             return data;
         }
 
+        function loadRequirements() {
+            try { return JSON.parse(localStorage.getItem('ims_att_requirements_v1') || '{}'); } catch(e) { return {}; }
+        }
+
+        function updateSummary() {
+            const data = getFilteredAttendanceData(true); // Ignore shift tab filter
+            const reqs = loadRequirements();
+            const subRolesList = ["Cycle Counter", "TL", "OIC", "Encoder", "SBD Checker", "RTV", "Damaged Checker", "B1T1 Checker", "Validator", "HVI Support", "Projects"];
+            const shiftsList = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+
+            const summary = {
+                '1st Shift-(6am-2pm)': { act: 0, req: 0 },
+                '2nd Shift-(2pm-10pm)': { act: 0, req: 0 },
+                '3rd Shift-(10pm-6am)': { act: 0, req: 0 },
+                'total': { act: 0, req: 0 }
+            };
+            
+            data.forEach(item => {
+                if (summary.hasOwnProperty(item.shift)) summary[item.shift].act++;
+                summary.total.act++;
+            });
+            
+            subRolesList.forEach(role => {
+                shiftsList.forEach(shift => {
+                    const val = parseInt(reqs[`${role}|${shift}`] || 0);
+                    if(summary[shift]) summary[shift].req += val;
+                    summary.total.req += val;
+                });
+            });
+            
+            const getPctHtml = (act, req) => {
+                const pct = req > 0 ? Math.round((act / req) * 100) : 0;
+                let color = '#e74c3c'; // red
+                if (pct >= 100) color = '#2ecc71'; // green
+                else if (pct >= 80) color = '#f1c40f'; // yellow
+                // Only show percentage if there is a requirement
+                if (req === 0 && act === 0) return '';
+                return `<span style="font-size:14px; color:${color}; margin-left:5px;">(${pct}%)</span>`;
+            };
+
+            document.getElementById('summary-1st').innerHTML = `${summary['1st Shift-(6am-2pm)'].act} <span style="font-size:14px; color:#999;">/ ${summary['1st Shift-(6am-2pm)'].req}</span> ${getPctHtml(summary['1st Shift-(6am-2pm)'].act, summary['1st Shift-(6am-2pm)'].req)}`;
+            document.getElementById('summary-2nd').innerHTML = `${summary['2nd Shift-(2pm-10pm)'].act} <span style="font-size:14px; color:#999;">/ ${summary['2nd Shift-(2pm-10pm)'].req}</span> ${getPctHtml(summary['2nd Shift-(2pm-10pm)'].act, summary['2nd Shift-(2pm-10pm)'].req)}`;
+            document.getElementById('summary-3rd').innerHTML = `${summary['3rd Shift-(10pm-6am)'].act} <span style="font-size:14px; color:#999;">/ ${summary['3rd Shift-(10pm-6am)'].req}</span> ${getPctHtml(summary['3rd Shift-(10pm-6am)'].act, summary['3rd Shift-(10pm-6am)'].req)}`;
+            document.getElementById('summary-total').innerHTML = `${summary.total.act} <span style="font-size:14px; color:#999;">/ ${summary.total.req}</span> ${getPctHtml(summary.total.act, summary.total.req)}`;
+        }
+
         function renderAttendanceTable() {
             if (!attendanceTableBody) return;
             const attRowsPerPageSelect = document.getElementById('att-rows-per-page');
@@ -842,6 +1000,9 @@
             const totalPages = Math.ceil(totalItems / attItemsPerPage) || 1;
             if (attCurrentPage > totalPages) attCurrentPage = totalPages;
             const paginatedData = data.slice((attCurrentPage - 1) * attItemsPerPage, attCurrentPage * attItemsPerPage);
+
+            const totalCountSpan = document.getElementById('att-total-count');
+            if (totalCountSpan) totalCountSpan.textContent = totalItems;
 
             attendanceTableBody.innerHTML = '';
             const paginationControls = document.getElementById('att-pagination-controls');
@@ -874,7 +1035,7 @@
                     <td>${item.breakIn || '-'}</td>
                     <td>${item.timeOut || '-'}</td>
                     <td style="font-weight:bold; color:#555;">${getDuration(item.breakOut, item.breakIn)}</td>
-                    <td>${item.status || '-'}</td>
+                    <td>${item.notes || ''}</td>
                     <td>
                         <button class="icon-btn edit-att-btn" data-id="${item.id}" title="Edit" style="margin-right:5px">✎</button>
                         <button class="icon-btn delete-att-btn" data-id="${item.id}" title="Delete" style="color:#d9534f">&times;</button>
@@ -882,6 +1043,7 @@
                 `;
                 attendanceTableBody.appendChild(tr);
             });
+            updateSummary();
         }
 
         // Auto-fill User ID based on Name selection
@@ -972,7 +1134,7 @@
                     breakIn: document.getElementById('att-break-in').value,
                     breakOut: document.getElementById('att-break-out').value,
                     timeOut: document.getElementById('att-time-out').value,
-                    status: document.getElementById('att-status').value
+                    notes: document.getElementById('att-notes').value.trim()
                 };
                 if(!newEntry.name) return;
 
@@ -1010,6 +1172,7 @@
                 showToast('Attendance saved successfully!');
                 attModal.classList.add('hidden');
                 renderAttendanceTable();
+                if(flipContainer.classList.contains('flipped')) renderSubRoleDashboard();
             });
         }
 
@@ -1042,7 +1205,7 @@
                         document.getElementById('att-break-out').value = item.breakOut;
                         document.getElementById('att-break-in').value = item.breakIn;
                         document.getElementById('att-time-out').value = item.timeOut || '';
-                        document.getElementById('att-status').value = item.status || 'Full counter';
+                        document.getElementById('att-notes').value = item.notes || '';
                         attModal.classList.remove('hidden');
                     }
                 }
@@ -1111,13 +1274,13 @@
             exportAttBtn.addEventListener('click', () => {
                 const data = getFilteredAttendanceData();
                 if (data.length === 0) { alert('No attendance records to export.'); return; }
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Sub Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
+                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Sub Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Notes'];
                 const rows = [headers.join(',')];
                 
                 data.forEach(item => {
                     const dur = getDuration(item.breakOut, item.breakIn);
                     const row = [
-                        item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
+                        item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.notes||''}"`
                     ];
                     rows.push(row.join(','));
                 });
@@ -1146,7 +1309,7 @@
                 printWindow.document.write('<h2>Attendance Report</h2>');
                 printWindow.document.write(`<p>Generated: ${new Date().toLocaleString()}</p>`);
                 printWindow.document.write('<table><thead><tr>');
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Sub Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Status', 'Signature'];
+                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Sub Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Notes', 'Signature'];
                 headers.forEach(h => printWindow.document.write(`<th>${h}</th>`));
                 printWindow.document.write('</tr></thead><tbody>');
 
@@ -1161,7 +1324,7 @@
                     printWindow.document.write(`<td>${item.breakOut || ''}</td>`);
                     printWindow.document.write(`<td>${item.breakIn || ''}</td>`);
                     printWindow.document.write(`<td>${item.timeOut || ''}</td>`);
-                    printWindow.document.write(`<td>${item.status || ''}</td>`);
+                    printWindow.document.write(`<td>${item.notes || ''}</td>`);
                     printWindow.document.write('<td class="sig"></td>');
                     printWindow.document.write('</tr>');
                 });
@@ -1173,12 +1336,226 @@
             });
         }
 
+        // Requirements Modal Logic
+        if(setReqBtn) {
+            setReqBtn.addEventListener('click', () => {
+                const reqs = loadRequirements();
+                const tbody = document.querySelector('#req-table tbody');
+                const subRolesList = ["Cycle Counter", "TL", "OIC", "Encoder", "SBD Checker", "RTV", "Damaged Checker", "B1T1 Checker", "Validator", "HVI Support", "Projects"];
+                const shiftsList = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+                
+                tbody.innerHTML = '';
+                subRolesList.forEach(role => {
+                    const tr = document.createElement('tr');
+                    let html = `<td>${role}</td>`;
+                    shiftsList.forEach(shift => {
+                        const key = `${role}|${shift}`;
+                        const val = reqs[key] || 0;
+                        html += `<td><input type="number" class="req-input" data-key="${key}" value="${val}" style="width:60px; padding:4px; border:1px solid #ccc; border-radius:4px;"></td>`;
+                    });
+                    tr.innerHTML = html;
+                    tbody.appendChild(tr);
+                });
+                reqModal.classList.remove('hidden');
+            });
+        }
+
+        if(saveReqBtn) {
+            saveReqBtn.addEventListener('click', () => {
+                const inputs = document.querySelectorAll('.req-input');
+                const reqs = {};
+                inputs.forEach(inp => {
+                    reqs[inp.dataset.key] = parseInt(inp.value) || 0;
+                });
+                localStorage.setItem('ims_att_requirements_v1', JSON.stringify(reqs));
+                reqModal.classList.add('hidden');
+                updateSummary();
+                showToast('Requirements saved');
+            });
+        }
+
+        if(exportReqBtn) {
+            exportReqBtn.addEventListener('click', () => {
+                const reqs = loadRequirements();
+                const subRolesList = ["Cycle Counter", "TL", "OIC", "Encoder", "SBD Checker", "RTV", "Damaged Checker", "B1T1 Checker", "Validator", "HVI Support", "Projects"];
+                const shiftsList = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+                
+                const headers = ['Sub Role', '1st Shift', '2nd Shift', '3rd Shift'];
+                const rows = [headers.join(',')];
+                
+                subRolesList.forEach(role => {
+                    const row = [`"${role}"`];
+                    shiftsList.forEach(shift => {
+                        const key = `${role}|${shift}`;
+                        row.push(reqs[key] || 0);
+                    });
+                    rows.push(row.join(','));
+                });
+                
+                const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'attendance_requirements.csv';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            });
+        }
+
+        // Analysis Dashboard Logic
+        function renderSubRoleDashboard() {
+            const container = document.getElementById('sub-role-dashboard');
+            if (!container) return;
+            
+            const data = getFilteredAttendanceData(true); // Ignore shift tab
+            const shifts = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+            const subRoles = [...new Set(data.map(d => d.area).filter(Boolean))].sort();
+            
+            let html = `
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px;">
+            `;
+            
+            // Summary Cards for Analysis
+            const total = data.length;
+            const shiftCounts = {};
+            shifts.forEach(s => shiftCounts[s] = data.filter(d => d.shift === s).length);
+            
+            shifts.forEach(s => {
+                const count = shiftCounts[s];
+                const pct = total > 0 ? Math.round((count/total)*100) : 0;
+                const label = s.split('-')[0];
+                html += `
+                <div class="summary-card" style="padding:10px;">
+                    <div class="summary-value" style="font-size:20px;">${count} <span style="font-size:14px; color:#999;">(${pct}%)</span></div>
+                    <div class="summary-label">${label}</div>
+                </div>`;
+            });
+            
+            html += `</div>
+            <div style="overflow-x:auto;">
+            <table class="report-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>Sub Role</th>
+                        <th>1st Shift</th>
+                        <th>2nd Shift</th>
+                        <th>3rd Shift</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+            
+            const shiftTotals = {
+                "1st Shift-(6am-2pm)": 0,
+                "2nd Shift-(2pm-10pm)": 0,
+                "3rd Shift-(10pm-6am)": 0
+            };
+
+            subRoles.forEach(role => {
+                let roleTotal = 0;
+                html += `<tr><td style="font-weight:bold;">${role}</td>`;
+                
+                shifts.forEach(shift => {
+                    const count = data.filter(d => d.shift === shift && d.area === role).length;
+                    shiftTotals[shift] += count;
+                    roleTotal += count;
+                    // Make cell clickable to filter
+                    const cursorStyle = count > 0 ? 'cursor:pointer; color:#2752a7; text-decoration:underline;' : '';
+                    const clickAttr = count > 0 ? `onclick="filterByAnalysis('${role}', '${shift}')"` : '';
+                    html += `<td style="${cursorStyle}" ${clickAttr}>${count}</td>`;
+                });
+                
+                html += `<td style="font-weight:bold;">${roleTotal}</td></tr>`;
+            });
+            
+            // Totals Row
+            html += `<tr style="background-color:#f8f9fa; font-weight:bold; border-top:2px solid #ddd;">
+                <td>TOTAL</td>`;
+            shifts.forEach(shift => {
+                html += `<td>${shiftTotals[shift]}</td>`;
+            });
+            html += `<td>${total}</td></tr>`;
+            
+            html += `</tbody></table></div>`;
+            
+            container.innerHTML = html;
+        }
+
+        // Helper for click interaction
+        window.filterByAnalysis = function(role, shift) {
+             // Apply Shift Filter
+             const shiftTab = document.querySelector(`.att-tab[data-shift="${shift}"]`);
+             if(shiftTab) shiftTab.click();
+             
+             // Apply Sub Role Filter (Multi-select)
+             const checkboxes = document.querySelectorAll('.att-area-cb');
+             let matched = false;
+             checkboxes.forEach(cb => {
+                 cb.checked = (cb.value === role);
+                 if(cb.checked) matched = true;
+             });
+             
+             // Update Dropdown Text
+             const areaText = document.getElementById('att-filter-area-text');
+             if(areaText) areaText.textContent = matched ? role : 'All Sub Roles';
+             
+             // Trigger Render
+             renderAttendanceTable();
+             
+             // Flip back to table
+             const flipContainer = document.getElementById('attendance-flip-container');
+             if(flipContainer) flipContainer.classList.remove('flipped');
+        }
+
         // Event Listeners for Filters
         if (applyGlobalFilterBtn) applyGlobalFilterBtn.addEventListener('click', renderAttendanceTable);
         if (clearGlobalFilterBtn) clearGlobalFilterBtn.addEventListener('click', () => { globalStartDate.value = ''; globalEndDate.value = ''; renderAttendanceTable(); });
         if (attSearchInput) attSearchInput.addEventListener('input', renderAttendanceTable);
         if (attFilterRole) attFilterRole.addEventListener('change', renderAttendanceTable);
-        if (attFilterArea) attFilterArea.addEventListener('change', renderAttendanceTable);
+        
+        // Sub Role Multi-Select Logic
+        const areaBtn = document.getElementById('att-filter-area-btn');
+        const areaDropdown = document.getElementById('att-filter-area-dropdown');
+        const areaApplyBtn = document.getElementById('att-filter-area-apply');
+        const areaClearBtn = document.getElementById('att-filter-area-clear');
+        const areaText = document.getElementById('att-filter-area-text');
+
+        if(areaBtn && areaDropdown) {
+            areaBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                areaDropdown.style.display = areaDropdown.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!areaBtn.contains(e.target) && !areaDropdown.contains(e.target)) {
+                    areaDropdown.style.display = 'none';
+                }
+            });
+
+            areaApplyBtn.addEventListener('click', () => {
+                const checked = Array.from(document.querySelectorAll('.att-area-cb:checked')).map(cb => cb.value);
+                areaText.textContent = checked.length === 0 ? 'All Sub Roles' : (checked.length <= 2 ? checked.join(', ') : `${checked.length} Selected`);
+                areaDropdown.style.display = 'none';
+                renderAttendanceTable();
+            });
+
+            areaClearBtn.addEventListener('click', () => {
+                document.querySelectorAll('.att-area-cb').forEach(cb => cb.checked = false);
+                areaText.textContent = 'All Sub Roles';
+                areaDropdown.style.display = 'none';
+                renderAttendanceTable();
+            });
+        }
+
+        // Flip Card Listeners
+        if(viewChartBtn && flipContainer) {
+            viewChartBtn.addEventListener('click', () => {
+                flipContainer.classList.add('flipped');
+                renderSubRoleDashboard();
+            });
+        }
+        if(viewTableBtn && flipContainer) {
+            viewTableBtn.addEventListener('click', () => flipContainer.classList.remove('flipped'));
+        }
         
         // Tab Listeners
         document.querySelectorAll('.att-tab').forEach(tab => {
@@ -1262,6 +1639,12 @@
         // Initial Render
         renderAttendanceTable();
     });
+  </script>
+</body>
+</html>
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>

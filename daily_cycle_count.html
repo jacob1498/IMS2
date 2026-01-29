@@ -547,11 +547,6 @@
                 <option value="IC Support">IC Support</option>
                 <option value="IC Back up">IC Back up</option>
             </select>
-            <select id="att-filter-area" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
-                <option value="">All Areas</option>
-                <option value="Pick Bin">Pick Bin</option>
-                <option value="Reserved Bin">Reserved Bin</option>
-            </select>
             <input type="text" id="att-search" placeholder="Search name..." style="padding:6px; border:1px solid #ccc; border-radius:4px;">
             <button id="print-att-btn" class="icon-btn" title="Print List">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -578,7 +573,6 @@
                       <th class="sortable" data-sort="shift">Shift <span class="sort-icon"></span></th>
                       <th class="sortable" data-sort="name">Name <span class="sort-icon"></span></th>
                       <th class="sortable" data-sort="role">Role <span class="sort-icon"></span></th>
-                      <th class="sortable" data-sort="area">Area <span class="sort-icon"></span></th>
                       <th>Time In</th>
                       <th>Break Out</th>
                       <th>Break In</th>
@@ -641,21 +635,12 @@
                     <datalist id="att-name-list"></datalist>
                 </div>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div>
+            <div>
                     <label for="att-role">Role</label>
                     <select id="att-role" style="width:100%">
                         <option value="IC Support">IC Support</option>
                         <option value="IC Back up">IC Back up</option>
                     </select>
-                </div>
-                <div>
-                    <label for="att-area">Area</label>
-                    <select id="att-area" style="width:100%">
-                        <option value="Pick Bin">Pick Bin</option>
-                        <option value="Reserved Bin">Reserved Bin</option>
-                    </select>
-                </div>
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div>
@@ -947,7 +932,7 @@
   <!-- Counter Timestamp Modal -->
   <div id="timestamp-modal" class="modal hidden">
     <div class="modal-overlay"></div>
-    <div class="modal-content card" style="width: 98vw; max-width: 1800px; height: 90vh; margin: 20px auto; display:flex; flex-direction:column;">
+    <div class="modal-content card" style="width: 100%; height: 100%; max-width: none; margin: 0; border-radius: 0; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3 style="margin:0">Counter Timestamp</h3>
             <button class="icon-btn close-modal">&times;</button>
@@ -955,7 +940,7 @@
         
         <div style="display:flex; gap: 20px; flex:1; overflow:hidden;">
             <!-- Left Column: Controls & Tables -->
-            <div style="width: 60%; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:10px;">
+            <div style="width: 60%; display:flex; flex-direction:column; gap:10px; padding-right:10px;">
                 <!-- Controls -->
                 <div>
                     <div style="margin-bottom:10px;">
@@ -973,7 +958,7 @@
                 </div>
 
                 <!-- Table 1: Sessions (Active & History) -->
-                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; max-height:450px; border:1px solid #eee; box-shadow:none;">
+                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; flex: 1; min-height: 0; border:1px solid #eee; box-shadow:none;">
                     <div class="tab-header">
                         <button class="tab-btn active" onclick="openTsTab(event, 'tab-active')">Active Sessions</button>
                         <button class="tab-btn" onclick="openTsTab(event, 'tab-history')">Session History</button>
@@ -1050,7 +1035,7 @@
                 </div>
 
                 <!-- Table 2: Inactive Users & Breaks -->
-                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; max-height:400px; border:1px solid #eee; box-shadow:none;">
+                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; flex: 1; min-height: 0; border:1px solid #eee; box-shadow:none;">
                     <div class="tab-header">
                         <button class="tab-btn active" onclick="openTsTab(event, 'tab-inactive')">Inactive Users</button>
                         <button class="tab-btn" onclick="openTsTab(event, 'tab-active-breaks')">Active Breaks</button>
@@ -1136,34 +1121,48 @@
                 </div>
             </div>
 
-            <!-- Embedded Hourly View -->
-            <div id="embedded-hourly-view" class="card" style="margin:0; padding:10px; display:none; flex-direction:column; border:1px solid #eee; box-shadow:none;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <button id="toggle-embedded-hourly-btn" class="icon-btn" title="Collapse" style="padding:2px; height:24px; width:24px; border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-                        <h4 style="margin:0;" id="embedded-hourly-title">Hourly Output</h4>
-                    </div>
-                    <button id="embedded-save-btn" class="icon-btn" style="background:#2752a7; color:white; font-size:11px; padding:4px 8px;">Save Data</button>
-                </div>
-                <div id="embedded-hourly-content">
-                    <div style="height:250px; position:relative; width:100%;">
-                        <canvas id="embedded-hourly-chart"></canvas>
-                    </div>
-                    <div id="embedded-hourly-details" style="margin-top:10px; overflow-x:auto;"></div>
-                </div>
-            </div>
-
-            
+           
         </div>
 
-        <!-- Right Column: Analytics -->
-            <div style="width: 40%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 style="margin:0;">Analytics Overview</h4>
-                    <input type="date" id="ts-analytics-date-filter" style="padding:2px 5px; border:1px solid #ccc; border-radius:4px; font-size:12px; color:#333;" title="Filter Analytics Date">
-                </div>
-                <div id="ts-analytics-content" style="flex: 1; overflow-y: auto;"></div>
+         <!-- Right Column: Hourly Output Chart + Analytics -->
+            <div style="width: 40%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:15px; padding-right:10px; gap:12px; overflow:hidden; min-width:350px;">
                 
+                <!-- Hourly Output Chart Section -->
+                <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0; max-height:380px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h4 style="margin:0; font-size:13px; color:#2752a7;" id="ts-hourly-chart-title">Hourly Output (Today)</h4>
+                        <button id="ts-view-hourly-full-btn" class="icon-btn" title="View Full Report" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Full Report</button>
+                    </div>
+                    <div style="flex:1; position:relative; width:100%; min-height:240px; border:1px solid #ddd; border-radius:4px; padding:5px; background:#fff; overflow:hidden;">
+                        <canvas id="ts-hourly-chart" style="max-width:100%; max-height:100%;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Embedded Hourly View (Hidden by default) -->
+                <div id="embedded-hourly-view" class="card" style="margin:0; padding:10px; display:none; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:4px;">
+                            <button id="toggle-embedded-hourly-btn" class="icon-btn" title="Toggle" style="padding:2px; height:20px; width:20px; border:none; background:none; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                            <h4 style="margin:0; font-size:12px;" id="embedded-hourly-title">Hourly Details</h4>
+                        </div>
+                        <button id="embedded-save-btn" class="icon-btn" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Save</button>
+                    </div>
+                    <div id="embedded-hourly-content" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow:hidden;">
+                        <div style="height:180px; position:relative; width:100%; flex-shrink:0; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+                            <canvas id="embedded-hourly-chart" style="max-width:100%; max-height:100%;"></canvas>
+                        </div>
+                        <div id="embedded-hourly-details" style="overflow-x:auto; overflow-y:auto; max-height:100px; border:1px solid #ddd; border-radius:4px; font-size:11px;"></div>
+                    </div>
+                </div>
+
+                <!-- Analytics Overview -->
+                <div style="display:flex; flex-direction:column; flex:1; min-height:150px; padding:10px; background:#f9f9f9; border:1px solid #ddd; border-radius:6px; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-shrink:0;">
+                        <h4 style="margin:0; font-size:13px; color:#2752a7;">Analytics Overview</h4>
+                        <input type="date" id="ts-analytics-date-filter" style="padding:3px 5px; border:1px solid #ccc; border-radius:3px; font-size:11px; color:#333; cursor:pointer;" title="Filter by Date">
+                    </div>
+                    <div id="ts-analytics-content" style="overflow-y:auto; flex:1; padding:8px; background:#fff; border:1px solid #ddd; border-radius:4px; font-size:12px;"></div>
+                </div>
             </div>
     </div>
   </div>
@@ -1624,7 +1623,17 @@
         const tsSelectAll = document.getElementById('ts-select-all');
         const tsShowLongActive = document.getElementById('ts-show-long-active');
         const tsAnalyticsDateFilter = document.getElementById('ts-analytics-date-filter');
+
+        const tsViewHourlyFullBtn = document.getElementById('ts-view-hourly-full-btn');
+        if (tsViewHourlyFullBtn) {
+            tsViewHourlyFullBtn.addEventListener('click', () => {
+                const date = document.getElementById('ts-analytics-date-filter').value || new Date().toISOString().split('T')[0];
+                openHourlyModal(date, "1st Shift-(6am-2pm)");
+            });
+        }
         
+       
+
         // End Count Modal Elements
         const endCountModal = document.getElementById('end-count-modal');
         const ecAreaType = document.getElementById('ec-area-type');
@@ -1949,6 +1958,7 @@
         let hourlyChart = null;
         let monitorDashboardChart = null;
         let timestampChart = null;
+        let tsHourlyChart = null;
 
         function showToast(message) {
             const toast = document.getElementById('toast-notification');
@@ -1963,6 +1973,7 @@
         const STORAGE_KEY_ATTENDANCE = 'ims_daily_counters_attendance_v1';
         const STORAGE_KEY_CC = 'ims_cycle_count_v1';
         const STORAGE_KEY_TIMESTAMPS = 'ims_counter_timestamps_v1';
+
         
         // State Persistence: Load saved state or defaults
         const UI_STATE_KEY = 'ims_daily_counters_ui_state_v1';
@@ -2118,6 +2129,10 @@
             } catch (e) {
                 return [];
             }
+        }
+
+        function getMasterUsers() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY_MASTER_USERS) || '[]'); } catch(e) { return []; }
         }
 
         function saveAttendanceData(data) {
@@ -3326,7 +3341,6 @@
                     <td>${item.shift}</td>
                     <td>${item.name}</td>
                     <td>${item.role || '-'}</td>
-                    <td>${item.area || '-'}</td>
                     <td>${item.timeIn || '-'}</td>
                     <td>${item.breakOut || '-'}</td>
                     <td>${item.breakIn || '-'}</td>
@@ -3637,11 +3651,26 @@
             attUserIdInput.addEventListener('input', () => {
                 const val = attUserIdInput.value.trim();
                 if (!val) return;
-                const data = getAttendanceData();
-                const user = data.slice().reverse().find(d => d.userId && d.userId.toLowerCase() === val.toLowerCase());
-                if (user) {
-                    if (user.name) document.getElementById('att-name').value = user.name;
-                    if (user.role) document.getElementById('att-role').value = user.role;
+
+                // First, try to find the user in the master data
+                const masterUsers = getMasterUsers();
+                const masterUser = masterUsers.find(u => u.userId && u.userId.toLowerCase() === val.toLowerCase());
+
+                if (masterUser) {
+                    if (masterUser.name) document.getElementById('att-name').value = masterUser.name;
+                    if (masterUser.role) {
+                        const roleSelect = document.getElementById('att-role');
+                        const optionExists = Array.from(roleSelect.options).some(opt => opt.value === masterUser.role);
+                        if (optionExists) roleSelect.value = masterUser.role;
+                    }
+                } else {
+                    // Fallback to searching in existing attendance data if not in master
+                    const data = getAttendanceData();
+                    const user = data.slice().reverse().find(d => d.userId && d.userId.toLowerCase() === val.toLowerCase());
+                    if (user) {
+                        if (user.name) document.getElementById('att-name').value = user.name;
+                        if (user.role) document.getElementById('att-role').value = user.role;
+                    }
                 }
             });
         }
@@ -3720,7 +3749,6 @@
                     userId: document.getElementById('att-user-id').value.trim(),
                     name: document.getElementById('att-name').value.trim().toUpperCase(),
                     role: document.getElementById('att-role').value,
-                    area: document.getElementById('att-area').value,
                     timeIn: document.getElementById('att-time-in').value,
                     breakIn: document.getElementById('att-break-in').value,
                     breakOut: document.getElementById('att-break-out').value,
@@ -3780,13 +3808,13 @@
 
         function exportAttendanceCSV(data) {
             if (data.length === 0) { alert('No attendance records to export.'); return; }
-            const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Area', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
+            const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
             const rows = [headers.join(',')];
             
             data.forEach(item => {
                 const dur = getDuration(item.breakOut, item.breakIn);
                 const row = [
-                    item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
+                    item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
                 ];
                 rows.push(row.join(','));
             });
@@ -3825,7 +3853,6 @@
                         document.getElementById('att-shift').value = item.shift;
                         document.getElementById('att-name').value = item.name;
                         document.getElementById('att-role').value = item.role;
-                        document.getElementById('att-area').value = item.area;
                         document.getElementById('att-time-in').value = item.timeIn || '';
                         document.getElementById('att-break-out').value = item.breakOut;
                         document.getElementById('att-break-in').value = item.breakIn;
@@ -5168,14 +5195,15 @@
             if(totalEl) totalEl.textContent = `Total: ${totalStr}`;
 
             // Prepare chart data (completed sessions only)
-            const chartSessions = sessions.filter(s => s.endLog && s.duration > 0).map(s => ({
+            const chartSessions = sessions.filter(s => s.endLog && s.durationVal > 0).map(s => ({
                 user: s.userId,
-                shift: s.shift,
-                duration: s.duration,
+                shift: s.resolvedShift,
+                duration: s.durationVal,
                 end: s.endLog.timestamp
             }));
             renderTimestampChart(chartSessions);
             renderTsAnalytics(sessions, analyticsDate, logsToProcess);
+            renderTsHourlyChart(analyticsDate);
             renderBreakLogTable(logsToProcess, attendance);
             cachedInactiveArgs = [sessions, attendance, logsToProcess];
             renderInactiveUsersTable(sessions, attendance, logsToProcess);
@@ -5649,7 +5677,135 @@
             document.getElementById('history-break-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
         }
 
-        function renderInactiveUsersTable(sessions, attendanceData, logs) {
+
+        function renderTsHourlyChart(date) {
+            const ctx = document.getElementById('ts-hourly-chart');
+            if (!ctx || typeof Chart === 'undefined') return;
+            
+            const counters = getCountersData();
+            const attendance = getAttendanceData();
+            const todayCounters = counters.filter(c => c.date === date);
+            
+            if (todayCounters.length === 0) {
+                if(ctx.parentElement) {
+                    ctx.parentElement.innerHTML = '<div style="text-align:center; padding:40px; color:#999; font-size:13px;">No data for ' + date + '</div>';
+                }
+                return;
+            }
+            
+            const hourlyData = {}, hourlyTargets = {};
+            
+            // Initialize hours 6-22
+            for (let h = 6; h < 22; h++) {
+                const label = `${h}:00 - ${h+1}:00`;
+                hourlyData[label] = 0;
+                hourlyTargets[label] = 0;
+            }
+            
+            // Aggregate data from all shifts
+            todayCounters.forEach(counter => {
+                if (counter.hourlyActuals) {
+                    Object.keys(counter.hourlyActuals).forEach(label => {
+                        if (hourlyData.hasOwnProperty(label)) {
+                            hourlyData[label] += Number(counter.hourlyActuals[label]) || 0;
+                        }
+                    });
+                }
+                
+                if (counter.hourlyTargets) {
+                    Object.keys(counter.hourlyTargets).forEach(label => {
+                        if (hourlyTargets.hasOwnProperty(label)) {
+                            hourlyTargets[label] += Number(counter.hourlyTargets[label]) || 0;
+                        }
+                    });
+                } else {
+                    const shiftAtt = attendance.filter(a => a.date === date && a.shift === counter.shift);
+                    const headcount = shiftAtt.length;
+                    const rate = Number(counter.standardRate) || 0;
+                    const activeTarget = rate > 0 ? (headcount * rate) : (Number(counter.targetOutput) || 0);
+                    const defaultHourlyTarget = activeTarget > 0 ? Math.round(activeTarget / 8) : 0;
+                    
+                    if (counter.shift === "1st Shift-(6am-2pm)") {
+                        for (let h = 6; h < 14; h++) {
+                            hourlyTargets[`${h}:00 - ${h+1}:00`] += defaultHourlyTarget;
+                        }
+                    } else if (counter.shift === "2nd Shift-(2pm-10pm)") {
+                        for (let h = 14; h < 22; h++) {
+                            hourlyTargets[`${h}:00 - ${h+1}:00`] += defaultHourlyTarget;
+                        }
+                    }
+                }
+            });
+            
+            const labels = Object.keys(hourlyData);
+            const values = Object.values(hourlyData);
+            const targetValues = Object.values(hourlyTargets);
+            
+            // Calculate cumulative
+            const cumulativeData = [];
+            let sum = 0;
+            for (const val of values) {
+                sum += val;
+                cumulativeData.push(sum);
+            }
+            
+            if (window.tsHourlyChart) window.tsHourlyChart.destroy();
+            
+            try {
+                window.tsHourlyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { 
+                                label: 'Hourly Output', 
+                                data: values, 
+                                backgroundColor: '#36b9cc', 
+                                borderColor: '#117a8b',
+                                borderWidth: 1,
+                                order: 2 
+                            },
+                            { 
+                                label: 'Cumulative', 
+                                data: cumulativeData, 
+                                type: 'line',
+                                borderColor: '#e74c3c', 
+                                backgroundColor: 'transparent', 
+                                tension: 0.2,
+                                borderWidth: 2,
+                                order: 1 
+                            },
+                            { 
+                                label: 'Target', 
+                                data: targetValues, 
+                                type: 'line',
+                                borderColor: '#27ae60', 
+                                backgroundColor: 'transparent', 
+                                tension: 0.2,
+                                borderDash: [5, 5],
+                                borderWidth: 2,
+                                order: 0 
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { font: { size: 10 }, padding: 8 } },
+                            tooltip: { enabled: true }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            } catch(e) {
+                console.error('Chart error:', e);
+            }
+        }
+
+                function renderInactiveUsersTable(sessions, attendanceData, logs) {
             const tbody = document.querySelector('#inactive-users-table tbody');
             if(!tbody) return;
             tbody.innerHTML = '';

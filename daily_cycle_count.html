@@ -27,6 +27,14 @@
     .flip-back { transform: rotateY(180deg); position: absolute; height: 100%; top: 0; overflow-y: auto; }
   </style>
   <style>
+    /* Tab Styles */
+    .tab-header { display: flex; background: #f9f9f9; border-bottom: 1px solid #eee; border-radius: 8px 8px 0 0; }
+    .tab-btn { padding: 10px 15px; border: none; background: #f9f9f9; border-right: 1px solid #eee; cursor: pointer; color: #666; font-size: 13px; font-weight: 600; transition: all 0.2s; outline: none; }
+    .tab-btn:first-child { border-radius: 8px 0 0 0; }
+    .tab-btn.active { background: #fff; color: #2752a7; border-bottom: 2px solid #2752a7; margin-bottom: -1px; }
+    .tab-btn:hover:not(.active) { background: #eee; color: #333; }
+  </style>
+  <style>
     /* Card content expand/collapse */
     .card-content.hidden { display: none; }
     .section-content.hidden { display: none !important; }
@@ -398,6 +406,9 @@
       </button>
       <button id="counter-timestamp-btn" class="icon-btn" title="Counter Timestamp" style="margin-left: 5px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Timestamp
+      </button>
+      <button id="user-master-btn" class="icon-btn" title="User Master Data" style="margin-left: 5px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> User Master
       </button>
       <button id="reports-menu-btn" class="icon-btn" title="Reports" style="margin-left: 5px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Reports
@@ -944,7 +955,7 @@
         
         <div style="display:flex; gap: 20px; flex:1; overflow:hidden;">
             <!-- Left Column: Controls & Tables -->
-            <div style="flex: 2; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:10px;">
+            <div style="width: 60%; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:10px;">
                 <!-- Controls -->
                 <div>
                     <div style="margin-bottom:10px;">
@@ -961,13 +972,14 @@
                     </div>
                 </div>
 
-                <!-- Table 1: Today's Logs -->
-                <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:400px;">
-                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-                            <h4 style="margin:0;">Today's Logs</h4>
-                        </div>
+                <!-- Table 1: Sessions (Active & History) -->
+                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; max-height:450px; border:1px solid #eee; box-shadow:none;">
+                    <div class="tab-header">
+                        <button class="tab-btn active" onclick="openTsTab(event, 'tab-active')">Active Sessions</button>
+                        <button class="tab-btn" onclick="openTsTab(event, 'tab-history')">Session History</button>
+                    </div>
+                    
+                    <div id="tab-active" class="tab-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
                         <div style="display:flex; gap:5px; align-items:center;">
                             <select id="ts-shift-filter" style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px;">
                                 <option value="">All Shifts</option>
@@ -976,16 +988,34 @@
                                 <option value="3rd Shift">3rd Shift</option>
                             </select>
                             <input type="text" id="ts-filter-user" placeholder="Search User..." style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
-                            <label style="font-size:12px; cursor:pointer;"><input type="checkbox" id="ts-show-active"> Active Only</label>
                             <label style="font-size:12px; cursor:pointer; margin-left:5px;"><input type="checkbox" id="ts-show-long-active"> > 1hr</label>
+                        </div>
+                        <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px; margin-top:5px;">
+                            <table id="active-table" class="report-table">
+                                <thead>
+                                    <tr style="position:sticky; top:0;">
+                                        <th class="sortable" data-sort="userId">User ID <span class="sort-icon"></span></th>
+                                        <th class="sortable" data-sort="resolvedName">Name <span class="sort-icon"></span></th>
+                                        <th class="sortable" data-sort="resolvedArea">Area Type <span class="sort-icon"></span></th>
+                                        <th class="sortable" data-sort="resolvedShift">Shift <span class="sort-icon"></span></th>
+                                        <th class="sortable" data-sort="startTime">Start Time <span class="sort-icon"></span></th>
+                                        <th class="sortable" data-sort="durationVal">Duration <span class="sort-icon"></span></th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-history" class="tab-content" style="display:none; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                        <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-bottom:5px;">
                             <button id="ts-delete-selected-btn" class="icon-btn" title="Delete Selected" style="padding: 2px 6px; font-size: 12px; color:#d9534f; display:none;">Del Sel</button>
                             <button id="ts-purge-all-btn" class="icon-btn" title="Permanently Delete All Shown" style="padding: 2px 6px; font-size: 12px; background:#c0392b; color:white; border-color:#c0392b;">Purge All</button>
                             <button id="ts-export-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
                         </div>
-                    </div>
-                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
-                        <table id="timestamp-table" class="report-table">
+                        <table id="history-table" class="report-table">
                             <thead>
                                 <tr style="position:sticky; top:0;">
                                     <th style="width:30px;"><input type="checkbox" id="ts-select-all"></th>
@@ -1017,35 +1047,75 @@
                             <button id="ts-next-page" class="icon-btn" title="Next" style="padding:2px 6px; font-size:12px;">›</button>
                         </div>
                     </div>
-                    </div>
                 </div>
 
-                <!-- Table 2: Break Log -->
-                <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:300px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-                            <h4 style="margin:0;">Break Log</h4>
+                <!-- Table 2: Inactive Users & Breaks -->
+                <div class="card" style="margin:0; padding:0; display:flex; flex-direction:column; max-height:400px; border:1px solid #eee; box-shadow:none;">
+                    <div class="tab-header">
+                        <button class="tab-btn active" onclick="openTsTab(event, 'tab-inactive')">Inactive Users</button>
+                        <button class="tab-btn" onclick="openTsTab(event, 'tab-active-breaks')">Active Breaks</button>
+                        <button class="tab-btn" onclick="openTsTab(event, 'tab-break-history')">Break History</button>
+                    </div>
+
+                    <div id="tab-inactive" class="tab-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                        <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
+                            <button id="ts-export-inactive-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
                         </div>
-                        <div style="display:flex; gap:5px;">
+                        <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
+                            <table id="inactive-users-table" class="report-table">
+                                <thead>
+                                    <tr style="position:sticky; top:0;">
+                                        <th style="cursor:pointer;" onclick="sortInactiveTable('userId')">User <span class="sort-icon"></span></th>
+                                        <th style="cursor:pointer;" onclick="sortInactiveTable('name')">Name <span class="sort-icon"></span></th>
+                                        <th style="cursor:pointer;" onclick="sortInactiveTable('shift')">Shift <span class="sort-icon"></span></th>
+                                        <th style="cursor:pointer;" onclick="sortInactiveTable('role')">Role <span class="sort-icon"></span></th>
+                                        <th style="cursor:pointer;" onclick="sortInactiveTable('lastEnd')">Last End Count <span class="sort-icon"></span></th>
+                                        <th style="text-align:center; width:40px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-active-breaks" class="tab-content" style="display:none; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                        <div style="display:flex; gap:5px; align-items:center; margin-bottom:5px;">
                              <select id="break-shift-filter" style="padding: 2px 6px; font-size: 12px; border: 1px solid #ccc; border-radius: 4px; width: 80px;">
                                 <option value="">All Shifts</option>
                                 <option value="1st Shift">1st Shift</option>
                                 <option value="2nd Shift">2nd Shift</option>
                                 <option value="3rd Shift">3rd Shift</option>
                              </select>
-                             <label style="font-size:12px; cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="break-show-active"> Active</label>
                              <input type="datetime-local" id="manual-break-time" style="padding:4px; font-size:11px; border:1px solid #ccc; border-radius:4px; width:130px;" title="Manual Break Time">
                              <button id="btn-break-start" class="icon-btn" style="background:#f1c40f; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">Start Break</button>
                              <button id="btn-break-end" class="icon-btn" style="background:#f39c12; color:white; padding:4px 8px; font-size:12px; font-weight:bold;">End Break</button>
+                        </div>
+                        <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px;">
+                            <table id="active-break-table" class="report-table">
+                                <thead>
+                                    <tr style="position:sticky; top:0;">
+                                        <th>User</th>
+                                        <th>Name</th>
+                                        <th>Shift</th>
+                                        <th>Role</th>
+                                        <th>Break Out</th>
+                                        <th>Duration</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-break-history" class="tab-content" style="display:none; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                        <div style="display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-bottom:5px;">
                              <button id="break-delete-selected-btn" class="icon-btn" title="Delete Selected" style="color:#d9534f; padding:4px 8px; font-size:12px; font-weight:bold; display:none;">Del Sel</button>
                              <button id="break-export-btn" class="icon-btn" title="Export CSV" style="padding:4px 8px; font-size:12px; font-weight:bold;">Export</button>
                              <button id="btn-break-delete-all" class="icon-btn" title="Delete All Breaks" style="color:#d9534f; padding:4px 8px; font-size:12px; font-weight:bold; margin-left:5px;">🗑 All</button>
                         </div>
-                    </div>
-                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
                     <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
-                        <table id="break-log-table" class="report-table">
+                        <table id="history-break-table" class="report-table">
                             <thead>
                                 <tr style="position:sticky; top:0;">
                                     <th style="width:30px;"><input type="checkbox" id="break-select-all"></th>
@@ -1064,45 +1134,37 @@
                     </div>
                 </div>
                 </div>
+            </div>
 
-                <!-- Table 3: Inactive Users -->
-                <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; max-height:300px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <button class="icon-btn toggle-section-btn" title="Toggle Table" style="padding:2px; height:24px; width:24px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-                            <h4 style="margin:0;">Inactive Users</h4>
-                        </div>
-                        <button id="ts-export-inactive-btn" class="icon-btn" title="Export CSV" style="padding: 2px 6px; font-size: 12px;">Export</button>
+            <!-- Embedded Hourly View -->
+            <div id="embedded-hourly-view" class="card" style="margin:0; padding:10px; display:none; flex-direction:column; border:1px solid #eee; box-shadow:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <button id="toggle-embedded-hourly-btn" class="icon-btn" title="Collapse" style="padding:2px; height:24px; width:24px; border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+                        <h4 style="margin:0;" id="embedded-hourly-title">Hourly Output</h4>
                     </div>
-                    <div class="section-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-                    <div style="flex:1; overflow-y:auto; border:1px solid #eee;">
-                        <table id="inactive-users-table" class="report-table">
-                            <thead>
-                                <tr style="position:sticky; top:0;">
-                                    <th style="cursor:pointer;" onclick="sortInactiveTable('userId')">User <span class="sort-icon"></span></th>
-                                    <th style="cursor:pointer;" onclick="sortInactiveTable('name')">Name <span class="sort-icon"></span></th>
-                                    <th style="cursor:pointer;" onclick="sortInactiveTable('shift')">Shift <span class="sort-icon"></span></th>
-                                    <th style="cursor:pointer;" onclick="sortInactiveTable('role')">Role <span class="sort-icon"></span></th>
-                                    <th style="cursor:pointer;" onclick="sortInactiveTable('lastEnd')">Last End Count <span class="sort-icon"></span></th>
-                                    <th style="text-align:center; width:40px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
+                    <button id="embedded-save-btn" class="icon-btn" style="background:#2752a7; color:white; font-size:11px; padding:4px 8px;">Save Data</button>
                 </div>
+                <div id="embedded-hourly-content">
+                    <div style="height:250px; position:relative; width:100%;">
+                        <canvas id="embedded-hourly-chart"></canvas>
+                    </div>
+                    <div id="embedded-hourly-details" style="margin-top:10px; overflow-x:auto;"></div>
                 </div>
             </div>
 
-            <!-- Right Column: Analytics -->
-            <div style="flex: 1; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:20px;">
+            
+        </div>
+
+        <!-- Right Column: Analytics -->
+            <div style="width: 40%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h4 style="margin:0;">Analytics Overview</h4>
                     <input type="date" id="ts-analytics-date-filter" style="padding:2px 5px; border:1px solid #ccc; border-radius:4px; font-size:12px; color:#333;" title="Filter Analytics Date">
                 </div>
                 <div id="ts-analytics-content" style="flex: 1; overflow-y: auto;"></div>
+                
             </div>
-        </div>
     </div>
   </div>
 
@@ -1246,6 +1308,58 @@
     </div>
   </div>
 
+  <!-- User Master Modal -->
+  <div id="user-master-modal" class="modal hidden" style="z-index: 10025;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 600px; margin: 50px auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0">User ID Master Data</h3>
+            <button class="icon-btn close-modal">&times;</button>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 2fr 1fr auto; gap:10px; align-items:end; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid #eee;">
+            <div>
+                <label style="font-size:12px; font-weight:bold;">User ID</label>
+                <input type="text" id="master-user-id" style="width:100%; padding:6px;" placeholder="ID">
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:bold;">Name</label>
+                <input type="text" id="master-user-name" style="width:100%; padding:6px;" placeholder="Name">
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:bold;">Role</label>
+                <input type="text" id="master-user-role" style="width:100%; padding:6px;" placeholder="Role">
+            </div>
+            <button id="save-master-user-btn" class="icon-btn" style="background:#2752a7; color:white; height:32px;">Save</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <input type="text" id="master-user-search" placeholder="Search..." style="padding:6px; border:1px solid #ccc; border-radius:4px;">
+            <div style="display:flex; gap:5px;">
+                <button id="import-master-users-btn" class="icon-btn" title="Import CSV">Import</button>
+                <input type="file" id="import-master-users-file" accept=".csv" style="display:none;">
+                <button id="export-master-users-btn" class="icon-btn" title="Export CSV">Export</button>
+                <button id="delete-selected-master-users-btn" class="icon-btn" style="color:#d9534f; display:none;">Delete</button>
+            </div>
+        </div>
+
+        <div style="max-height:400px; overflow-y:auto; border:1px solid #eee;">
+            <table id="master-users-table" class="report-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th style="width:30px;"><input type="checkbox" id="select-all-master-users"></th>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th style="width:60px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
   <div id="toast-notification" class="toast"></div>
   <script src="app.js"></script>
   <script>
@@ -1327,6 +1441,158 @@
         const repInactiveBtn = document.getElementById('rep-inactive-btn');
         const repSessionsBtn = document.getElementById('rep-sessions-btn');
 
+        // User Master Logic
+        const STORAGE_KEY_MASTER_USERS = 'ims_master_users_v1';
+        const userMasterBtn = document.getElementById('user-master-btn');
+        const userMasterModal = document.getElementById('user-master-modal');
+        const masterUserTableBody = document.querySelector('#master-users-table tbody');
+        const saveMasterUserBtn = document.getElementById('save-master-user-btn');
+        const masterUserIdInput = document.getElementById('master-user-id');
+        const masterUserNameInput = document.getElementById('master-user-name');
+        const masterUserRoleInput = document.getElementById('master-user-role');
+        const masterUserSearch = document.getElementById('master-user-search');
+        const deleteSelectedMasterUsersBtn = document.getElementById('delete-selected-master-users-btn');
+        const selectAllMasterUsers = document.getElementById('select-all-master-users');
+        const importMasterUsersBtn = document.getElementById('import-master-users-btn');
+        const importMasterUsersFile = document.getElementById('import-master-users-file');
+        const exportMasterUsersBtn = document.getElementById('export-master-users-btn');
+
+        function getMasterUsers() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY_MASTER_USERS) || '[]'); } catch(e) { return []; } }
+        function saveMasterUsers(data) { localStorage.setItem(STORAGE_KEY_MASTER_USERS, JSON.stringify(data)); }
+
+        function renderMasterUsers() {
+            if(!masterUserTableBody) return;
+            masterUserTableBody.innerHTML = '';
+            let users = getMasterUsers();
+            const term = masterUserSearch ? masterUserSearch.value.toLowerCase() : '';
+            if(term) {
+                users = users.filter(u => u.userId.toLowerCase().includes(term) || u.name.toLowerCase().includes(term) || (u.role && u.role.toLowerCase().includes(term)));
+            }
+            users.sort((a,b) => a.name.localeCompare(b.name));
+            if(users.length === 0) {
+                masterUserTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#999;">No users found.</td></tr>';
+                return;
+            }
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td><input type="checkbox" class="master-user-checkbox" value="${u.userId}"></td><td>${u.userId}</td><td>${u.name}</td><td>${u.role || ''}</td><td><button class="icon-btn edit-master-user-btn" data-id="${u.userId}" title="Edit" style="padding:2px 6px;">✎</button></td>`;
+                masterUserTableBody.appendChild(tr);
+            });
+            updateMasterUserDeleteBtn();
+        }
+
+        function updateMasterUserDeleteBtn() {
+            const count = document.querySelectorAll('.master-user-checkbox:checked').length;
+            if(deleteSelectedMasterUsersBtn) deleteSelectedMasterUsersBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        if(userMasterBtn) {
+            userMasterBtn.addEventListener('click', () => {
+                userMasterModal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    setTimeout(renderMasterUsers, 10);
+                });
+            });
+        }
+
+        if(saveMasterUserBtn) {
+            saveMasterUserBtn.addEventListener('click', () => {
+                const id = masterUserIdInput.value.trim();
+                const name = masterUserNameInput.value.trim();
+                const role = masterUserRoleInput.value.trim();
+                if(!id || !name) { alert('User ID and Name are required.'); return; }
+                let users = getMasterUsers();
+                const existingIdx = users.findIndex(u => u.userId === id);
+                if(existingIdx > -1) { users[existingIdx] = { userId: id, name, role }; showToast('User updated'); }
+                else { users.push({ userId: id, name, role }); showToast('User added'); }
+                saveMasterUsers(users);
+                renderMasterUsers();
+                masterUserIdInput.value = ''; masterUserNameInput.value = ''; masterUserRoleInput.value = '';
+            });
+        }
+
+        if(masterUserTableBody) {
+            masterUserTableBody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.edit-master-user-btn');
+                if(btn) {
+                    const id = btn.dataset.id;
+                    const users = getMasterUsers();
+                    const user = users.find(u => u.userId === id);
+                    if(user) { masterUserIdInput.value = user.userId; masterUserNameInput.value = user.name; masterUserRoleInput.value = user.role || ''; }
+                }
+            });
+            masterUserTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('master-user-checkbox')) updateMasterUserDeleteBtn(); });
+        }
+
+        if(selectAllMasterUsers) {
+            selectAllMasterUsers.addEventListener('change', (e) => {
+                document.querySelectorAll('.master-user-checkbox').forEach(cb => cb.checked = e.target.checked);
+                updateMasterUserDeleteBtn();
+            });
+        }
+
+        if(deleteSelectedMasterUsersBtn) {
+            deleteSelectedMasterUsersBtn.addEventListener('click', () => {
+                if(!confirm('Delete selected users?')) return;
+                const selected = Array.from(document.querySelectorAll('.master-user-checkbox:checked')).map(cb => cb.value);
+                let users = getMasterUsers();
+                users = users.filter(u => !selected.includes(u.userId));
+                saveMasterUsers(users);
+                renderMasterUsers();
+                showToast(`${selected.length} users deleted`);
+            });
+        }
+
+        if(masterUserSearch) masterUserSearch.addEventListener('input', renderMasterUsers);
+
+        if(exportMasterUsersBtn) {
+            exportMasterUsersBtn.addEventListener('click', () => {
+                const users = getMasterUsers();
+                if(users.length === 0) { alert('No users to export'); return; }
+                const rows = [['User ID', 'Name', 'Role']];
+                users.forEach(u => rows.push([`"${u.userId}"`, `"${u.name}"`, `"${u.role||''}"`].join(',')));
+                const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'master_users.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            });
+        }
+
+        if(importMasterUsersBtn) importMasterUsersBtn.addEventListener('click', () => importMasterUsersFile.click());
+
+        if(importMasterUsersFile) {
+            importMasterUsersFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const text = ev.target.result;
+                    const lines = text.split(/\r?\n/);
+                    if(lines.length < 2) { alert('Invalid CSV'); return; }
+                    let users = getMasterUsers();
+                    let count = 0;
+                    for(let i=1; i<lines.length; i++) {
+                        const line = lines[i].trim();
+                        if(!line) continue;
+                        const parts = line.split(',').map(p => p.replace(/^"|"$/g, '').trim());
+                        if(parts.length >= 2) {
+                            const id = parts[0]; const name = parts[1]; const role = parts[2] || '';
+                            if(id && name) {
+                                const idx = users.findIndex(u => u.userId === id);
+                                if(idx > -1) users[idx] = { userId: id, name, role };
+                                else users.push({ userId: id, name, role });
+                                count++;
+                            }
+                        }
+                    }
+                    saveMasterUsers(users);
+                    renderMasterUsers();
+                    alert(`Imported/Updated ${count} users.`);
+                    importMasterUsersFile.value = '';
+                };
+                reader.readAsText(file);
+            });
+        }
+
         // Timestamp Modal
         let cachedInactiveArgs = null;
         let inactiveSort = { field: 'status', dir: 'asc' };
@@ -1349,7 +1615,6 @@
         const btnBreakEnd = document.getElementById('btn-break-end');
         const btnTimeOut = document.getElementById('btn-time-out');
         const btnEndCount = document.getElementById('btn-end-count');
-        const timestampTableBody = document.querySelector('#timestamp-table tbody');
         const tsExportBtn = document.getElementById('ts-export-btn');
         const tsFilterUser = document.getElementById('ts-filter-user');
         const tsShiftFilter = document.getElementById('ts-shift-filter');
@@ -1357,7 +1622,6 @@
         const tsPurgeAllBtn = document.getElementById('ts-purge-all-btn');
         const tsDeleteSelectedBtn = document.getElementById('ts-delete-selected-btn');
         const tsSelectAll = document.getElementById('ts-select-all');
-        const tsShowActive = document.getElementById('ts-show-active');
         const tsShowLongActive = document.getElementById('ts-show-long-active');
         const tsAnalyticsDateFilter = document.getElementById('ts-analytics-date-filter');
         
@@ -1372,7 +1636,6 @@
         const breakExportBtn = document.getElementById('break-export-btn');
         const breakSelectAll = document.getElementById('break-select-all');
         const breakShiftFilter = document.getElementById('break-shift-filter');
-        const breakShowActive = document.getElementById('break-show-active');
 
         const editTimeModal = document.getElementById('edit-time-modal');
         const cancelEditTimeBtn = document.getElementById('cancel-edit-time-btn');
@@ -1399,8 +1662,19 @@
             });
         }
 
-        if (timestampTableBody) {
-            timestampTableBody.addEventListener('click', (e) => {
+        const activeTableBody = document.querySelector('#active-table tbody');
+        const historyTableBody = document.querySelector('#history-table tbody');
+
+        if (activeTableBody) {
+            activeTableBody.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('editable-time')) {
+                    openEditTimeModal(target.dataset.logId);
+                }
+            });
+        }
+        if (historyTableBody) {
+            historyTableBody.addEventListener('click', (e) => {
                 const target = e.target;
                 if (target.classList.contains('editable-time')) {
                     openEditTimeModal(target.dataset.logId);
@@ -1448,14 +1722,18 @@
         // Reports Modal Logic
         if(reportsMenuBtn) {
             reportsMenuBtn.addEventListener('click', () => {
-                // Set default dates if empty
-                if(!document.getElementById('rep-start-date').value) {
-                    document.getElementById('rep-start-date').value = new Date().toISOString().split('T')[0];
-                }
-                if(!document.getElementById('rep-end-date').value) {
-                    document.getElementById('rep-end-date').value = new Date().toISOString().split('T')[0];
-                }
                 reportsModal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        // Set default dates if empty
+                        if(!document.getElementById('rep-start-date').value) {
+                            document.getElementById('rep-start-date').value = new Date().toISOString().split('T')[0];
+                        }
+                        if(!document.getElementById('rep-end-date').value) {
+                            document.getElementById('rep-end-date').value = new Date().toISOString().split('T')[0];
+                        }
+                    }, 10);
+                });
             });
         }
         
@@ -1682,7 +1960,7 @@
         }
 
         const STORAGE_KEY_COUNTERS = 'ims_daily_counters_v1';
-        const STORAGE_KEY_ATTENDANCE = 'ims_daily_attendance_v1';
+        const STORAGE_KEY_ATTENDANCE = 'ims_daily_counters_attendance_v1';
         const STORAGE_KEY_CC = 'ims_cycle_count_v1';
         const STORAGE_KEY_TIMESTAMPS = 'ims_counter_timestamps_v1';
         
@@ -4686,7 +4964,6 @@
             const attendance = getAttendanceData();
             const filterShift = tsShiftFilter ? tsShiftFilter.value : '';
             const filterUser = tsFilterUser ? tsFilterUser.value.toLowerCase() : '';
-            const showActiveOnly = tsShowActive ? tsShowActive.checked : false;
             const showLongActive = tsShowLongActive ? tsShowLongActive.checked : false;
             
             // Analytics Date
@@ -4775,10 +5052,6 @@
                 });
             }
 
-            if (showActiveOnly) {
-                filteredSessions = filteredSessions.filter(s => !s.endLog);
-            }
-            
             if (showLongActive) {
                 const now = new Date();
                 filteredSessions = filteredSessions.filter(s => {
@@ -4833,13 +5106,17 @@
                 return 0;
             });
 
+            // Split into Active and History
+            const activeSessions = filteredSessions.filter(s => !s.endLog);
+            const historySessions = filteredSessions.filter(s => s.endLog);
+
             // Pagination Logic
-            const totalItems = filteredSessions.length;
+            const totalItems = historySessions.length;
             const totalPages = Math.ceil(totalItems / tsItemsPerPage) || 1;
             if (tsCurrentPage > totalPages) tsCurrentPage = totalPages;
             if (tsCurrentPage < 1) tsCurrentPage = 1;
             
-            const paginatedSessions = filteredSessions.slice((tsCurrentPage - 1) * tsItemsPerPage, tsCurrentPage * tsItemsPerPage);
+            const paginatedHistory = historySessions.slice((tsCurrentPage - 1) * tsItemsPerPage, tsCurrentPage * tsItemsPerPage);
             
             // Update Controls
             const tsPageInfo = document.getElementById('ts-page-info');
@@ -4850,97 +5127,35 @@
             }
             
             // Update sort icons
-            document.querySelectorAll('#timestamp-table th.sortable .sort-icon').forEach(icon => icon.textContent = '');
-            const activeHeader = document.querySelector(`#timestamp-table th[data-sort="${tsSortField}"]`);
+            document.querySelectorAll('.report-table th.sortable .sort-icon').forEach(icon => icon.textContent = '');
+            const activeHeader = document.querySelector(`.report-table th[data-sort="${tsSortField}"]`);
             if(activeHeader) activeHeader.querySelector('.sort-icon').textContent = tsSortDirection === 'asc' ? '↑' : '↓';
 
-            timestampTableBody.innerHTML = '';
-            if(filteredSessions.length === 0) {
-                timestampTableBody.innerHTML = '<tr><td colspan="5" style="padding:10px; text-align:center; color:#999;">No logs for today.</td></tr>';
+            // Render Active Table
+            if (activeTableBody) {
+                activeTableBody.innerHTML = '';
+                if (activeSessions.length === 0) {
+                    activeTableBody.innerHTML = '<tr><td colspan="7" style="padding:10px; text-align:center; color:#999;">No active sessions.</td></tr>';
+                } else {
+                    activeSessions.forEach(session => {
+                        const tr = createSessionRow(session, false);
+                        activeTableBody.appendChild(tr);
+                    });
+                }
+            }
+
+            // Render History Table
+            if (historyTableBody) {
+                historyTableBody.innerHTML = '';
+                if (paginatedHistory.length === 0) {
+                    historyTableBody.innerHTML = '<tr><td colspan="9" style="padding:10px; text-align:center; color:#999;">No history logs.</td></tr>';
                 if(tsSelectAll) tsSelectAll.checked = false;
             } else {
-                const now = new Date();
-                paginatedSessions.forEach(session => {
-                    const userId = session.userId;
-                    const name = session.resolvedName;
-                    const areaTypeDisplay = session.resolvedArea;
-                    const shiftDisplay = session.resolvedShift.split('-')[0];
-
-                    const datePrefix = (session.startLog) ? new Date(session.startLog.timestamp).toLocaleDateString() + ' ' : '';
-                    const startStr = session.startLog ? `<span class="editable-time" data-log-id="${session.startLog.id}">${datePrefix + new Date(session.startLog.timestamp).toLocaleTimeString()}</span>` : '-';
-                    const endStr = session.endLog ? `<span class="editable-time" data-log-id="${session.endLog.id}">${new Date(session.endLog.timestamp).toLocaleTimeString()}</span>` : '-';
-                    
-                    let duration = '-';
-                    let isHigh = false;
-                    const durationMins = session.durationVal;
-                    
-                    if (session.endLog) {
-                        duration = `${durationMins} min`;
-                        if (durationMins >= 30) isHigh = true;
-                    } else if (session.startLog) {
-                        duration = `Active (${durationMins}m)`;
-                        if (durationMins > 60) {
-                            duration += ' ⚠️ > 1hr';
-                            isHigh = true; 
-                        }
-                    }
-                    
-                    // Add duration to session object for chart
-                    session.duration = durationMins;
-                    // Ensure shift is set for chart
-                    session.shift = session.resolvedShift;
-                    
-                    const tr = document.createElement('tr');
-                    if ((session.startLog && session.startLog.deleted) || (session.endLog && session.endLog.deleted)) {
-                        tr.style.opacity = '0.5';
-                        tr.style.background = '#f9f9f9';
-                    }
-                    
-                    const idsToDelete = [session.startLog?.id, session.endLog?.id, ...(session.breaks || []).flatMap(b => [b.start.id, b.end.id])].filter(x=>x).join(',');
-                    const deleteAction = `<button class="icon-btn delete-action-btn" onclick="deleteSession('${idsToDelete}')" title="Permanently Delete Session" style="color:#d9534f; opacity:0; transition:opacity 0.2s;">&times;</button>`;
-                    const rowIds = idsToDelete; // Store all related IDs for row selection
-                    
-                    let quickAction = '';
-                    if (!session.endLog) {
-                        if (session.currentBreakStart) {
-                            // On Break -> End Break
-                            quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End Break', null, '${userId}')" title="End Break" style="color:#f39c12; margin-right:4px; opacity:0; transition:opacity 0.2s;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            </button>`;
-                        } else {
-                            // Active -> End Counting
-                            quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End', null, '${userId}')" title="End Counting" style="color:#e74c3c; margin-right:4px; opacity:0; transition:opacity 0.2s;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-                            </button>`;
-                        }
-                    }
-
-                    tr.innerHTML = `
-                        <td><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>
-                        <td>${userId}</td>
-                        <td>${name}</td>
-                        <td>${areaTypeDisplay}</td>
-                        <td>${shiftDisplay}</td>
-                        <td style="color:#2ecc71; font-weight:bold;">${startStr}</td>
-                        <td style="color:#e74c3c; font-weight:bold;">${endStr}</td>
-                        <td style="${isHigh ? 'color:#e74c3c; font-weight:bold;' : (duration==='Active'?'color:#2ecc71;font-weight:bold':'')}">${duration}</td>
-                        <td>
-                            ${quickAction}
-                            ${deleteAction}
-                        </td>
-                    `;
-                    
-                    tr.onmouseenter = () => { 
-                        tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '1'); 
-                        tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '1'); 
-                    };
-                    tr.onmouseleave = () => { 
-                        tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '0'); 
-                        tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '0'); 
-                    };
-
-                    timestampTableBody.appendChild(tr);
+                paginatedHistory.forEach(session => {
+                    const tr = createSessionRow(session, true);
+                    historyTableBody.appendChild(tr);
                 });
+            }
             }
             updateTsDeleteButton();
             
@@ -4964,6 +5179,61 @@
             renderBreakLogTable(logsToProcess, attendance);
             cachedInactiveArgs = [sessions, attendance, logsToProcess];
             renderInactiveUsersTable(sessions, attendance, logsToProcess);
+            renderEmbeddedHourly(analyticsDate, filterShift);
+        }
+
+        function createSessionRow(session, isHistory) {
+            const userId = session.userId;
+            const name = session.resolvedName;
+            const areaTypeDisplay = session.resolvedArea;
+            const shiftDisplay = session.resolvedShift.split('-')[0];
+            const datePrefix = (session.startLog) ? new Date(session.startLog.timestamp).toLocaleDateString() + ' ' : '';
+            const startStr = session.startLog ? `<span class="editable-time" data-log-id="${session.startLog.id}">${datePrefix + new Date(session.startLog.timestamp).toLocaleTimeString()}</span>` : '-';
+            const endStr = session.endLog ? `<span class="editable-time" data-log-id="${session.endLog.id}">${new Date(session.endLog.timestamp).toLocaleTimeString()}</span>` : '-';
+            
+            let duration = '-';
+            let isHigh = false;
+            const durationMins = session.durationVal;
+            
+            if (session.endLog) {
+                duration = `${durationMins} min`;
+                if (durationMins >= 30) isHigh = true;
+            } else if (session.startLog) {
+                duration = `Active (${durationMins}m)`;
+                if (durationMins > 60) {
+                    duration += ' ⚠️ > 1hr';
+                    isHigh = true; 
+                }
+            }
+            session.duration = durationMins;
+            session.shift = session.resolvedShift;
+            
+            const tr = document.createElement('tr');
+            if ((session.startLog && session.startLog.deleted) || (session.endLog && session.endLog.deleted)) {
+                tr.style.opacity = '0.5';
+                tr.style.background = '#f9f9f9';
+            }
+            
+            const idsToDelete = [session.startLog?.id, session.endLog?.id, ...(session.breaks || []).flatMap(b => [b.start.id, b.end.id])].filter(x=>x).join(',');
+            const deleteAction = `<button class="icon-btn delete-action-btn" onclick="deleteSession('${idsToDelete}')" title="Permanently Delete Session" style="color:#d9534f; opacity:0; transition:opacity 0.2s;">&times;</button>`;
+            const rowIds = idsToDelete;
+            
+            let quickAction = '';
+            if (!session.endLog) {
+                if (session.currentBreakStart) {
+                    quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End Break', null, '${userId}')" title="End Break" style="color:#f39c12; margin-right:4px; opacity:0; transition:opacity 0.2s;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>`;
+                } else {
+                    quickAction = `<button class="icon-btn quick-action-btn" onclick="logTimestamp('End', null, '${userId}')" title="End Counting" style="color:#e74c3c; margin-right:4px; opacity:0; transition:opacity 0.2s;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></button>`;
+                }
+            }
+
+            let checkboxHtml = isHistory ? `<td><input type="checkbox" class="ts-row-checkbox" data-ids="${rowIds}"></td>` : '';
+            
+            tr.innerHTML = `${checkboxHtml}<td>${userId}</td><td>${name}</td><td>${areaTypeDisplay}</td><td>${shiftDisplay}</td><td style="color:#2ecc71; font-weight:bold;">${startStr}</td>${isHistory ? `<td style="color:#e74c3c; font-weight:bold;">${endStr}</td>` : ''}<td style="${isHigh ? 'color:#e74c3c; font-weight:bold;' : (duration.includes('Active')?'color:#2ecc71;font-weight:bold':'')}">${duration}</td><td>${quickAction}${deleteAction}</td>`;
+            
+            tr.onmouseenter = () => { tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '1'); tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '1'); };
+            tr.onmouseleave = () => { tr.querySelectorAll('.quick-action-btn').forEach(b => b.style.opacity = '0'); tr.querySelectorAll('.delete-action-btn').forEach(b => b.style.opacity = '0'); };
+            return tr;
         }
         
         function updateTsDeleteButton() {
@@ -4978,8 +5248,8 @@
             });
         }
         
-        if(timestampTableBody) {
-            timestampTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('ts-row-checkbox')) updateTsDeleteButton(); });
+        if(historyTableBody) {
+            historyTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('ts-row-checkbox')) updateTsDeleteButton(); });
         }
 
         // Timestamp Sorting Listeners
@@ -5244,9 +5514,11 @@
         }
 
         function renderBreakLogTable(logs, attendanceData) {
-            const tbody = document.querySelector('#break-log-table tbody');
-            if(!tbody) return;
-            tbody.innerHTML = '';
+            const activeTbody = document.querySelector('#active-break-table tbody');
+            const historyTbody = document.querySelector('#history-break-table tbody');
+            
+            if(activeTbody) activeTbody.innerHTML = '';
+            if(historyTbody) historyTbody.innerHTML = '';
             
             const breaks = [];
             const openBreaks = {};
@@ -5272,10 +5544,8 @@
             
             // Filters
             const filterShift = breakShiftFilter ? breakShiftFilter.value : '';
-            const showActive = breakShowActive ? breakShowActive.checked : false;
             
             const filteredBreaks = breaks.filter(b => {
-                if (showActive && b.end) return false;
                 if (filterShift) {
                     const att = attendanceData.find(a => a.userId === b.userId) || {};
                     const shift = att.shift || '';
@@ -5286,64 +5556,80 @@
 
             filteredBreaks.sort((a,b) => new Date(b.start) - new Date(a.start));
             
-            if(filteredBreaks.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="padding:10px; text-align:center; color:#999;">No breaks recorded.</td></tr>';
-                if(breakSelectAll) breakSelectAll.checked = false;
-                return;
+            const activeBreaks = filteredBreaks.filter(b => !b.end);
+            const historyBreaks = filteredBreaks.filter(b => b.end);
+
+            // Render Active
+            if(activeTbody) {
+                if(activeBreaks.length === 0) {
+                    activeTbody.innerHTML = '<tr><td colspan="7" style="padding:10px; text-align:center; color:#999;">No active breaks.</td></tr>';
+                } else {
+                    activeBreaks.forEach(b => {
+                        const att = attendanceData.find(a => a.userId === b.userId) || {};
+                        const name = att.name || '-';
+                        const shift = att.shift ? att.shift.split('-')[0] : '-';
+                        const role = att.role || '-';
+                        const start = new Date(b.start);
+                        const durationMs = now - start;
+                        const durationMins = Math.floor(durationMs / 60000);
+                        
+                        let durationDisplay = `Running (${durationMins} min)`;
+                        let rowStyle = '';
+                        if (durationMins > 40) {
+                            rowStyle = 'background-color: #ffebee; color: #c0392b; font-weight: bold;';
+                            durationDisplay += ' ⚠️ > 40m';
+                        } else {
+                            durationDisplay = `<span style="color:orange">${durationDisplay}</span>`;
+                        }
+                        
+                        const startStr = `<span class="editable-time" data-log-id="${b.startId}">${start.toLocaleTimeString()}</span>`;
+                        
+                        const endBreakBtn = `<button class="icon-btn end-break-btn" onclick="logTimestamp('End Break', null, '${b.userId}')" title="End Break" style="color:#f39c12; padding:2px 6px; font-size:10px; margin-right:4px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        </button>`;
+                        const deleteBtn = `<button class="icon-btn delete-break-btn" onclick="deleteBreak('${b.startId}', null)" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px;">&times;</button>`;
+
+                        const tr = document.createElement('tr');
+                        if (rowStyle) tr.style.cssText = rowStyle;
+                        tr.innerHTML = `<td>${b.userId}</td><td>${name}</td><td>${shift}</td><td>${role}</td><td>${startStr}</td><td>${durationDisplay}</td><td>${endBreakBtn}${deleteBtn}</td>`;
+                        activeTbody.appendChild(tr);
+                    });
+                }
             }
 
-            filteredBreaks.forEach(b => {
-                const att = attendanceData.find(a => a.userId === b.userId) || {};
-                const name = att.name || '-';
-                const shift = att.shift ? att.shift.split('-')[0] : '-';
-                const role = att.role || '-';
-                
-                const start = new Date(b.start);
-                const end = b.end ? new Date(b.end) : now;
-                const durationMs = end - start;
-                const durationMins = Math.floor(durationMs / 60000);
-                
-                let durationDisplay = `${durationMins} min`;
-                let rowStyle = '';
-                
-                if (!b.end) {
-                    durationDisplay = `Running (${durationMins} min)`;
-                    if (durationMins > 40) {
-                        rowStyle = 'background-color: #ffebee; color: #c0392b; font-weight: bold;';
-                        durationDisplay += ' ⚠️ > 40m';
-                    } else {
-                        durationDisplay = `<span style="color:orange">${durationDisplay}</span>`;
-                    }
+            // Render History
+            if(historyTbody) {
+                if(historyBreaks.length === 0) {
+                    historyTbody.innerHTML = '<tr><td colspan="9" style="padding:10px; text-align:center; color:#999;">No break history.</td></tr>';
+                    if(breakSelectAll) breakSelectAll.checked = false;
+                } else {
+                    historyBreaks.forEach(b => {
+                        const att = attendanceData.find(a => a.userId === b.userId) || {};
+                        const name = att.name || '-';
+                        const shift = att.shift ? att.shift.split('-')[0] : '-';
+                        const role = att.role || '-';
+                        const start = new Date(b.start);
+                        const end = new Date(b.end);
+                        const durationMs = end - start;
+                        const durationMins = Math.floor(durationMs / 60000);
+                        const durationDisplay = `${durationMins} min`;
+                        
+                        const startStr = `<span class="editable-time" data-log-id="${b.startId}">${start.toLocaleTimeString()}</span>`;
+                        const endStr = `<span class="editable-time" data-log-id="${b.endId}">${end.toLocaleTimeString()}</span>`;
+                        
+                        const deleteBtn = `<button class="icon-btn delete-break-btn" onclick="deleteBreak('${b.startId}', '${b.endId}')" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px; opacity:0; transition:opacity 0.2s;">&times;</button>`;
+                        const rowIds = [b.startId, b.endId].filter(x=>x).join(',');
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td>${b.userId}</td><td>${name}</td><td>${shift}</td><td>${role}</td><td>${startStr}</td><td>${endStr}</td><td>${durationDisplay}</td><td>${deleteBtn}</td>`;
+                        
+                        tr.onmouseenter = () => { tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '1'); };
+                        tr.onmouseleave = () => { tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '0'); };
+                        
+                        historyTbody.appendChild(tr);
+                    });
                 }
-                
-                const startStr = `<span class="editable-time" data-log-id="${b.startId}">${start.toLocaleTimeString()}</span>`;
-                const endStr = b.end ? `<span class="editable-time" data-log-id="${b.endId}">${new Date(b.end).toLocaleTimeString()}</span>` : '-';
-
-                let endBreakBtn = '';
-                if (!b.end) {
-                    endBreakBtn = `<button class="icon-btn end-break-btn" onclick="logTimestamp('End Break', null, '${b.userId}')" title="End Break" style="color:#f39c12; padding:2px 6px; font-size:10px; opacity:0; transition:opacity 0.2s; margin-right:4px;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                    </button>`;
-                }
-
-                const deleteBtn = `<button class="icon-btn delete-break-btn" onclick="deleteBreak('${b.startId}', '${b.endId}')" title="Delete Break" style="color:#d9534f; padding:2px 6px; font-size:10px; opacity:0; transition:opacity 0.2s;">&times;</button>`;
-                const rowIds = [b.startId, b.endId].filter(x=>x).join(',');
-
-                const tr = document.createElement('tr');
-                if (rowStyle) tr.style.cssText = rowStyle;
-                tr.innerHTML = `<td><input type="checkbox" class="break-row-checkbox" data-ids="${rowIds}"></td><td>${b.userId}</td><td>${name}</td><td>${shift}</td><td>${role}</td><td>${startStr}</td><td>${endStr}</td><td>${durationDisplay}</td><td>${endBreakBtn}${deleteBtn}</td>`;
-                
-                tr.onmouseenter = () => { 
-                    tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '1'); 
-                    tr.querySelectorAll('.end-break-btn').forEach(b => b.style.opacity = '1');
-                };
-                tr.onmouseleave = () => { 
-                    tr.querySelectorAll('.delete-break-btn').forEach(b => b.style.opacity = '0'); 
-                    tr.querySelectorAll('.end-break-btn').forEach(b => b.style.opacity = '0');
-                };
-                
-                tbody.appendChild(tr);
-            });
+            }
             updateBreakDeleteButton();
         }
         
@@ -5359,8 +5645,8 @@
             });
         }
         
-        if(document.getElementById('break-log-table')) {
-            document.getElementById('break-log-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
+        if(document.getElementById('history-break-table')) {
+            document.getElementById('history-break-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
         }
 
         function renderInactiveUsersTable(sessions, attendanceData, logs) {
@@ -6078,7 +6364,6 @@
                 const attendance = getAttendanceData();
                 const filterUser = tsFilterUser ? tsFilterUser.value.toLowerCase() : '';
                 const filterShift = tsShiftFilter ? tsShiftFilter.value : '';
-                const showActiveOnly = tsShowActive ? tsShowActive.checked : false;
 
                 // Reconstruct sessions to match table view
                 data.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -6114,8 +6399,6 @@
 
                 // Filter sessions
                 let filteredSessions = sessions.filter(s => {
-                    if (showActiveOnly && s.endLog) return false;
-                    
                     // Resolve details
                     const ts = s.startLog ? s.startLog.timestamp : (s.endLog ? s.endLog.timestamp : null);
                     let sessionDate = '';
@@ -6299,7 +6582,6 @@
         if(btnTimeOut) btnTimeOut.addEventListener('click', () => logTimestamp('Time Out'));
         if(tsFilterUser) tsFilterUser.addEventListener('input', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsShiftFilter) tsShiftFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
-        if(tsShowActive) tsShowActive.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsShowLongActive) tsShowLongActive.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         if(tsAnalyticsDateFilter) tsAnalyticsDateFilter.addEventListener('change', () => { tsCurrentPage = 1; renderTimestamps(); });
         
@@ -6322,18 +6604,218 @@
             });
         }
         
-        const breakLogTable = document.getElementById('break-log-table');
-        if (breakLogTable) {
-            breakLogTable.addEventListener('click', (e) => {
+        const activeBreakTable = document.getElementById('active-break-table');
+        const historyBreakTable = document.getElementById('history-break-table');
+        
+        if (activeBreakTable) {
+            activeBreakTable.addEventListener('click', (e) => {
                 const target = e.target;
                 if (target.classList.contains('editable-time')) {
                     openEditTimeModal(target.dataset.logId);
                 }
             });
         }
+        if (historyBreakTable) {
+            historyBreakTable.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.classList.contains('editable-time')) {
+                    openEditTimeModal(target.dataset.logId);
+                }
+            });
+        }
+
+    // Tab Switching Logic (Global Scope)
+    window.openTsTab = function(evt, tabId) {
+        const card = evt.target.closest('.card');
+        const tabContents = card.querySelectorAll('.tab-content');
+        tabContents.forEach(tc => tc.style.display = 'none');
+
+        const tabBtns = card.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+
+        const target = document.getElementById(tabId);
+        if(target) target.style.display = 'flex';
+        evt.target.classList.add('active');
+    };
+
+    let embeddedHourlyChart = null;
+    function renderEmbeddedHourly(dateStr, shift) {
+        const container = document.getElementById('embedded-hourly-view');
+        if (!container) return;
+        
+        if (!shift || shift === 'All Shifts' || shift === '') {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'flex';
+        document.getElementById('embedded-hourly-title').textContent = `Hourly Output: ${shift.split('-')[0]}`;
+
+        // Logic adapted from openHourlyModal
+        const counters = getCountersData();
+        const counterEntry = counters.find(c => c.date === dateStr && c.shift === shift);
+        
+        const start = new Date(dateStr);
+        const end = new Date(dateStr);
+        if (shift.includes('1st Shift')) { start.setHours(6,0,0,0); end.setHours(14,0,0,0); }
+        else if (shift.includes('2nd Shift')) { start.setHours(14,0,0,0); end.setHours(22,0,0,0); }
+        else { start.setHours(22,0,0,0); end.setDate(end.getDate() + 1); end.setHours(6,0,0,0); }
+
+        let cycleCounts = [];
+        try { cycleCounts = JSON.parse(localStorage.getItem('ims_cycle_count_v1') || '[]'); } catch(e){}
+        
+        const hourlyData = {};
+        const hourlyTargets = {};
+        const attendance = getAttendanceData();
+        const shiftAtt = attendance.filter(a => a.date === dateStr && a.shift === shift);
+        const act = shiftAtt.length;
+        const rate = (counterEntry && counterEntry.standardRate) || 0;
+        const activeTarget = rate > 0 ? (act * rate) : ((counterEntry && counterEntry.targetOutput) || 0);
+        const defaultHourlyTarget = activeTarget > 0 ? Math.round(activeTarget / 8) : 0;
+        
+        const savedActuals = counterEntry && counterEntry.hourlyActuals ? counterEntry.hourlyActuals : null;
+        const savedPallets = counterEntry && counterEntry.hourlyPallets ? counterEntry.hourlyPallets : {};
+        const savedNotes = counterEntry && counterEntry.hourlyNotes ? counterEntry.hourlyNotes : {};
+
+        for (let d = new Date(start); d < end; d.setHours(d.getHours() + 1)) {
+            const h = d.getHours();
+            const label = `${h}:00 - ${h+1}:00`;
+            hourlyData[label] = (savedActuals && savedActuals[label] !== undefined) ? savedActuals[label] : 0;
+            
+            const savedTarget = counterEntry && counterEntry.hourlyTargets && counterEntry.hourlyTargets[label];
+            let activeCount = 0;
+            if (rate > 0) {
+                shiftAtt.forEach(p => {
+                    if (!p.timeIn) { activeCount++; } 
+                    else {
+                        const [ph, pm] = p.timeIn.split(':').map(Number);
+                        let pDate = new Date(start);
+                        if (shift.includes('3rd') && ph < 12) pDate.setDate(pDate.getDate() + 1);
+                        pDate.setHours(ph, pm, 0, 0);
+                        const nextHour = new Date(d); nextHour.setHours(d.getHours() + 1);
+                        if (pDate < nextHour) activeCount++;
+                    }
+                });
+                hourlyTargets[label] = activeCount * rate;
+            } else {
+                hourlyTargets[label] = savedTarget !== undefined ? savedTarget : defaultHourlyTarget;
+            }
+        }
+
+        if (!savedActuals) {
+            cycleCounts.forEach(c => {
+                const ts = c.createdDate || c.date;
+                if (ts) {
+                    const d = new Date(ts);
+                    if (d >= start && d < end) {
+                        const h = d.getHours();
+                        const label = `${h}:00 - ${h+1}:00`;
+                        if (hourlyData.hasOwnProperty(label)) hourlyData[label]++;
+                    }
+                }
+            });
+        }
+
+        let html = `<table class="excel-table" style="width:100%; font-size:11px;"><thead><tr><th style="text-align:left;">Hour</th><th>Pallet</th><th>Act</th><th>Tgt</th><th>Var</th><th>Notes</th></tr></thead><tbody>`;
+        
+        Object.keys(hourlyData).forEach(label => {
+            const act = hourlyData[label] || 0;
+            const tgt = hourlyTargets[label] || 0;
+            const pallet = savedPallets[label] || 0;
+            const note = savedNotes[label] || '';
+            const variance = act - tgt;
+            const varColor = variance >= 0 ? '#2ecc71' : '#e74c3c';
+            
+            html += `<tr>
+                <td style="text-align:left;">${label}</td>
+                <td><input type="number" class="emb-pallet" data-hour="${label}" value="${pallet}" style="width:40px;"></td>
+                <td><input type="number" class="emb-actual" data-hour="${label}" value="${act}" style="width:40px;"></td>
+                <td><input type="number" class="emb-target" data-hour="${label}" value="${tgt}" style="width:40px;"></td>
+                <td style="color:${varColor}; font-weight:bold;">${(variance > 0 ? '+' : '') + variance}</td>
+                <td><input type="text" class="emb-note" data-hour="${label}" value="${note}" style="width:100%;"></td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById('embedded-hourly-details').innerHTML = html;
+
+        // Chart
+        const ctx = document.getElementById('embedded-hourly-chart');
+        if (embeddedHourlyChart) embeddedHourlyChart.destroy();
+        
+        const labels = Object.keys(hourlyData);
+        const dataAct = Object.values(hourlyData);
+        const dataTgt = Object.values(hourlyTargets);
+        
+        embeddedHourlyChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Actual', data: dataAct, backgroundColor: '#36b9cc' },
+                    { label: 'Target', data: dataTgt, type: 'line', borderColor: '#27ae60', borderDash: [5,5], tension: 0.1 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        });
+
+        // Save Handler
+        const saveBtn = document.getElementById('embedded-save-btn');
+        saveBtn.onclick = () => {
+            const counters = getCountersData();
+            const idx = counters.findIndex(c => c.date === dateStr && c.shift === shift);
+            if (idx > -1) {
+                if (!counters[idx].hourlyTargets) counters[idx].hourlyTargets = {};
+                if (!counters[idx].hourlyActuals) counters[idx].hourlyActuals = {};
+                if (!counters[idx].hourlyPallets) counters[idx].hourlyPallets = {};
+                if (!counters[idx].hourlyNotes) counters[idx].hourlyNotes = {};
+                
+                const container = document.getElementById('embedded-hourly-details');
+                container.querySelectorAll('.emb-target').forEach(i => counters[idx].hourlyTargets[i.dataset.hour] = parseInt(i.value)||0);
+                container.querySelectorAll('.emb-actual').forEach(i => counters[idx].hourlyActuals[i.dataset.hour] = parseInt(i.value)||0);
+                container.querySelectorAll('.emb-pallet').forEach(i => counters[idx].hourlyPallets[i.dataset.hour] = parseInt(i.value)||0);
+                container.querySelectorAll('.emb-note').forEach(i => counters[idx].hourlyNotes[i.dataset.hour] = i.value);
+                
+                saveCountersData(counters);
+                showToast('Hourly data saved!');
+                renderEmbeddedHourly(dateStr, shift); // Refresh
+            }
+        };
+    }
+
+    function renderTimestampChart(sessions) {
+        const ctx = document.getElementById('timestamp-chart');
+        if (!ctx || typeof Chart === 'undefined') return;
+        
+        if (timestampChart) timestampChart.destroy();
+        
+        const labels = sessions.map(s => {
+            const time = new Date(s.end).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return `${s.user} (${time})`;
+        });
+        const data = sessions.map(s => s.duration);
+        
+        timestampChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Duration (Minutes)',
+                    data: data,
+                    backgroundColor: '#3498db',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Minutes' } },
+                    x: { ticks: { maxRotation: 45, minRotation: 45 } }
+                }
+            }
+        });
+    }
         
         if(breakShiftFilter) breakShiftFilter.addEventListener('change', () => renderTimestamps());
-        if(breakShowActive) breakShowActive.addEventListener('change', () => renderTimestamps());
 
         if(tsUserIdInput) {
             tsUserIdInput.addEventListener('input', () => {
@@ -6343,7 +6825,18 @@
                     if(uid) {
                         const attData = getAttendanceData();
                         const userRecord = attData.find(a => a.userId === uid);
-                        nameDisplay.value = userRecord ? `Name: ${userRecord.name} | Role: ${userRecord.role || '-'}` : '';
+                        if (userRecord) {
+                            nameDisplay.value = `Name: ${userRecord.name} | Role: ${userRecord.role || '-'}`;
+                        } else {
+                            // Check Master Data
+                            const masterUsers = getMasterUsers();
+                            const masterUser = masterUsers.find(u => u.userId === uid);
+                            if (masterUser) {
+                                nameDisplay.value = `Name: ${masterUser.name} | Role: ${masterUser.role || '-'}`;
+                            } else {
+                                nameDisplay.value = '';
+                            }
+                        }
                     } else {
                         nameDisplay.value = '';
                     }

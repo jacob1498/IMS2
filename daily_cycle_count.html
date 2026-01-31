@@ -25,6 +25,26 @@
     }
     .flip-front { z-index: 2; transform: rotateY(0deg); position: relative; }
     .flip-back { transform: rotateY(180deg); position: absolute; height: 100%; top: 0; overflow-y: auto; }
+    
+    /* Sticky Header for Attendance Table */
+    .sticky-table-container { overflow: auto; max-height: 500px; border: 1px solid #ccc; border-top: none; }
+    .sticky-table-container thead th { position: sticky; top: 0; z-index: 10; background-color: #f0f0f0; box-shadow: 0 1px 0 #ccc; }
+
+    @keyframes blink-red {
+        0% { background-color: #ffebee; border-color: #ffcdd2; }
+        50% { background-color: #ffcdd2; border-color: #e57373; box-shadow: 0 0 8px rgba(229, 115, 115, 0.6); }
+        100% { background-color: #ffebee; border-color: #ffcdd2; }
+    }
+    .blink-red-card { animation: blink-red 1s infinite ease-in-out; }
+
+    @keyframes blink-orange {
+        0% { background-color: #fff8e1; border-color: #ffecb3; }
+        50% { background-color: #ffe0b2; border-color: #ffb300; box-shadow: 0 0 8px rgba(255, 179, 0, 0.6); }
+        100% { background-color: #fff8e1; border-color: #ffecb3; }
+    }
+    .blink-orange-card { animation: blink-orange 1s infinite ease-in-out; }
+    .ts-stat-card { transition: transform 0.2s ease-in-out; }
+    .ts-stat-card:hover { transform: scale(1.1); z-index: 1; }
   </style>
   <style>
     /* Tab Styles */
@@ -536,12 +556,6 @@
             <button class="icon-btn expand-toggle-btn" title="Collapse" style="padding:4px; border:none; background:transparent; color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg></button>
         </div>
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <select id="att-filter-shift" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
-                <option value="">All Shifts</option>
-                <option value="1st Shift-(6am-2pm)">1st Shift</option>
-                <option value="2nd Shift-(2pm-10pm)">2nd Shift</option>
-                <option value="3rd Shift-(10pm-6am)">3rd Shift</option>
-            </select>
             <select id="att-filter-role" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
                 <option value="">All Roles</option>
                 <option value="IC Support">IC Support</option>
@@ -563,7 +577,13 @@
         </div>
       </div>
       <div class="card-content">
-      <div style="overflow-x: auto;">
+      <div class="tab-header">
+          <button class="tab-btn active att-shift-tab" data-shift="1st Shift-(6am-2pm)">1st Shift</button>
+          <button class="tab-btn att-shift-tab" data-shift="2nd Shift-(2pm-10pm)">2nd Shift</button>
+          <button class="tab-btn att-shift-tab" data-shift="3rd Shift-(10pm-6am)">3rd Shift</button>
+          <button class="tab-btn att-shift-tab" data-shift="">All Shifts</button>
+      </div>
+      <div class="sticky-table-container">
           <table id="attendance-table" class="report-table">
               <thead>
                   <tr>
@@ -583,6 +603,11 @@
                   </tr>
               </thead>
               <tbody></tbody>
+              <tfoot>
+                  <tr style="background-color: #f8f9fa; font-weight: bold; border-top: 2px solid #eef2f6;">
+                      <td colspan="13" style="text-align: right; padding: 10px;">Total People: <span id="att-total-count">0</span></td>
+                  </tr>
+              </tfoot>
           </table>
       </div>
       <div id="att-pagination-controls" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-top: 1px solid #eee;">
@@ -934,13 +959,37 @@
     <div class="modal-overlay"></div>
     <div class="modal-content card" style="width: 100%; height: 100%; max-width: none; margin: 0; border-radius: 0; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="margin:0">Counter Timestamp</h3>
+            <div style="display:flex; align-items:center; gap: 15px;">
+                <h3 style="margin:0">Counter Timestamp</h3>
+                <div style="display:flex; gap:20px; margin-left: 20px;">
+                    <div class="ts-stat-card" onclick="activateTsTab('tab-active'); document.getElementById('ts-show-long-active').checked = false; renderTimestamps();" style="cursor:pointer; background:#e8f5e9; padding:8px 15px; border-radius:4px; border:1px solid #c8e6c9; text-align:center; min-width: 100px;">
+                        <div style="font-size:12px; color:#2e7d32;">Active Session</div>
+                        <div style="font-weight:bold; color:#2ecc71; font-size:18px;" id="card-active-sessions">0</div>
+                    </div>
+                    <div class="ts-stat-card" onclick="activateTsTab('tab-active'); document.getElementById('ts-show-long-active').checked = true; renderTimestamps();" style="cursor:pointer; background:#ffebee; padding:8px 15px; border-radius:4px; border:1px solid #ffcdd2; text-align:center; min-width: 100px;">
+                        <div style="font-size:12px; color:#c62828;">Active > 1hr</div>
+                        <div style="font-weight:bold; color:#e74c3c; font-size:18px;" id="card-long-sessions">0</div>
+                    </div>
+                    <div class="ts-stat-card" onclick="activateTsTab('tab-inactive');" style="cursor:pointer; background:#f3e5f5; padding:8px 15px; border-radius:4px; border:1px solid #e1bee7; text-align:center; min-width: 100px;">
+                        <div style="font-size:12px; color:#6a1b9a;">Inactive User</div>
+                        <div style="font-weight:bold; color:#8e24aa; font-size:18px;" id="card-inactive-users">0</div>
+                    </div>
+                    <div class="ts-stat-card" onclick="activateTsTab('tab-active-breaks');" style="cursor:pointer; background:#fff3e0; padding:8px 15px; border-radius:4px; border:1px solid #ffe0b2; text-align:center; min-width: 100px;">
+                        <div style="font-size:12px; color:#ef6c00;">Active Breaks</div>
+                        <div style="font-weight:bold; color:#f57c00; font-size:18px;" id="card-active-breaks">0</div>
+                    </div>
+                    <div class="ts-stat-card" onclick="activateTsTab('tab-active-breaks');" style="cursor:pointer; background:#fff8e1; padding:8px 15px; border-radius:4px; border:1px solid #ffecb3; text-align:center; min-width: 100px;">
+                        <div style="font-size:12px; color:#f57f17;">Breaks > 40m</div>
+                        <div style="font-weight:bold; color:#ffb300; font-size:18px;" id="card-long-breaks">0</div>
+                    </div>
+                </div>
+            </div>
             <button class="icon-btn close-modal">&times;</button>
         </div>
         
         <div style="display:flex; gap: 20px; flex:1; overflow:hidden;">
             <!-- Left Column: Controls & Tables -->
-            <div style="width: 60%; display:flex; flex-direction:column; gap:10px; padding-right:10px;">
+            <div style="width: 50%; display:flex; flex-direction:column; gap:10px; padding-right:10px;">
                 <!-- Controls -->
                 <div>
                     <div style="margin-bottom:10px;">
@@ -1125,7 +1174,7 @@
         </div>
 
          <!-- Right Column: Hourly Output Chart + Analytics -->
-            <div style="width: 40%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:15px; padding-right:10px; gap:12px; overflow:hidden; min-width:350px;">
+            <div style="width: 50%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:15px; padding-right:10px; gap:12px; overflow:hidden; min-width:350px;">
                 
                 <!-- Hourly Output Chart Section -->
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0; max-height:380px;">
@@ -1133,25 +1182,13 @@
                         <h4 style="margin:0; font-size:13px; color:#2752a7;" id="ts-hourly-chart-title">Hourly Output (Today)</h4>
                         <button id="ts-view-hourly-full-btn" class="icon-btn" title="View Full Report" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Full Report</button>
                     </div>
+                    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:5px; font-size:10px;">
+                        <div style="display:flex; align-items:center;"><span style="width:8px; height:8px; background:rgba(54, 185, 204, 0.8); display:inline-block; margin-right:3px;"></span> 1st Shift</div>
+                        <div style="display:flex; align-items:center;"><span style="width:8px; height:8px; background:rgba(246, 194, 62, 0.8); display:inline-block; margin-right:3px;"></span> 2nd Shift</div>
+                        <div style="display:flex; align-items:center;"><span style="width:8px; height:8px; background:rgba(78, 115, 223, 0.8); display:inline-block; margin-right:3px;"></span> 3rd Shift</div>
+                    </div>
                     <div style="flex:1; position:relative; width:100%; min-height:240px; border:1px solid #ddd; border-radius:4px; padding:5px; background:#fff; overflow:hidden;">
                         <canvas id="ts-hourly-chart" style="max-width:100%; max-height:100%;"></canvas>
-                    </div>
-                </div>
-
-                <!-- Embedded Hourly View (Hidden by default) -->
-                <div id="embedded-hourly-view" class="card" style="margin:0; padding:10px; display:none; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <div style="display:flex; align-items:center; gap:4px;">
-                            <button id="toggle-embedded-hourly-btn" class="icon-btn" title="Toggle" style="padding:2px; height:20px; width:20px; border:none; background:none; cursor:pointer; display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-                            <h4 style="margin:0; font-size:12px;" id="embedded-hourly-title">Hourly Details</h4>
-                        </div>
-                        <button id="embedded-save-btn" class="icon-btn" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Save</button>
-                    </div>
-                    <div id="embedded-hourly-content" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow:hidden;">
-                        <div style="height:180px; position:relative; width:100%; flex-shrink:0; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
-                            <canvas id="embedded-hourly-chart" style="max-width:100%; max-height:100%;"></canvas>
-                        </div>
-                        <div id="embedded-hourly-details" style="overflow-x:auto; overflow-y:auto; max-height:100px; border:1px solid #ddd; border-radius:4px; font-size:11px;"></div>
                     </div>
                 </div>
 
@@ -1390,7 +1427,6 @@
         const attSearchInput = document.getElementById('att-search');
         const attFilterRole = document.getElementById('att-filter-role');
         const attFilterArea = document.getElementById('att-filter-area');
-        const attFilterShift = document.getElementById('att-filter-shift');
         const countersSearchInput = document.getElementById('counters-search');
         const deleteSelectedCountersBtn = document.getElementById('delete-selected-counters-btn');
         const clearCountersFiltersBtn = document.getElementById('clear-counters-filters-btn');
@@ -3271,7 +3307,9 @@
             if (areaFilter) {
                 data = data.filter(item => item.area === areaFilter);
             }
-            const shiftFilter = attFilterShift ? attFilterShift.value : '';
+            // Use active tab for shift filter
+            const activeTab = document.querySelector('.att-shift-tab.active');
+            const shiftFilter = activeTab ? activeTab.dataset.shift : '1st Shift-(6am-2pm)'; // Default to 1st if none active
             if (shiftFilter) {
                 data = data.filter(item => item.shift === shiftFilter);
             }
@@ -3300,6 +3338,9 @@
             if (attRowsPerPageSelect) attItemsPerPage = parseInt(attRowsPerPageSelect.value, 10);
 
             let data = getFilteredAttendanceData();
+
+            const totalCountSpan = document.getElementById('att-total-count');
+            if (totalCountSpan) totalCountSpan.textContent = data.length;
 
             // Pagination
             const totalItems = data.length;
@@ -3501,9 +3542,19 @@
             });
         });
 
+        // Attendance Shift Tabs Logic
+        const attShiftTabs = document.querySelectorAll('.att-shift-tab');
+        attShiftTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                attShiftTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                attCurrentPage = 1;
+                renderAttendanceTable();
+            });
+        });
+
         if (attFilterRole) attFilterRole.addEventListener('change', () => { attCurrentPage = 1; renderAttendanceTable(); });
         if (attFilterArea) attFilterArea.addEventListener('change', () => { attCurrentPage = 1; renderAttendanceTable(); });
-        if (attFilterShift) attFilterShift.addEventListener('change', () => { attCurrentPage = 1; renderAttendanceTable(); });
 
         const attPaginationControls = document.getElementById('att-pagination-controls');
         if (attPaginationControls) {
@@ -5137,6 +5188,30 @@
             const activeSessions = filteredSessions.filter(s => !s.endLog);
             const historySessions = filteredSessions.filter(s => s.endLog);
 
+            // Update Header Cards (Active Sessions)
+            let statsActiveSessions = sessions.filter(s => !s.endLog);
+            if (filterShift) {
+                statsActiveSessions = statsActiveSessions.filter(s => s.resolvedShift.includes(filterShift));
+            }
+            const statsActiveCount = statsActiveSessions.length;
+            const statsLongActiveCount = statsActiveSessions.filter(s => {
+                const diff = new Date() - new Date(s.startLog.timestamp);
+                return (diff / 60000) > 60;
+            }).length;
+
+            const cardActive = document.getElementById('card-active-sessions');
+            if(cardActive) cardActive.textContent = statsActiveCount;
+            
+            const cardLong = document.getElementById('card-long-sessions');
+            if(cardLong) {
+                cardLong.textContent = statsLongActiveCount;
+                if (statsLongActiveCount > 0) {
+                    cardLong.parentElement.classList.add('blink-red-card');
+                } else {
+                    cardLong.parentElement.classList.remove('blink-red-card');
+                }
+            }
+
             // Pagination Logic
             const totalItems = historySessions.length;
             const totalPages = Math.ceil(totalItems / tsItemsPerPage) || 1;
@@ -5349,6 +5424,9 @@
                     }
                 }
             });
+
+            const cardInactive = document.getElementById('card-inactive-users');
+            if(cardInactive) cardInactive.textContent = inactiveCount;
 
             // 2. Session Stats
             const userStarts = {};
@@ -5587,6 +5665,27 @@
             const activeBreaks = filteredBreaks.filter(b => !b.end);
             const historyBreaks = filteredBreaks.filter(b => b.end);
 
+            // Update Header Cards (Breaks)
+            let longBreakCount = 0;
+            activeBreaks.forEach(b => {
+                const start = new Date(b.start);
+                const durationMs = new Date() - start;
+                if (durationMs / 60000 > 40) longBreakCount++;
+            });
+            
+            const cardBreaks = document.getElementById('card-active-breaks');
+            if(cardBreaks) cardBreaks.textContent = activeBreaks.length;
+            
+            const cardLongBreaks = document.getElementById('card-long-breaks');
+            if(cardLongBreaks) {
+                cardLongBreaks.textContent = longBreakCount;
+                if (longBreakCount > 0) {
+                    cardLongBreaks.parentElement.classList.add('blink-orange-card');
+                } else {
+                    cardLongBreaks.parentElement.classList.remove('blink-orange-card');
+                }
+            }
+
             // Render Active
             if(activeTbody) {
                 if(activeBreaks.length === 0) {
@@ -5694,12 +5793,29 @@
             }
             
             const hourlyData = {}, hourlyTargets = {};
+            const hoursOrder = [];
+            const backgroundColors = [];
+            const borderColors = [];
             
-            // Initialize hours 6-22
-            for (let h = 6; h < 22; h++) {
+            // Initialize hours 6am to 6am (24h)
+            for (let i = 0; i < 24; i++) {
+                const h = (6 + i) % 24;
                 const label = `${h}:00 - ${h+1}:00`;
                 hourlyData[label] = 0;
                 hourlyTargets[label] = 0;
+                hoursOrder.push(label);
+                
+                // Set colors based on shift
+                if (h >= 6 && h < 14) { // 1st Shift
+                    backgroundColors.push('rgba(54, 185, 204, 0.8)'); // Cyan
+                    borderColors.push('#36b9cc');
+                } else if (h >= 14 && h < 22) { // 2nd Shift
+                    backgroundColors.push('rgba(246, 194, 62, 0.8)'); // Yellow
+                    borderColors.push('#f6c23e');
+                } else { // 3rd Shift
+                    backgroundColors.push('rgba(78, 115, 223, 0.8)'); // Blue
+                    borderColors.push('#4e73df');
+                }
             }
             
             // Aggregate data from all shifts
@@ -5733,13 +5849,18 @@
                         for (let h = 14; h < 22; h++) {
                             hourlyTargets[`${h}:00 - ${h+1}:00`] += defaultHourlyTarget;
                         }
+                    } else if (counter.shift === "3rd Shift-(10pm-6am)") {
+                        const hours = [22, 23, 0, 1, 2, 3, 4, 5];
+                        hours.forEach(h => {
+                            hourlyTargets[`${h}:00 - ${h+1}:00`] += defaultHourlyTarget;
+                        });
                     }
                 }
             });
             
-            const labels = Object.keys(hourlyData);
-            const values = Object.values(hourlyData);
-            const targetValues = Object.values(hourlyTargets);
+            const labels = hoursOrder;
+            const values = labels.map(l => hourlyData[l]);
+            const targetValues = labels.map(l => hourlyTargets[l]);
             
             // Calculate cumulative
             const cumulativeData = [];
@@ -5760,8 +5881,8 @@
                             { 
                                 label: 'Hourly Output', 
                                 data: values, 
-                                backgroundColor: '#36b9cc', 
-                                borderColor: '#117a8b',
+                                backgroundColor: backgroundColors, 
+                                borderColor: borderColors,
                                 borderWidth: 1,
                                 order: 2 
                             },
@@ -6794,6 +6915,26 @@
         evt.target.classList.add('active');
     };
 
+    // Helper to switch tabs from header cards
+    window.activateTsTab = function(tabId) {
+        const target = document.getElementById(tabId);
+        if(!target) return;
+        const card = target.parentElement;
+        if(card) {
+            const tabContents = card.querySelectorAll('.tab-content');
+            tabContents.forEach(tc => tc.style.display = 'none');
+            target.style.display = 'flex';
+            
+            const tabBtns = card.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+    };
+
     let embeddedHourlyChart = null;
     function renderEmbeddedHourly(dateStr, shift) {
         const container = document.getElementById('embedded-hourly-view');
@@ -6901,12 +7042,16 @@
         const dataAct = Object.values(hourlyData);
         const dataTgt = Object.values(hourlyTargets);
         
+        let barColor = '#36b9cc'; // 1st Shift default
+        if (shift.includes('2nd Shift')) barColor = '#f6c23e';
+        else if (shift.includes('3rd Shift')) barColor = '#4e73df';
+        
         embeddedHourlyChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Actual', data: dataAct, backgroundColor: '#36b9cc' },
+                    { label: 'Actual', data: dataAct, backgroundColor: barColor },
                     { label: 'Target', data: dataTgt, type: 'line', borderColor: '#27ae60', borderDash: [5,5], tension: 0.1 }
                 ]
             },
@@ -7005,6 +7150,56 @@
             const btn = e.target.closest('.toggle-section-btn');
             if (btn) {
                 const card = btn.closest('.card');
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
                 const content = card.querySelector('.section-content');
                 if (content) {
                     content.classList.toggle('hidden');

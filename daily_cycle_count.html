@@ -961,24 +961,25 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <div style="display:flex; align-items:center; gap: 15px;">
                 <h3 style="margin:0">Counter Timestamp</h3>
+                
                 <div style="display:flex; gap:20px; margin-left: 20px;">
-                    <div class="ts-stat-card" onclick="activateTsTab('tab-active'); document.getElementById('ts-show-long-active').checked = false; renderTimestamps();" style="cursor:pointer; background:#e8f5e9; padding:8px 15px; border-radius:4px; border:1px solid #c8e6c9; text-align:center; min-width: 100px;">
+                    <div class="ts-stat-card" onclick="resetTsFilters(); activateTsTab('tab-active'); renderTimestamps();" style="cursor:pointer; background:#e8f5e9; padding:8px 15px; border-radius:4px; border:1px solid #c8e6c9; text-align:center; min-width: 100px;">
                         <div style="font-size:12px; color:#2e7d32;">Active Session</div>
                         <div style="font-weight:bold; color:#2ecc71; font-size:18px;" id="card-active-sessions">0</div>
                     </div>
-                    <div class="ts-stat-card" onclick="activateTsTab('tab-active'); document.getElementById('ts-show-long-active').checked = true; renderTimestamps();" style="cursor:pointer; background:#ffebee; padding:8px 15px; border-radius:4px; border:1px solid #ffcdd2; text-align:center; min-width: 100px;">
+                    <div class="ts-stat-card" onclick="resetTsFilters(); activateTsTab('tab-active'); document.getElementById('ts-show-long-active').checked = true; renderTimestamps();" style="cursor:pointer; background:#ffebee; padding:8px 15px; border-radius:4px; border:1px solid #ffcdd2; text-align:center; min-width: 100px;">
                         <div style="font-size:12px; color:#c62828;">Active > 1hr</div>
                         <div style="font-weight:bold; color:#e74c3c; font-size:18px;" id="card-long-sessions">0</div>
                     </div>
-                    <div class="ts-stat-card" onclick="activateTsTab('tab-inactive');" style="cursor:pointer; background:#f3e5f5; padding:8px 15px; border-radius:4px; border:1px solid #e1bee7; text-align:center; min-width: 100px;">
+                    <div class="ts-stat-card" onclick="resetTsFilters(); activateTsTab('tab-inactive');" style="cursor:pointer; background:#f3e5f5; padding:8px 15px; border-radius:4px; border:1px solid #e1bee7; text-align:center; min-width: 100px;">
                         <div style="font-size:12px; color:#6a1b9a;">Inactive User</div>
                         <div style="font-weight:bold; color:#8e24aa; font-size:18px;" id="card-inactive-users">0</div>
                     </div>
-                    <div class="ts-stat-card" onclick="activateTsTab('tab-active-breaks');" style="cursor:pointer; background:#fff3e0; padding:8px 15px; border-radius:4px; border:1px solid #ffe0b2; text-align:center; min-width: 100px;">
+                    <div class="ts-stat-card" onclick="resetTsFilters(); activateTsTab('tab-active-breaks'); renderTimestamps();" style="cursor:pointer; background:#fff3e0; padding:8px 15px; border-radius:4px; border:1px solid #ffe0b2; text-align:center; min-width: 100px;">
                         <div style="font-size:12px; color:#ef6c00;">Active Breaks</div>
                         <div style="font-weight:bold; color:#f57c00; font-size:18px;" id="card-active-breaks">0</div>
                     </div>
-                    <div class="ts-stat-card" onclick="activateTsTab('tab-active-breaks');" style="cursor:pointer; background:#fff8e1; padding:8px 15px; border-radius:4px; border:1px solid #ffecb3; text-align:center; min-width: 100px;">
+                    <div class="ts-stat-card" onclick="resetTsFilters(); tsBreakFilterLong = true; activateTsTab('tab-active-breaks'); renderTimestamps();" style="cursor:pointer; background:#fff8e1; padding:8px 15px; border-radius:4px; border:1px solid #ffecb3; text-align:center; min-width: 100px;">
                         <div style="font-size:12px; color:#f57f17;">Breaks > 40m</div>
                         <div style="font-weight:bold; color:#ffb300; font-size:18px;" id="card-long-breaks">0</div>
                     </div>
@@ -1011,6 +1012,8 @@
                     <div class="tab-header">
                         <button class="tab-btn active" onclick="openTsTab(event, 'tab-active')">Active Sessions</button>
                         <button class="tab-btn" onclick="openTsTab(event, 'tab-history')">Session History</button>
+                        <button class="tab-btn" onclick="openTsTab(event, 'tab-area-dashboard')">Area Dashboard</button>
+                        <button class="tab-btn" onclick="openTsTab(event, 'tab-user-dashboard')">User Dashboard</button>
                     </div>
                     
                     <div id="tab-active" class="tab-content" style="display:flex; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
@@ -1081,6 +1084,16 @@
                             <button id="ts-next-page" class="icon-btn" title="Next" style="padding:2px 6px; font-size:12px;">›</button>
                         </div>
                     </div>
+                </div>
+
+                <div id="tab-area-dashboard" class="tab-content" style="display:none; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                    <div id="area-dashboard-grid" style="display:flex; flex-direction:column; gap:15px; overflow-y:auto; height:100%;">
+                        <!-- Cards will be injected here -->
+                    </div>
+                </div>
+
+                <div id="tab-user-dashboard" class="tab-content" style="display:none; flex-direction:column; flex:1; overflow:hidden; padding:10px;">
+                    <div id="user-dashboard-content" style="overflow-y:auto; height:100%;"></div>
                 </div>
 
                 <!-- Table 2: Inactive Users & Breaks -->
@@ -1176,6 +1189,14 @@
          <!-- Right Column: Hourly Output Chart + Analytics -->
             <div style="width: 50%; display:flex; flex-direction:column; border-left:1px solid #eee; padding-left:15px; padding-right:10px; gap:12px; overflow:hidden; min-width:350px;">
                 
+                <div style="display:flex; gap:10px; margin-left:10px;">
+                    <button id="ts-open-user-master-btn" class="icon-btn" title="User Master" style="font-size:12px; padding:4px 8px; background:#f0f4f8; border:1px solid #ccc;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:4px;vertical-align:text-bottom;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> User Master
+                    </button>
+                    <button id="ts-clear-logs-btn" class="icon-btn" title="Clear All Logs" style="font-size:12px; padding:4px 8px; background:#ffebee; color:#c62828; border:1px solid #ffcdd2;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:4px;vertical-align:text-bottom;"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Clear Logs
+                    </button>
+                </div>
                 <!-- Hourly Output Chart Section -->
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0; max-height:380px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1347,24 +1368,32 @@
   <!-- User Master Modal -->
   <div id="user-master-modal" class="modal hidden" style="z-index: 10025;">
     <div class="modal-overlay"></div>
-    <div class="modal-content card" style="max-width: 600px; margin: 50px auto;">
+    <div class="modal-content card" style="max-width: 700px; margin: 50px auto; display:flex; flex-direction:column; max-height:85vh;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3 style="margin:0">User ID Master Data</h3>
             <button class="icon-btn close-modal">&times;</button>
         </div>
         
+        <div class="tab-header" style="margin-bottom:15px;">
+            <button class="tab-btn active master-role-tab" data-role="IC Support">IC Support</button>
+            <button class="tab-btn master-role-tab" data-role="IC Back up">IC Back up</button>
+        </div>
+
         <div style="display:grid; grid-template-columns: 1fr 2fr 1fr auto; gap:10px; align-items:end; margin-bottom:15px; padding-bottom:15px; border-bottom:1px solid #eee;">
             <div>
                 <label style="font-size:12px; font-weight:bold;">User ID</label>
-                <input type="text" id="master-user-id" style="width:100%; padding:6px;" placeholder="ID">
+                <input type="text" id="master-user-id" style="width:100%; padding:6px; text-transform:uppercase;" placeholder="ID">
             </div>
             <div>
                 <label style="font-size:12px; font-weight:bold;">Name</label>
-                <input type="text" id="master-user-name" style="width:100%; padding:6px;" placeholder="Name">
+                <input type="text" id="master-user-name" style="width:100%; padding:6px; text-transform:uppercase;" placeholder="Name">
             </div>
             <div>
                 <label style="font-size:12px; font-weight:bold;">Role</label>
-                <input type="text" id="master-user-role" style="width:100%; padding:6px;" placeholder="Role">
+                <select id="master-user-role" style="width:100%; padding:6px;">
+                    <option value="IC Support">IC Support</option>
+                    <option value="IC Back up">IC Back up</option>
+                </select>
             </div>
             <button id="save-master-user-btn" class="icon-btn" style="background:#2752a7; color:white; height:32px;">Save</button>
         </div>
@@ -1372,6 +1401,7 @@
         <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
             <input type="text" id="master-user-search" placeholder="Search..." style="padding:6px; border:1px solid #ccc; border-radius:4px;">
             <div style="display:flex; gap:5px;">
+                <button id="print-master-users-btn" class="icon-btn" title="Print List">Print</button>
                 <button id="import-master-users-btn" class="icon-btn" title="Import CSV">Import</button>
                 <input type="file" id="import-master-users-file" accept=".csv" style="display:none;">
                 <button id="export-master-users-btn" class="icon-btn" title="Export CSV">Export</button>
@@ -1379,14 +1409,14 @@
             </div>
         </div>
 
-        <div style="max-height:400px; overflow-y:auto; border:1px solid #eee;">
+        <div class="sticky-table-container" style="flex:1; min-height:0;">
             <table id="master-users-table" class="report-table" style="width:100%;">
                 <thead>
                     <tr>
                         <th style="width:30px;"><input type="checkbox" id="select-all-master-users"></th>
-                        <th>User ID</th>
-                        <th>Name</th>
-                        <th>Role</th>
+                        <th class="sortable" data-sort="userId">User ID <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="name">Name <span class="sort-icon"></span></th>
+                        <th class="sortable" data-sort="role">Role <span class="sort-icon"></span></th>
                         <th style="width:60px;">Action</th>
                     </tr>
                 </thead>
@@ -1394,6 +1424,24 @@
             </table>
         </div>
     </div>
+  </div>
+
+  <!-- Floating Quick Time In Widget -->
+  <div id="quick-time-in-widget" class="card" style="position: fixed; bottom: 20px; right: 20px; width: 300px; padding: 0; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid #ccc; background: white; display:flex; flex-direction:column;">
+      <div id="quick-widget-header" style="padding:10px; background:#f1f1f1; border-bottom:1px solid #eee; cursor:move; display:flex; justify-content:space-between; align-items:center; border-radius: 8px 8px 0 0;">
+          <h4 style="margin:0; color:#2752a7; font-size:14px;">Quick Time In</h4>
+          <button onclick="this.closest('#quick-time-in-widget').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:16px; line-height:1;">&times;</button>
+      </div>
+      <div style="padding:10px 15px 15px 15px; display:flex; flex-direction:column; gap:10px;">
+          <div id="quick-widget-clock" style="text-align:center; font-size:12px; color:#666; margin-bottom:5px; font-weight:bold;"></div>
+          <div style="display:flex; gap:5px;">
+              <input type="text" id="quick-user-id" placeholder="User ID" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px; text-transform:uppercase;">
+              <button id="quick-time-in-btn" class="icon-btn" style="background:#2ecc71; color:white; font-weight:bold; padding: 0 12px;">GO</button>
+              <button id="quick-clear-btn" class="icon-btn" style="background:#f0f0f0; color:#333; border:1px solid #ccc; padding: 0 8px;" title="Clear">C</button>
+          </div>
+          <input type="text" id="quick-user-name" placeholder="Name" readonly style="padding:8px; border:1px solid #eee; border-radius:4px; background:#f9f9f9; color:#555;">
+          <input type="text" id="quick-user-role" placeholder="Role" readonly style="padding:8px; border:1px solid #eee; border-radius:4px; background:#f9f9f9; color:#555;">
+      </div>
   </div>
 
   <div id="toast-notification" class="toast"></div>
@@ -1491,6 +1539,11 @@
         const importMasterUsersBtn = document.getElementById('import-master-users-btn');
         const importMasterUsersFile = document.getElementById('import-master-users-file');
         const exportMasterUsersBtn = document.getElementById('export-master-users-btn');
+        const printMasterUsersBtn = document.getElementById('print-master-users-btn');
+        
+        let currentMasterRole = 'IC Support';
+        let masterSortField = 'name';
+        let masterSortDir = 'asc';
 
         function getMasterUsers() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY_MASTER_USERS) || '[]'); } catch(e) { return []; } }
         function saveMasterUsers(data) { localStorage.setItem(STORAGE_KEY_MASTER_USERS, JSON.stringify(data)); }
@@ -1499,11 +1552,24 @@
             if(!masterUserTableBody) return;
             masterUserTableBody.innerHTML = '';
             let users = getMasterUsers();
+            
+            // Filter by Role Tab
+            users = users.filter(u => u.role === currentMasterRole);
+
             const term = masterUserSearch ? masterUserSearch.value.toLowerCase() : '';
             if(term) {
                 users = users.filter(u => u.userId.toLowerCase().includes(term) || u.name.toLowerCase().includes(term) || (u.role && u.role.toLowerCase().includes(term)));
             }
-            users.sort((a,b) => a.name.localeCompare(b.name));
+            
+            // Sort
+            users.sort((a,b) => {
+                let valA = (a[masterSortField] || '').toLowerCase();
+                let valB = (b[masterSortField] || '').toLowerCase();
+                if (valA < valB) return masterSortDir === 'asc' ? -1 : 1;
+                if (valA > valB) return masterSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
             if(users.length === 0) {
                 masterUserTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#999;">No users found.</td></tr>';
                 return;
@@ -1514,6 +1580,13 @@
                 masterUserTableBody.appendChild(tr);
             });
             updateMasterUserDeleteBtn();
+            
+            // Update sort icons
+            document.querySelectorAll('#master-users-table th.sortable .sort-icon').forEach(icon => icon.textContent = '');
+            const activeHeader = document.querySelector(`#master-users-table th[data-sort="${masterSortField}"]`);
+            if(activeHeader) {
+                activeHeader.querySelector('.sort-icon').textContent = masterSortDir === 'asc' ? '↑' : '↓';
+            }
         }
 
         function updateMasterUserDeleteBtn() {
@@ -1532,9 +1605,9 @@
 
         if(saveMasterUserBtn) {
             saveMasterUserBtn.addEventListener('click', () => {
-                const id = masterUserIdInput.value.trim();
-                const name = masterUserNameInput.value.trim();
-                const role = masterUserRoleInput.value.trim();
+                const id = masterUserIdInput.value.trim().toUpperCase();
+                const name = masterUserNameInput.value.trim().toUpperCase();
+                const role = masterUserRoleInput.value;
                 if(!id || !name) { alert('User ID and Name are required.'); return; }
                 let users = getMasterUsers();
                 const existingIdx = users.findIndex(u => u.userId === id);
@@ -1542,7 +1615,7 @@
                 else { users.push({ userId: id, name, role }); showToast('User added'); }
                 saveMasterUsers(users);
                 renderMasterUsers();
-                masterUserIdInput.value = ''; masterUserNameInput.value = ''; masterUserRoleInput.value = '';
+                masterUserIdInput.value = ''; masterUserNameInput.value = '';
             });
         }
 
@@ -1553,7 +1626,7 @@
                     const id = btn.dataset.id;
                     const users = getMasterUsers();
                     const user = users.find(u => u.userId === id);
-                    if(user) { masterUserIdInput.value = user.userId; masterUserNameInput.value = user.name; masterUserRoleInput.value = user.role || ''; }
+                    if(user) { masterUserIdInput.value = user.userId; masterUserNameInput.value = user.name; masterUserRoleInput.value = user.role || 'IC Support'; }
                 }
             });
             masterUserTableBody.addEventListener('change', (e) => { if(e.target.classList.contains('master-user-checkbox')) updateMasterUserDeleteBtn(); });
@@ -1589,6 +1662,35 @@
                 const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url; a.download = 'master_users.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            });
+        }
+
+        if(printMasterUsersBtn) {
+            printMasterUsersBtn.addEventListener('click', () => {
+                const users = getMasterUsers().filter(u => u.role === currentMasterRole);
+                users.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+                
+                const now = new Date();
+                const shiftInfo = getShiftFromTimestamp(now.toISOString());
+                
+                const printWindow = window.open('', '_blank');
+                let html = `<html><head><title>User Master List</title>`;
+                html += `<style>body{font-family:sans-serif; font-size:12px;} table{width:100%;border-collapse:collapse;margin-top:10px;} th,td{border:1px solid #ccc;padding:6px;text-align:left;} th{background:#f0f0f0;} h2{margin-bottom:5px;}</style>`;
+                html += `</head><body>`;
+                html += `<h2>User Master List - ${currentMasterRole}</h2>`;
+                html += `<p><strong>Date:</strong> ${now.toLocaleDateString()} &nbsp;&nbsp; <strong>Time:</strong> ${now.toLocaleTimeString()} &nbsp;&nbsp; <strong>Shift:</strong> ${shiftInfo.shift}</p>`;
+                html += `<table><thead><tr><th>User ID</th><th>Name</th><th>Role</th><th style="width:150px;">Signature</th></tr></thead><tbody>`;
+                
+                users.forEach(u => {
+                    html += `<tr><td>${u.userId}</td><td>${u.name}</td><td>${u.role || ''}</td><td></td></tr>`;
+                });
+                
+                html += `</tbody></table>`;
+                html += `<script>window.onload = function() { window.print(); window.close(); }<\/script>`;
+                html += `</body></html>`;
+                
+                printWindow.document.write(html);
+                printWindow.document.close();
             });
         }
 
@@ -1628,6 +1730,30 @@
             });
         }
 
+        // User Master Tabs
+        document.querySelectorAll('.master-role-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.master-role-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentMasterRole = tab.dataset.role;
+                renderMasterUsers();
+            });
+        });
+
+        // Master User Sorting
+        document.querySelectorAll('#master-users-table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.dataset.sort;
+                if (masterSortField === field) {
+                    masterSortDir = masterSortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    masterSortField = field;
+                    masterSortDir = 'asc';
+                }
+                renderMasterUsers();
+            });
+        });
+
         // Timestamp Modal
         let cachedInactiveArgs = null;
         let inactiveSort = { field: 'status', dir: 'asc' };
@@ -1659,6 +1785,25 @@
         const tsSelectAll = document.getElementById('ts-select-all');
         const tsShowLongActive = document.getElementById('ts-show-long-active');
         const tsAnalyticsDateFilter = document.getElementById('ts-analytics-date-filter');
+
+        const tsOpenUserMasterBtn = document.getElementById('ts-open-user-master-btn');
+        if(tsOpenUserMasterBtn) {
+            tsOpenUserMasterBtn.addEventListener('click', () => {
+                userMasterModal.classList.remove('hidden');
+                requestAnimationFrame(() => setTimeout(renderMasterUsers, 10));
+            });
+        }
+
+        const tsClearLogsBtn = document.getElementById('ts-clear-logs-btn');
+        if(tsClearLogsBtn) {
+            tsClearLogsBtn.addEventListener('click', () => {
+                if(confirm('Are you sure you want to clear ALL timestamp logs? This cannot be undone.')) {
+                    saveTimestamps([]);
+                    renderTimestamps();
+                    showToast('All logs cleared.');
+                }
+            });
+        }
 
         const tsViewHourlyFullBtn = document.getElementById('ts-view-hourly-full-btn');
         if (tsViewHourlyFullBtn) {
@@ -2025,6 +2170,8 @@
         let attSortDirection = 'desc';
         let tsSortField = 'startTime';
         let tsSortDirection = 'desc';
+        let tsFilterArea = null;
+        let tsBreakFilterLong = false;
 
         // Restore Filters & Button State
         if(uiState.globalStartDate && globalStartDate) globalStartDate.value = uiState.globalStartDate;
@@ -2340,6 +2487,7 @@
                                 <button class="icon-btn edit-counter-btn" data-id="${item.id}" title="Edit" style="padding:2px 6px; font-size:12px;">✎</button>
                                 <button class="icon-btn duplicate-counter-btn" data-id="${item.id}" title="Duplicate to Next Day" style="padding:2px 6px; font-size:12px;">📋</button>
                                 <button class="icon-btn hourly-btn" data-date="${date}" data-shift="${shift}" title="Hourly Monitor" style="padding:2px 6px; font-size:12px; background:#6f42c1; color:white; border:none;">Hourly</button>
+                                <button class="icon-btn duplicate-all-shifts-btn" data-id="${item.id}" title="Copy to All Shifts" style="padding:2px 6px; font-size:12px; background:#17a2b8; color:white; border:none;">📑</button>
                                 <button class="icon-btn delete-counter-btn" data-id="${item.id}" title="Delete" style="padding:2px 6px; font-size:12px; color:#d9534f;">&times;</button>
                             </div>
                         </td>`;
@@ -2473,6 +2621,31 @@
                         renderCountersTable();
                         alert(`Duplicated entry to ${nextDate}`);
                     }
+                } else if (btn.classList.contains('duplicate-all-shifts-btn')) {
+                    const data = getCountersData();
+                    const item = data.find(i => i.id === id);
+                    if (item) {
+                        if(!confirm('Copy this entry to all other shifts for ' + item.date + '?')) return;
+                        const shifts = ["1st Shift-(6am-2pm)", "2nd Shift-(2pm-10pm)", "3rd Shift-(10pm-6am)"];
+                        let added = false;
+                        shifts.forEach(s => {
+                            if (s !== item.shift) {
+                                const exists = data.find(x => x.date === item.date && x.shift === s);
+                                if (!exists) {
+                                    const newItem = { ...item, id: Date.now().toString() + Math.random(), shift: s, hourlyActuals: {}, hourlyTargets: {}, hourlyPallets: {}, hourlyNotes: {} };
+                                    data.push(newItem);
+                                    added = true;
+                                }
+                            }
+                        });
+                        if (added) {
+                            saveCountersData(data);
+                            renderCountersTable();
+                            showToast('Copied to all shifts');
+                        } else {
+                            alert('All shifts already exist for this date.');
+                        }
+                    }
                 }
             });
         }
@@ -2491,7 +2664,10 @@
 
         function openHourlyModal(dateStr, shift) {
              const tsModal = document.getElementById('timestamp-modal');
-             if(tsModal) tsModal.classList.add('hidden');
+             if(tsModal) {
+                 tsModal.classList.add('hidden');
+                 sessionStorage.removeItem('ims_timestamp_modal_open');
+             }
 
              document.getElementById('hourly-modal-title').textContent = `Hourly Output: ${dateStr} (${shift.split('-')[0]})`;
              hourlyModal.classList.remove('hidden');
@@ -2813,6 +2989,7 @@
             hourlyBackTimestampBtn.addEventListener('click', () => {
                 hourlyModal.classList.add('hidden');
                 timestampModal.classList.remove('hidden');
+                sessionStorage.setItem('ims_timestamp_modal_open', 'true');
             });
         }
 
@@ -3769,7 +3946,12 @@
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal');
-                if (modal) modal.classList.add('hidden');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    if (modal.id === 'timestamp-modal') {
+                        sessionStorage.removeItem('ims_timestamp_modal_open');
+                    }
+                }
             });
         });
 
@@ -5001,6 +5183,144 @@
             return { date: dateStr, shift };
         }
 
+        // Quick Time In Logic
+        const quickTimeInBtn = document.getElementById('quick-time-in-btn');
+        const quickUserIdInput = document.getElementById('quick-user-id');
+        const quickUserNameInput = document.getElementById('quick-user-name');
+        const quickUserRoleInput = document.getElementById('quick-user-role');
+        const quickClearBtn = document.getElementById('quick-clear-btn');
+
+        if (quickTimeInBtn && quickUserIdInput) {
+            quickUserIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') quickTimeInBtn.click();
+            });
+
+            if(quickClearBtn) {
+                quickClearBtn.addEventListener('click', () => {
+                    quickUserIdInput.value = '';
+                    if(quickUserNameInput) quickUserNameInput.value = '';
+                    if(quickUserRoleInput) quickUserRoleInput.value = '';
+                    quickUserIdInput.focus();
+                });
+            }
+
+            // Update Clock
+            function updateQuickClock() {
+                const el = document.getElementById('quick-widget-clock');
+                if(el) el.textContent = new Date().toLocaleString();
+            }
+            setInterval(updateQuickClock, 1000);
+            updateQuickClock();
+
+            // Auto-populate Name/Role
+            quickUserIdInput.addEventListener('input', () => {
+                const val = quickUserIdInput.value.trim().toUpperCase();
+                if (val) {
+                    const masterUsers = getMasterUsers();
+                    const user = masterUsers.find(u => u.userId === val);
+                    if (user) {
+                        if(quickUserNameInput) quickUserNameInput.value = user.name || '';
+                        if(quickUserRoleInput) quickUserRoleInput.value = user.role || '';
+                    } else {
+                        if(quickUserNameInput) quickUserNameInput.value = '';
+                        if(quickUserRoleInput) quickUserRoleInput.value = '';
+                    }
+                } else {
+                    if(quickUserNameInput) quickUserNameInput.value = '';
+                    if(quickUserRoleInput) quickUserRoleInput.value = '';
+                }
+            });
+
+            quickTimeInBtn.addEventListener('click', () => {
+                const userId = quickUserIdInput.value.trim().toUpperCase();
+                if (!userId) { showToast('Please enter User ID'); return; }
+
+                const masterUsers = getMasterUsers();
+                const user = masterUsers.find(u => u.userId === userId);
+
+                if (!user) {
+                    alert(`User ID ${userId} not found in Master List.`);
+                    return;
+                }
+
+                const now = new Date();
+                const shiftInfo = getShiftFromTimestamp(now.toISOString());
+                const date = shiftInfo.date;
+                const shift = shiftInfo.shift;
+                const timeIn = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+
+                const attendance = getAttendanceData();
+                const exists = attendance.find(a => a.date === date && a.shift === shift && a.userId === userId);
+
+                if (exists) {
+                    alert(`User ${user.name} is already timed in for ${shift} on ${date}.`);
+                    quickUserIdInput.value = '';
+                    return;
+                }
+
+                const newEntry = {
+                    id: Date.now().toString(),
+                    date: date,
+                    shift: shift,
+                    userId: user.userId,
+                    name: user.name,
+                    role: user.role || 'IC Support',
+                    timeIn: timeIn,
+                    breakOut: '',
+                    breakIn: '',
+                    timeOut: '',
+                    status: 'Full counter',
+                    notes: 'Quick Time In'
+                };
+
+                attendance.push(newEntry);
+                saveAttendanceData(attendance);
+                
+                showToast(`Timed in: ${user.name}`);
+                quickUserIdInput.value = '';
+                if(quickUserNameInput) quickUserNameInput.value = '';
+                if(quickUserRoleInput) quickUserRoleInput.value = '';
+                
+                renderAttendanceTable();
+                renderCountersTable();
+            });
+            
+            // Make Widget Draggable
+            const quickWidget = document.getElementById('quick-time-in-widget');
+            const quickHeader = document.getElementById('quick-widget-header');
+            if(quickWidget && quickHeader) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                quickHeader.onmousedown = dragMouseDown;
+
+                function dragMouseDown(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }
+
+                function elementDrag(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    quickWidget.style.top = (quickWidget.offsetTop - pos2) + "px";
+                    quickWidget.style.left = (quickWidget.offsetLeft - pos1) + "px";
+                    quickWidget.style.bottom = "auto"; 
+                    quickWidget.style.right = "auto";
+                }
+
+                function closeDragElement() {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            }
+        }
+
         // Update Attendance Modal Area Options
         const attAreaSelect = document.getElementById('att-area');
         if (attAreaSelect) {
@@ -5030,6 +5350,14 @@
             }
         }, 15000);
 
+        // Auto Refresh Timestamp Modal (10s)
+        setInterval(() => {
+            const modal = document.getElementById('timestamp-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                renderTimestamps();
+            }
+        }, 10000);
+
         // Counter Timestamp Logic
         function getTimestamps() {
             try { return JSON.parse(localStorage.getItem(STORAGE_KEY_TIMESTAMPS) || '[]'); } catch(e) { return []; }
@@ -5037,6 +5365,154 @@
         function saveTimestamps(data) {
             localStorage.setItem(STORAGE_KEY_TIMESTAMPS, JSON.stringify(data));
         }
+
+        window.filterTsByArea = function(area) {
+            tsFilterArea = area;
+            // Switch to Active Sessions tab
+            const tabBtn = document.querySelector('button[onclick*="tab-active"]');
+            if(tabBtn) tabBtn.click();
+            renderTimestamps();
+        };
+
+        window.resetTsFilters = function() {
+            tsFilterArea = null;
+            tsBreakFilterLong = false;
+            const chk = document.getElementById('ts-show-long-active');
+            if(chk) chk.checked = false;
+        };
+
+        function renderAreaDashboard(activeSessions) {
+            const container = document.getElementById('area-dashboard-grid');
+            if (!container) return;
+            
+            // Initialize data structure with arrays for user names
+            const data = {
+                'Pick Bin': {
+                    'Coldroom': [], 'Ecom 2': [], 'Storage': [], 'Pallet Picking': []
+                },
+                'Reserved': {
+                    'Coldroom': [], 'Ecom 2': [], 'Storage': []
+                }
+            };
+            
+            activeSessions.forEach(s => {
+                const parts = (s.resolvedArea || '').split(' - ');
+                if (parts.length === 2) {
+                    const type = parts[0]; // Pick Bin or Reserved
+                    const sub = parts[1];
+                    // Map 'Reserved Bin' to 'Reserved' if needed, or handle exact match
+                    const key = type.includes('Reserved') ? 'Reserved' : type;
+                    
+                    if (data[key] && data[key][sub]) {
+                        data[key][sub].push(s.resolvedName || s.userId);
+                    }
+                }
+            });
+            
+            let html = '';
+            
+            // Total Active Card
+            const totalActive = activeSessions.length;
+            html += `<div class="card" onclick="filterTsByArea(null)" style="padding:15px; text-align:center; background:#e8f5e9; border:1px solid #c8e6c9; margin-bottom:5px; cursor:pointer; display:flex; flex-direction:column; justify-content:center; min-height:100px; box-shadow:none;" title="Click to Show All">
+                <div style="font-size:12px; color:#2e7d32; margin-bottom:5px; font-weight:600;">Total Active Users</div>
+                <div style="font-size:32px; font-weight:bold; color:#2ecc71;">${totalActive}</div>
+            </div>`;
+
+            const renderSection = (title, items) => {
+                let sectionHtml = `<div style="margin-bottom:5px;"><h5 style="margin:0; color:#2752a7; border-bottom:1px solid #eee; padding-bottom:5px;">${title}</h5></div>`;
+                sectionHtml += `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">`;
+                
+                Object.entries(items).forEach(([subArea, users]) => {
+                    const count = users.length;
+                    const isZero = count === 0;
+                    const bg = isZero ? '#f9f9f9' : '#e3f2fd';
+                    const border = isZero ? '#eee' : '#90caf9';
+                    const text = isZero ? '#999' : '#1565c0';
+                    const valColor = isZero ? '#ccc' : '#1e88e5';
+                    const userList = users.length > 0 ? users.join('<br>') : 'No active users';
+                    const filterKey = `${title} - ${subArea}`;
+                    
+                    sectionHtml += `<div class="card area-dash-card" onclick="filterTsByArea('${filterKey}')" style="padding:15px; text-align:center; background:${bg}; border:1px solid ${border}; margin:0; display:flex; flex-direction:column; justify-content:center; min-height:100px; box-shadow:none; position:relative; cursor:pointer;">
+                        <div style="font-size:12px; color:${text}; margin-bottom:5px; font-weight:600;">${subArea}</div>
+                        <div style="font-size:28px; font-weight:bold; color:${valColor};">${count}</div>
+                        <div class="hover-tooltip" style="display:none; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:8px; border-radius:4px; font-size:11px; width:160px; z-index:100; pointer-events:none; white-space:normal; box-shadow:0 4px 8px rgba(0,0,0,0.2); line-height:1.4;">
+                            <div style="font-weight:bold; border-bottom:1px solid #555; margin-bottom:4px; padding-bottom:2px; color:#eee;">Active Users</div>
+                            ${userList}
+                            <div style="position:absolute; top:100%; left:50%; margin-left:-5px; border-width:5px; border-style:solid; border-color:#333 transparent transparent transparent;"></div>
+                        </div>
+                    </div>`;
+                });
+                sectionHtml += `</div>`;
+                return sectionHtml;
+            };
+            
+            html += renderSection('Pick Bin', data['Pick Bin']);
+            html += renderSection('Reserved Bin', data['Reserved']);
+            
+            container.innerHTML = html;
+            
+            // Add hover listeners
+            container.querySelectorAll('.area-dash-card').forEach(card => {
+                const tooltip = card.querySelector('.hover-tooltip');
+                if(tooltip){
+                    card.addEventListener('mouseenter', () => tooltip.style.display = 'block');
+                    card.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+                }
+            });
+        }
+
+        function renderUserDashboard(sessions) {
+            const container = document.getElementById('user-dashboard-content');
+            if (!container) return;
+
+            const shiftStats = {
+                '1st Shift-(6am-2pm)': {},
+                '2nd Shift-(2pm-10pm)': {},
+                '3rd Shift-(10pm-6am)': {}
+            };
+
+            sessions.forEach(s => {
+                if (s.endLog && s.endLog.skus) {
+                    const shift = s.resolvedShift;
+                    const name = s.resolvedName || s.userId;
+                    const count = parseInt(s.endLog.skus) || 0;
+                    
+                    if (shiftStats[shift]) {
+                        if (!shiftStats[shift][name]) shiftStats[shift][name] = 0;
+                        shiftStats[shift][name] += count;
+                    }
+                }
+            });
+
+            let html = '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">';
+
+            Object.keys(shiftStats).forEach(shift => {
+                const users = shiftStats[shift];
+                const sortedUsers = Object.entries(users).sort((a, b) => b[1] - a[1]);
+                const totalSkus = sortedUsers.reduce((sum, [_, count]) => sum + count, 0);
+                const shortShiftName = shift.split('-')[0];
+
+                html += `<div class="card" style="padding:0; border:1px solid #eee; overflow:hidden; box-shadow:none;">
+                    <div style="background:#f5f5f5; padding:10px; border-bottom:1px solid #eee; font-weight:bold; color:#2752a7; display:flex; justify-content:space-between; align-items:center;">
+                        <span>${shortShiftName}</span>
+                        <span style="font-size:12px; background:#e3f2fd; color:#1565c0; padding:2px 6px; border-radius:4px;">Total: ${totalSkus}</span>
+                    </div>
+                    <div style="max-height:300px; overflow-y:auto;"><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead style="background:#fff; position:sticky; top:0;"><tr><th style="text-align:left; padding:8px; border-bottom:1px solid #eee; color:#666;">User</th><th style="text-align:right; padding:8px; border-bottom:1px solid #eee; color:#666;">SKUs</th></tr></thead><tbody>`;
+                
+                if (sortedUsers.length === 0) {
+                    html += `<tr><td colspan="2" style="padding:10px; text-align:center; color:#999;">No data</td></tr>`;
+                } else {
+                    sortedUsers.forEach(([user, count]) => {
+                        html += `<tr><td style="padding:6px 8px; border-bottom:1px solid #f0f0f0;">${user}</td><td style="padding:6px 8px; border-bottom:1px solid #f0f0f0; text-align:right; font-weight:bold;">${count}</td></tr>`;
+                    });
+                }
+                html += `</tbody></table></div></div>`;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
         function renderTimestamps() {
             const data = getTimestamps();
             const attendance = getAttendanceData();
@@ -5139,7 +5615,7 @@
                 });
             }
 
-            // Pre-calculate fields for sorting and display
+            // Pre-calculate fields for all sessions to support dashboard and filtering
             const now = new Date();
             filteredSessions.forEach(s => {
                 const ts = s.startLog ? s.startLog.timestamp : (s.endLog ? s.endLog.timestamp : null);
@@ -5172,6 +5648,14 @@
                 }
                 s.durationVal = durationMins;
             });
+
+            // Capture active sessions for dashboard BEFORE applying area filter
+            const dashboardActiveSessions = filteredSessions.filter(s => !s.endLog);
+
+            // Apply Area Filter (if selected from dashboard)
+            if (tsFilterArea) {
+                filteredSessions = filteredSessions.filter(s => s.resolvedArea === tsFilterArea);
+            }
 
             // Sort
             filteredSessions.sort((a,b) => {
@@ -5261,6 +5745,9 @@
             }
             updateTsDeleteButton();
             
+            renderAreaDashboard(dashboardActiveSessions);
+            renderUserDashboard(sessions);
+
             // Calculate Total Duration
             const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
             const h = Math.floor(totalMinutes / 60);
@@ -5651,7 +6138,7 @@
             // Filters
             const filterShift = breakShiftFilter ? breakShiftFilter.value : '';
             
-            const filteredBreaks = breaks.filter(b => {
+            let filteredBreaks = breaks.filter(b => {
                 if (filterShift) {
                     const att = attendanceData.find(a => a.userId === b.userId) || {};
                     const shift = att.shift || '';
@@ -5659,6 +6146,14 @@
                 }
                 return true;
             });
+
+            if (tsBreakFilterLong) {
+                filteredBreaks = filteredBreaks.filter(b => {
+                    const start = new Date(b.start);
+                    const end = b.end ? new Date(b.end) : now;
+                    return ((end - start) / 60000) > 40;
+                });
+            }
 
             filteredBreaks.sort((a,b) => new Date(b.start) - new Date(a.start));
             
@@ -6225,9 +6720,19 @@
             if (action === 'Start' || action === 'Start Break') {
                 // Check if user is in attendance list
                 const attData = getAttendanceData();
-                const userExists = attData.some(a => a.userId === userId);
-                if (!userExists) {
-                    alert(`User ID ${userId} not found in attendance list.`);
+                
+                // Validate against current shift attendance
+                const shiftInfo = getShiftFromTimestamp(now.toISOString());
+                const userRecord = attData.find(a => a.userId === userId && a.date === shiftInfo.date && a.shift === shiftInfo.shift);
+
+                if (!userRecord) {
+                    alert(`User ID ${userId} not found in attendance for ${shiftInfo.date} (${shiftInfo.shift}). Please add to attendance first.`);
+                    return;
+                }
+
+                const status = userRecord.status || 'Full counter';
+                if (action === 'Start' && status !== 'Full counter') {
+                    alert(`User ${userId} is marked as '${status}'. Only 'Full counter' can start counting.`);
                     return;
                 }
 
@@ -6842,6 +7347,7 @@
         if(timestampBtn) {
             timestampBtn.addEventListener('click', () => {
                 timestampModal.classList.remove('hidden');
+                sessionStorage.setItem('ims_timestamp_modal_open', 'true');
                 renderTimestamps();
                 setTimeout(() => tsUserIdInput.focus(), 100);
             });
@@ -7214,6 +7720,832 @@
                 }
             }
         });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
+    });
+  </script>
+</body>
+</html>             
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>             
+                const content = card.querySelector('.section-content');
+                if (content) {
+                    content.classList.toggle('hidden');
+                    const isHidden = content.classList.contains('hidden');
+                    btn.innerHTML = isHidden 
+                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+                    
+                    // Adjust card flex/height when collapsed
+                    card.style.flex = isHidden ? '0 0 auto' : '';
+                    card.style.minHeight = isHidden ? 'auto' : '';
+                }
+            }
+        });
+
+        // Restore Timestamp Modal State
+        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
+            const tm = document.getElementById('timestamp-modal');
+            if (tm) {
+                tm.classList.remove('hidden');
+                renderTimestamps();
+            }
+        }
     });
   </script>
 </body>

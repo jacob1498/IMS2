@@ -73,9 +73,20 @@
 
     /* Summary Cards */
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .summary-card { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eef2f6; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-    .summary-value { font-size: 24px; font-weight: bold; color: #2752a7; }
-    .summary-label { font-size: 12px; color: #6c757d; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .summary-card { 
+        background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eef2f6; text-align: center; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+    .summary-value { font-size: 32px; font-weight: 800; color: #2c3e50; margin-bottom: 5px; }
+    .summary-label { font-size: 13px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* Dashboard accent for cards */
+    .summary-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: transparent; }
+    .summary-card[style*="border-left: 4px solid #2ecc71"]::after { background: #2ecc71; }
+    .summary-card[style*="border-left: 4px solid #f1c40f"]::after { background: #f1c40f; }
+    .summary-card[style*="border-left: 4px solid #e74c3c"]::after { background: #e74c3c; }
+    .summary-card[style*="border-left: 4px solid #34495e"]::after { background: #34495e; }
 
     /* Flip Card Styles */
     .flip-container { perspective: 1000px; position: relative; margin-top: 20px; height: 80vh; min-height: 600px; }
@@ -113,6 +124,17 @@
       transform: scale(1.1);
       background-color: #1f4287;
     }
+
+    /* Clickable Summary Cards */
+    .summary-card.selected-summary-card { background-color: #e3f2fd; border-color: #2752a7; box-shadow: inset 0 0 0 1px #2752a7; }
+    body.dark-mode .summary-card.selected-summary-card { background-color: #2c3e50; border-color: #64b5f6; box-shadow: inset 0 0 0 1px #64b5f6; }
+
+    @keyframes blink-red {
+        0% { background-color: #fff; }
+        50% { background-color: #ffebee; box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
+        100% { background-color: #fff; }
+    }
+    .blink-red-card { animation: blink-red 1s infinite ease-in-out; border-color: #e74c3c !important; }
   </style>
 </head>
 <body class="inventory-mode">
@@ -173,9 +195,6 @@
       <button id="apply-global-filter" class="icon-btn" title="Apply Filter" style="background: #2752a7; color: white;">Filter</button>
       <button id="clear-global-filter" class="icon-btn" title="Clear Filter">Clear</button>
       
-      <button id="counter-timestamp-btn" class="icon-btn" title="Counter Timestamp" style="margin-left: 10px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Timestamp
-      </button>
       <button id="reports-menu-btn" class="icon-btn" title="Reports" style="margin-left: 5px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Reports
       </button>
@@ -189,6 +208,26 @@
           <input type="checkbox" id="auto-refresh-check" title="Auto Refresh every 15s">
           <label for="auto-refresh-check" style="font-size:13px; cursor:pointer;">Auto Refresh</label>
       </div>
+    </div>
+
+    <!-- Live Status Cards -->
+    <div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="summary-card" style="border-left: 4px solid #2ecc71;" onclick="showStatusModal('active')">
+            <div class="summary-value" id="live-status-active">0</div>
+            <div class="summary-label">Active (Present)</div>
+        </div>
+        <div class="summary-card" style="border-left: 4px solid #f1c40f;" onclick="showStatusModal('break')">
+            <div class="summary-value" id="live-status-break">0</div>
+            <div class="summary-label">On Break</div>
+        </div>
+        <div class="summary-card" style="border-left: 4px solid #e74c3c;" onclick="showStatusModal('long_break')">
+            <div class="summary-value" id="live-status-long-break">0</div>
+            <div class="summary-label">Break > 40mins</div>
+        </div>
+        <div class="summary-card" style="border-left: 4px solid #34495e;" onclick="showStatusModal('timeout')">
+            <div class="summary-value" id="live-status-timeout">0</div>
+            <div class="summary-label">Timed Out Today</div>
+        </div>
     </div>
 
     <div class="summary-grid">
@@ -332,6 +371,37 @@
     </div>
     </div>
   </main>
+
+  <!-- Active Users Modal -->
+  <div id="active-users-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 600px; margin: 50px auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0">Active Users (Present)</h3>
+            <button class="icon-btn close-modal">&times;</button>
+        </div>
+        <div style="margin-bottom:10px;">
+            <input type="text" id="modal-user-search" placeholder="Search name or ID..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="report-table" style="width:100%;">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Job Description</th>
+                        <th>Time In</th>
+                    </tr>
+                </thead>
+                <tbody id="active-users-tbody"></tbody>
+            </table>
+        </div>
+        <div style="text-align:right; margin-top:10px;">
+             <button class="icon-btn close-modal" style="border: 1px solid #ccc; padding: 8px 16px;">Close</button>
+        </div>
+    </div>
+  </div>
 
   <!-- Attendance Modal -->
   <div id="att-modal" class="modal hidden">
@@ -870,7 +940,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const STORAGE_KEY_ATTENDANCE = 'ims_daily_attendance_v1';
-        const STORAGE_KEY_TIMESTAMPS = 'ims_all_ic_timestamps_v1';
+        const STORAGE_KEY_TIMESTAMPS = 'ims_all_ic_timestamps_v1'; // Using the correct key
         
         let attCurrentPage = 1;
         let attItemsPerPage = 20;
@@ -879,6 +949,13 @@
         let tsSortField = 'startTime';
         let tsSortDirection = 'desc';
         let currentShiftFilter = '';
+        
+        // Live Status Filter Globals
+        let liveStatusFilter = null;
+        let liveStatusActiveUsers = new Set();
+        let liveStatusBreakUsers = new Set();
+        let liveStatusLongBreakUsers = new Set();
+        let liveStatusTimeoutUsers = new Set();
         
         // Elements
         const attendanceTableBody = document.querySelector('#attendance-table tbody');
@@ -974,6 +1051,9 @@
         function saveTimestamps(data) {
             localStorage.setItem(STORAGE_KEY_TIMESTAMPS, JSON.stringify(data));
         }
+        function getTimestamps() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY_TIMESTAMPS) || '[]'); } catch (e) { return []; }
+        }
         function showToast(message) {
             const toast = document.getElementById('toast-notification');
             if (toast) {
@@ -1017,6 +1097,182 @@
             return { date: dateStr, shift };
         }
 
+        function updateLiveStatusCards() {
+            const attendance = getAttendanceData();
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            // Reset Sets
+            liveStatusActiveUsers.clear();
+            liveStatusBreakUsers.clear();
+            liveStatusLongBreakUsers.clear();
+            liveStatusTimeoutUsers.clear();
+
+            attendance.forEach(att => {
+                if (!att.userId) return;
+
+                const attDate = new Date(att.date);
+                if (isNaN(attDate.getTime())) return;
+
+                // Check if relevant (Today or Yesterday if not timed out)
+                const isToday = (att.date === todayStr);
+                let isRelevant = isToday;
+                if (!isToday && !att.timeOut) {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const yesterdayStr = yesterday.toISOString().split('T')[0];
+                    if (att.date === yesterdayStr) isRelevant = true;
+                }
+
+                if (!isRelevant) return;
+
+                if (att.timeOut) {
+                    if (isToday) liveStatusTimeoutUsers.add(att.userId);
+                } else if (att.timeIn) {
+                    if (att.breakOut && !att.breakIn) {
+                        liveStatusBreakUsers.add(att.userId);
+                        const [h, m] = att.breakOut.split(':').map(Number);
+                        if (!isNaN(h) && !isNaN(m)) {
+                            const breakStart = new Date();
+                            breakStart.setHours(h, m, 0, 0);
+                            if (breakStart > now) breakStart.setDate(breakStart.getDate() - 1);
+                            const diffMins = (now - breakStart) / 60000;
+                            if (diffMins > 40) liveStatusLongBreakUsers.add(att.userId);
+                        }
+                    } else {
+                        liveStatusActiveUsers.add(att.userId);
+                    }
+                }
+            });
+
+            document.getElementById('live-status-active').textContent = liveStatusActiveUsers.size;
+            document.getElementById('live-status-break').textContent = liveStatusBreakUsers.size;
+            document.getElementById('live-status-long-break').textContent = liveStatusLongBreakUsers.size;
+            document.getElementById('live-status-timeout').textContent = liveStatusTimeoutUsers.size;
+
+            const lbCard = document.getElementById('live-status-long-break').closest('.summary-card');
+            if (liveStatusLongBreakUsers.size > 0) {
+                lbCard.classList.add('blink-red-card');
+            } else {
+                lbCard.classList.remove('blink-red-card');
+            }
+        }
+
+        window.filterByLiveStatus = function(status, cardEl) {
+            if (liveStatusFilter === status) {
+                liveStatusFilter = null;
+                document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-summary-card'));
+            } else {
+                liveStatusFilter = status;
+                document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('selected-summary-card'));
+                if(cardEl) cardEl.classList.add('selected-summary-card');
+            }
+            // Ensure sets are up to date before rendering
+            updateLiveStatusCards();
+            renderAttendanceTable();
+        }
+
+        window.showStatusModal = function(type) {
+            updateLiveStatusCards();
+            const attendance = getAttendanceData();
+            let targetSet = new Set();
+            let title = 'Users';
+            let showDuration = false;
+            let showAction = false;
+
+            if (type === 'active') {
+                targetSet = liveStatusActiveUsers;
+                title = 'Active Users (Present)';
+                showAction = true;
+            } else if (type === 'break') {
+                targetSet = liveStatusBreakUsers;
+                title = 'Users On Break';
+                showDuration = true;
+                showAction = true;
+            } else if (type === 'long_break') {
+                targetSet = liveStatusLongBreakUsers;
+                title = 'Users on Break (> 40mins)';
+                showDuration = true;
+                showAction = true;
+            } else if (type === 'timeout') {
+                targetSet = liveStatusTimeoutUsers;
+                title = 'Users Timed Out Today';
+            }
+
+            const ids = Array.from(targetSet);
+            const users = [];
+            
+            ids.forEach(uid => {
+                const userAtt = attendance.filter(a => a.userId === uid).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+                if (userAtt) {
+                    users.push(userAtt);
+                } else {
+                    users.push({ userId: uid, name: 'Unknown', role: '-', area: '-', timeIn: '-' });
+                }
+            });
+            
+            // Update Modal Title
+            const modalTitle = document.querySelector('#active-users-modal h3');
+            if(modalTitle) modalTitle.textContent = title;
+
+            // Update Table Header
+            const thead = document.querySelector('#active-users-modal thead tr');
+            if (thead) {
+                if (showDuration) {
+                    thead.innerHTML = `
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Job Description</th>
+                        <th>Time In</th>
+                        <th>Break Duration</th>
+                    `;
+                } else {
+                    thead.innerHTML = `
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Job Description</th>
+                        <th>Time In</th>
+                    `;
+                }
+            }
+
+            const tbody = document.getElementById('active-users-tbody');
+            if(tbody) {
+                tbody.innerHTML = '';
+                const colSpan = showDuration ? 6 : 5;
+                if (users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center; padding:10px;">No users found.</td></tr>`;
+                } else {
+                    const now = new Date();
+                    users.forEach(u => {
+                        const tr = document.createElement('tr');
+                        let durationHtml = '';
+                        if (showDuration) {
+                            let duration = '-';
+                            if (u.breakOut) {
+                                const [h, m] = u.breakOut.split(':').map(Number);
+                                if (!isNaN(h) && !isNaN(m)) {
+                                    const breakStart = new Date();
+                                    breakStart.setHours(h, m, 0, 0);
+                                    if (breakStart > now) breakStart.setDate(breakStart.getDate() - 1);
+                                    const diffMins = Math.floor((now - breakStart) / 60000);
+                                    duration = `${diffMins} min`;
+                                    if (diffMins > 40) duration = `<span style="color:#e74c3c; font-weight:bold;">${duration}</span>`;
+                                }
+                            }
+                            durationHtml = `<td>${duration}</td>`;
+                        }
+                        tr.innerHTML = `<td>${u.userId}</td><td>${u.name}</td><td>${u.role}</td><td>${u.area || '-'}</td><td>${u.timeIn || '-'}</td>${durationHtml}`;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+            const modal = document.getElementById('active-users-modal');
+            if(modal) modal.classList.remove('hidden');
+        };
+
         // --- Attendance Logic ---
         
         function getFilteredAttendanceData(ignoreShift = false) {
@@ -1050,6 +1306,19 @@
             }
             if (!ignoreShift && currentShiftFilter) data = data.filter(item => item.shift === currentShiftFilter);
             
+            // Apply Live Status Filter
+            if (liveStatusFilter) {
+                let targetSet = null;
+                if (liveStatusFilter === 'active') targetSet = liveStatusActiveUsers;
+                else if (liveStatusFilter === 'break') targetSet = liveStatusBreakUsers;
+                else if (liveStatusFilter === 'long_break') targetSet = liveStatusLongBreakUsers;
+                else if (liveStatusFilter === 'timeout') targetSet = liveStatusTimeoutUsers;
+                
+                if (targetSet) {
+                    data = data.filter(item => targetSet.has(item.userId));
+                }
+            }
+
             data.sort((a, b) => {
                 let valA = a[attSortField] || '';
                 let valB = b[attSortField] || '';
@@ -1164,6 +1433,7 @@
                 attendanceTableBody.appendChild(tr);
             });
             updateSummary();
+            updateLiveStatusCards();
         }
 
         // Auto-fill User ID based on Name selection
@@ -2183,12 +2453,28 @@
             const check = document.getElementById('auto-refresh-check');
             if(check && check.checked) {
                 if(document.querySelector('.modal:not(.hidden)')) return;
-                renderAttendanceTable();
+                renderAttendanceTable(); // This calls updateLiveStatusCards
+            } else {
+                // If table isn't refreshing, refresh the cards independently
+                updateLiveStatusCards();
             }
         }, 15000);
 
         // Initial Render
         renderAttendanceTable();
+
+        // Modal Search Logic
+        const modalSearch = document.getElementById('modal-user-search');
+        if(modalSearch) {
+            modalSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#active-users-tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        }
     });
   </script>
 </body>

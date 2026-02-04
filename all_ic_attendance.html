@@ -50,6 +50,10 @@
         font-weight: 600;
         color: #333;
         white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 1px 0 #ccc;
     }
     .report-table tbody tr:nth-child(even) { background-color: #fafafa; }
     .report-table tr:hover { background-color: #eef6ff; }
@@ -57,7 +61,7 @@
     /* Dark mode overrides */
     body.dark-mode .report-table { border-color: #444; }
     body.dark-mode .report-table th, body.dark-mode .report-table td { border-color: #444; color: #e0e0e0; }
-    body.dark-mode .report-table th { background-color: #2c2c2c; }
+    body.dark-mode .report-table th { background-color: #2c2c2c; box-shadow: 0 1px 0 #444; }
     body.dark-mode .report-table tbody tr:nth-child(even) { background-color: #1f1f1f; }
     body.dark-mode .report-table tr:hover { background-color: #333; }
 
@@ -378,10 +382,16 @@
     <div class="modal-content card" style="max-width: 600px; margin: 50px auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h3 style="margin:0">Active Users (Present)</h3>
-            <button class="icon-btn close-modal">&times;</button>
+            <div style="display:flex; gap:5px;">
+                <button id="modal-export-btn" class="icon-btn" title="Export CSV" style="border:1px solid #ccc;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+                <button class="icon-btn close-modal">&times;</button>
+            </div>
         </div>
-        <div style="margin-bottom:10px;">
-            <input type="text" id="modal-user-search" placeholder="Search name or ID..." style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <div style="margin-bottom:10px; display:flex; gap:10px; align-items:center;">
+            <input type="text" id="modal-user-search" placeholder="Search name or ID..." style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <div id="modal-bulk-actions" style="display:none; gap:5px;"></div>
         </div>
         <div style="max-height: 400px; overflow-y: auto;">
             <table class="report-table" style="width:100%;">
@@ -396,6 +406,22 @@
                 </thead>
                 <tbody id="active-users-tbody"></tbody>
             </table>
+        </div>
+        <div id="modal-pagination-controls" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid #eee;">
+            <div style="display:flex; align-items:center; gap:5px;">
+                <label style="font-size:12px;">Rows:</label>
+                <select id="modal-rows-per-page" style="padding:2px; font-size:12px;">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <span id="modal-page-info" style="font-size:12px; color:#666;"></span>
+            <div style="display:flex; gap:5px;">
+                <button id="modal-prev-page" class="icon-btn" style="padding:2px 6px;">&lt;</button>
+                <button id="modal-next-page" class="icon-btn" style="padding:2px 6px;">&gt;</button>
+            </div>
         </div>
         <div style="text-align:right; margin-top:10px;">
              <button class="icon-btn close-modal" style="border: 1px solid #ccc; padding: 8px 16px;">Close</button>
@@ -950,6 +976,14 @@
         let tsSortDirection = 'desc';
         let currentShiftFilter = '';
         
+        // Modal Pagination State
+        let modalCurrentPage = 1;
+        let modalRowsPerPage = 10;
+        let currentModalData = [];
+        let currentModalType = '';
+        let modalSortField = 'userId';
+        let modalSortDirection = 'asc';
+        
         // Live Status Filter Globals
         let liveStatusFilter = null;
         let liveStatusActiveUsers = new Set();
@@ -1173,6 +1207,7 @@
         }
 
         window.showStatusModal = function(type) {
+            window.currentStatusModalType = type;
             updateLiveStatusCards();
             const attendance = getAttendanceData();
             let targetSet = new Set();
@@ -1278,6 +1313,56 @@
             const modal = document.getElementById('active-users-modal');
             if(modal) modal.classList.remove('hidden');
         };
+
+        // Quick Actions for Status Modal
+        window.quickBreakOut = function(userId) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            updateAttendanceStatus(userId, { breakOut: timeStr });
+        };
+
+        window.quickEndBreak = function(userId) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            updateAttendanceStatus(userId, { breakIn: timeStr });
+        };
+
+        window.quickTimeout = function(userId) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+            updateAttendanceStatus(userId, { timeOut: timeStr });
+        };
+
+        function updateAttendanceStatus(userId, updates) {
+            const attendance = getAttendanceData();
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            
+            // Find record (Today or Yesterday if not timed out)
+            let attIdx = attendance.findIndex(a => a.userId === userId && a.date === todayStr);
+            
+            if (attIdx === -1) {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                attIdx = attendance.findIndex(a => a.userId === userId && a.date === yesterdayStr && !a.timeOut);
+            }
+
+            if (attIdx > -1) {
+                attendance[attIdx] = { ...attendance[attIdx], ...updates };
+                saveAttendanceData(attendance);
+                renderAttendanceTable();
+                
+                // Refresh modal if open
+                if (window.currentStatusModalType) {
+                    showStatusModal(window.currentStatusModalType);
+                }
+                
+                showToast(`Status updated for ${userId}`);
+            } else {
+                alert('Attendance record not found for today.');
+            }
+        }
 
         // --- Attendance Logic ---
         
@@ -2472,13 +2557,97 @@
         // Modal Search Logic
         const modalSearch = document.getElementById('modal-user-search');
         if(modalSearch) {
-            modalSearch.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const rows = document.querySelectorAll('#active-users-tbody tr');
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
+            modalSearch.addEventListener('input', () => {
+                modalCurrentPage = 1;
+                renderModalTable();
+            });
+        }
+        
+        const modalPrevBtn = document.getElementById('modal-prev-page');
+        const modalNextBtn = document.getElementById('modal-next-page');
+        const modalRowsSelect = document.getElementById('modal-rows-per-page');
+
+        if(modalPrevBtn) modalPrevBtn.addEventListener('click', () => {
+            if(modalCurrentPage > 1) { modalCurrentPage--; renderModalTable(); }
+        });
+        if(modalNextBtn) modalNextBtn.addEventListener('click', () => {
+            modalCurrentPage++; renderModalTable();
+        });
+        if(modalRowsSelect) modalRowsSelect.addEventListener('change', () => {
+            modalRowsPerPage = parseInt(modalRowsSelect.value);
+            modalCurrentPage = 1;
+            renderModalTable();
+        });
+
+        const modalTbody = document.getElementById('active-users-tbody');
+        if(modalTbody) {
+            modalTbody.addEventListener('change', (e) => {
+                if(e.target.classList.contains('modal-row-checkbox')) {
+                    updateModalBulkActionsUI();
+                }
+            });
+        }
+
+        const modalExportBtn = document.getElementById('modal-export-btn');
+        if(modalExportBtn) {
+            modalExportBtn.addEventListener('click', () => {
+                const searchTerm = document.getElementById('modal-user-search') ? document.getElementById('modal-user-search').value.toLowerCase() : '';
+                let dataToExport = currentModalData;
+                
+                if (searchTerm) {
+                    dataToExport = currentModalData.filter(u => {
+                        return (u.userId && u.userId.toLowerCase().includes(searchTerm)) ||
+                               (u.name && u.name.toLowerCase().includes(searchTerm));
+                    });
+                }
+
+                if (dataToExport.length === 0) {
+                    alert('No data to export.');
+                    return;
+                }
+                
+                const headers = ['User ID', 'Name', 'Role', 'Job Description', 'Time In'];
+                if (currentModalType === 'break' || currentModalType === 'long_break') {
+                    headers.push('Break Out');
+                    headers.push('Break Duration (min)');
+                }
+                
+                const rows = [headers.join(',')];
+                const now = new Date();
+                
+                dataToExport.forEach(u => {
+                    const row = [`"${u.userId}"`, `"${u.name}"`, `"${u.role}"`, `"${u.area || '-'}"`, `"${u.timeIn || '-'}"`];
+                    if (currentModalType === 'break' || currentModalType === 'long_break') {
+                        row.push(`"${u.breakOut || '-'}"`);
+                        let duration = 0;
+                        if (u.breakOut) {
+                            const [h, m] = u.breakOut.split(':').map(Number);
+                            if (!isNaN(h) && !isNaN(m)) {
+                                const breakStart = new Date();
+                                breakStart.setHours(h, m, 0, 0);
+                                if (breakStart > now) breakStart.setDate(breakStart.getDate() - 1);
+                                duration = Math.floor((now - breakStart) / 60000);
+                            }
+                        }
+                        row.push(duration);
+                    }
+                    rows.push(row.join(','));
                 });
+                
+                const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                let filename = 'users_list.csv';
+                if (currentModalType === 'active') filename = 'active_users.csv';
+                else if (currentModalType === 'break') filename = 'users_on_break.csv';
+                else if (currentModalType === 'long_break') filename = 'long_break_users.csv';
+                else if (currentModalType === 'timeout') filename = 'timed_out_users.csv';
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             });
         }
     });

@@ -84,6 +84,13 @@
     body.dark-mode .att-tab.active { border-color: #444; border-bottom-color: #1e1e1e; background: #1e1e1e; color: #fff; }
     body.dark-mode .att-tabs { border-bottom-color: #444; }
 
+    /* Compact Attendance Table Styles */
+    #attendance-table { font-size: 11px; }
+    #attendance-table th, #attendance-table td { padding: 3px 4px; vertical-align: middle; height: 28px; }
+    #attendance-table .icon-btn { padding: 2px; width: 22px; height: 22px; min-width: 22px; font-size: 14px; }
+    #attendance-table .icon-btn svg { width: 14px; height: 14px; }
+    #attendance-table td:last-child { white-space: nowrap; }
+
     /* Dashboard Stats Grid (8 Cards) */
     .dashboard-stats-grid {
         display: grid;
@@ -153,7 +160,6 @@
     }
 
     /* Clickable Summary Cards */
-    .stat-card.selected-summary-card { background-color: #e3f2fd; border-color: #2752a7; box-shadow: inset 0 0 0 1px #2752a7; }
     body.dark-mode .stat-card.selected-summary-card { background-color: #2c3e50; border-color: #64b5f6; box-shadow: inset 0 0 0 1px #64b5f6; }
 
     @keyframes blink-red {
@@ -321,7 +327,7 @@
 
     <div class="flip-container" id="attendance-flip-container">
       <div class="flip-inner">
-      <div class="flip-front card resizable-box" id="attendance-card">
+      <div class="flip-front card resizable-box" id="attendance-card" style="padding: 20px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <div style="display:flex; align-items:center; gap:10px;">
             <h2 style="margin:0;">Attendance Sheet</h2>
@@ -338,6 +344,7 @@
             <select id="att-filter-status" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
                 <option value="">All Statuses</option>
                 <option value="Full-time">Full-time</option>
+                <option value="Full Counter">Full Counter</option>
                 <option value="Temporary slide to Other task">Temporary slide to Other task</option>
             </select>
             <div id="att-filter-area-wrapper" style="position:relative; display:inline-block;">
@@ -370,6 +377,12 @@
             </button>
             <button id="delete-selected-att-btn" class="icon-btn" title="Delete Selected" style="color:#d9534f; display:none;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+            </button>
+            <button id="forward-all-btn" class="icon-btn" title="Forward All Cycle Counters" style="background: #e67e22; color: white; margin-right: 5px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Forward All
+            </button>
+            <button id="undo-forward-btn" class="icon-btn" title="Undo Last Forward" style="background: #7f8c8d; color: white; margin-right: 5px; display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo
             </button>
             <button id="export-att-btn" class="icon-btn" title="Export CSV" style="margin-right:5px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -417,14 +430,13 @@
                       <th style="width: 60px;">Time Out</th>
                       <th class="sortable" data-sort="duration" style="width: 60px;">Duration <span class="sort-icon"></span></th>
                       <th style="width: 80px;">Status</th>
-                      <th style="width: 100px;">Notes</th>
                       <th style="width: 60px;">Action</th>
                   </tr>
               </thead>
               <tbody></tbody>
               <tfoot>
                   <tr style="background-color: #f8f9fa; font-weight: bold; border-top: 2px solid #eef2f6;">
-                      <td colspan="15" style="text-align: right; padding: 10px;">Total Records: <span id="att-total-count">0</span></td>
+                      <td colspan="14" style="text-align: right; padding: 10px;">Total Records: <span id="att-total-count">0</span></td>
                   </tr>
               </tfoot>
           </table>
@@ -591,15 +603,12 @@
                         </button>
                     </div>
                 </div>
-                <div>
-                    <label for="att-notes">Notes (Optional)</label>
-                    <input type="text" id="att-notes" style="width:100%" placeholder="Enter notes">
-                </div>
             </div>
             <div>
                 <label for="att-status">Status</label>
                 <select id="att-status" style="width:100%">
                     <option value="Full-time">Full-time</option>
+                    <option value="Full Counter">Full Counter</option>
                     <option value="Temporary slide to Other task">Temporary slide to Other task</option>
                 </select>
             </div>
@@ -1040,22 +1049,60 @@
         </div>
 
         <!-- 1. Top Center: Dashboard -->
-        <div id="validation-summary-dashboard" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:15px;">
-            <div class="stat-card" style="padding:15px; background:#fff; border:1px solid #eef2f6; text-align:center; display:block;">
-                <div class="stat-value" id="val-total-tasks" style="font-size:24px; font-weight:bold; color:#1565c0;">0</div>
-                <div class="stat-label" style="font-size:12px; color:#555;">Total Tasks</div>
+        <div id="validation-summary-dashboard" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #1565c0;" onclick="filterValDashboard('total')">
+                <div class="stat-icon" style="background: #e3f2fd; color: #1565c0;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-total-tasks">0</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
             </div>
-            <div class="stat-card" style="padding:15px; background:#fff; border:1px solid #eef2f6; text-align:center; display:block;">
-                <div class="stat-value" id="val-completed-tasks" style="font-size:24px; font-weight:bold; color:#2e7d32;">0</div>
-                <div class="stat-label" style="font-size:12px; color:#555;">Completed</div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #2e7d32;" onclick="filterValDashboard('resolved')">
+                <div class="stat-icon" style="background: #e8f5e9; color: #2e7d32;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-completed-tasks">0</div>
+                <div class="stat-label">Resolved</div>
+                </div>
             </div>
-            <div class="stat-card" style="padding:15px; background:#fff; border:1px solid #eef2f6; text-align:center; display:block;">
-                <div class="stat-value" id="val-pending-tasks" style="font-size:24px; font-weight:bold; color:#ef6c00;">0</div>
-                <div class="stat-label" style="font-size:12px; color:#555;">Pending</div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #ef6c00;" onclick="filterValDashboard('pending')">
+                <div class="stat-icon" style="background: #fff3e0; color: #ef6c00;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-pending-tasks">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
             </div>
-            <div class="stat-card" style="padding:15px; background:#fff; border:1px solid #eef2f6; text-align:center; display:block;">
-                <div class="stat-value" id="val-completion-rate" style="font-size:24px; font-weight:bold; color:#7b1fa2;">0%</div>
-                <div class="stat-label" style="font-size:12px; color:#555;">Completion Rate</div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #3498db;" onclick="filterValDashboard('assigned')">
+            <div class="stat-icon" style="background: rgba(52, 152, 219, 0.1); color: #3498db;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="val-assigned-tasks">0</div>
+                <div class="stat-label">Assigned</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #d9534f;" onclick="filterValDashboard('unresolved')">
+                <div class="stat-icon" style="background: #ffebee; color: #d9534f;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-unresolved-tasks">0</div>
+                    <div class="stat-label">Unresolved</div>
+                </div>
+            </div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #7b1fa2;" onclick="filterValDashboard('chart')">
+                <div class="stat-icon" style="background: #f3e5f5; color: #7b1fa2;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-completion-rate">0%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
             </div>
         </div>
 
@@ -1072,6 +1119,7 @@
                             <button class="att-tab" onclick="openValTab(event, 'tab-val-assigned')">Assigned</button>
                         </div>
                         <div style="display:flex; gap:5px; align-items:center;">
+                            <input type="text" id="val-filter-sku-1" placeholder="Filter SKU..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:100px;">
                             <input type="text" id="val-filter-assigned-1" placeholder="Filter Assigned To..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:120px;">
                             <button class="icon-btn" id="val-print-btn-1" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
                             <button class="icon-btn" id="val-export-btn-1" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
@@ -1160,6 +1208,7 @@
                             <button class="att-tab" onclick="openValTab(event, 'tab-val-unresolved')">Unresolved</button>
                         </div>
                         <div style="display:flex; gap:5px; align-items:center;">
+                            <input type="text" id="val-filter-sku-2" placeholder="Filter SKU..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:100px;">
                             <input type="text" id="val-filter-assigned-2" placeholder="Filter Validator..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:120px;">
                             <button class="icon-btn" id="val-print-btn-2" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
                             <button class="icon-btn" id="val-export-btn-2" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
@@ -1180,6 +1229,7 @@
                                     <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                     <th style="position:sticky; top:0; z-index:1;">Reason</th>
                                     <th style="position:sticky; top:0; z-index:1;">Validator</th>
+                                    <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                     <th style="position:sticky; top:0; z-index:1;">Action</th>
                                 </tr>
                             </thead>
@@ -1216,6 +1266,7 @@
                                         <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                         <th style="position:sticky; top:0; z-index:1;">Reason</th>
                                         <th style="position:sticky; top:0; z-index:1;">Validator</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                         <th style="position:sticky; top:0; z-index:1;">Action</th>
                                     </tr>
                                 </thead>
@@ -1289,6 +1340,14 @@
                         <div style="grid-column: span 2; text-align:right;">
                             <button id="btn-assign-task" class="icon-btn" style="background:#2752a7; color:white; padding:8px 16px;">Add Task</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Middle: Status Chart -->
+                <div class="card" style="margin:0; padding:10px; min-height: 200px;">
+                    <h4 style="margin:0 0 10px 0; color:#2752a7;">Task Status Distribution</h4>
+                    <div style="position:relative; height:160px; width:100%;">
+                        <canvas id="val-status-chart"></canvas>
                     </div>
                 </div>
 
@@ -1846,17 +1905,26 @@
             if(activeHeader) activeHeader.querySelector('.sort-icon').textContent = attSortDirection === 'asc' ? '↑' : '↓';
 
             if (paginatedData.length === 0) {
-                attendanceTableBody.innerHTML = `<tr><td colspan="15" class="muted" style="text-align:center; padding: 20px;">No attendance records found.</td></tr>`;
+                attendanceTableBody.innerHTML = `<tr><td colspan="14" class="muted" style="text-align:center; padding: 20px;">No attendance records found.</td></tr>`;
                 return;
             }
             paginatedData.forEach(item => {
                 const tr = document.createElement('tr');
+
+                let forwardBtnHtml = '';
+                let nameHtml = item.name;
+                if (item.area === 'Cycle Counter' && item.status === 'Full-time') {
+                    forwardBtnHtml = `<button class="icon-btn forward-to-daily-btn" data-id="${item.id}" title="Forward to Daily Counters" style="color:#2752a7; margin-right:5px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>`;
+                    nameHtml = `<span style="color:#e74c3c; font-weight:bold; background:#ffebee; padding:2px 5px; border-radius:4px;">${item.name}</span>`;
+                }
                 tr.innerHTML = `
                     <td><input type="checkbox" class="att-row-checkbox" data-id="${item.id}"></td>
                     <td>${item.date}</td>
                     <td>${item.userId || '-'}</td>
                     <td>${item.shift}</td>
-                    <td>${item.name}</td>
+                    <td>${nameHtml}</td>
                     <td>${item.role || '-'}</td>
                     <td>${item.area || '-'}</td>
                     <td>${item.timeIn || '-'}</td>
@@ -1865,8 +1933,8 @@
                     <td>${item.timeOut || '-'}</td>
                     <td style="font-weight:bold; color:#555;">${getDuration(item.breakOut, item.breakIn)}</td>
                     <td>${item.status || '-'}</td>
-                    <td>${item.notes || ''}</td>
                     <td>
+                        ${forwardBtnHtml}
                         <button class="icon-btn edit-att-btn" data-id="${item.id}" title="Edit" style="margin-right:5px">✎</button>
                         <button class="icon-btn delete-att-btn" data-id="${item.id}" title="Delete" style="color:#d9534f">&times;</button>
                     </td>
@@ -1959,8 +2027,7 @@
                     breakIn: document.getElementById('att-break-in').value,
                     breakOut: document.getElementById('att-break-out').value,
                     timeOut: document.getElementById('att-time-out').value,
-                    status: document.getElementById('att-status').value,
-                    notes: document.getElementById('att-notes').value.trim()
+                    status: document.getElementById('att-status').value
                 };
                 if(!newEntry.name) return;
 
@@ -2007,6 +2074,44 @@
                 const btn = e.target.closest('button');
                 if (!btn) return;
                 const id = btn.dataset.id;
+
+                if (btn.classList.contains('forward-to-daily-btn')) {
+                    const allAttendance = getAttendanceData();
+                    const itemIndex = allAttendance.findIndex(item => item.id === id);
+                    if (itemIndex > -1) {
+                        const itemToForward = { ...allAttendance[itemIndex] };
+                        
+                        // 1. Change status
+                        itemToForward.status = 'Full Counter';
+                        itemToForward.jobDescription = 'Cycle Counter';
+                        itemToForward.area = '';
+                        allAttendance[itemIndex].status = 'Full Counter';
+                        saveAttendanceData(allAttendance); // Save change in current list
+
+                        // 2. Forward to daily_cycle_count attendance
+                        const dailyCountersAttendanceKey = 'ims_daily_counters_attendance_v1';
+                        let dailyAttendance = [];
+                        try {
+                            dailyAttendance = JSON.parse(localStorage.getItem(dailyCountersAttendanceKey) || '[]');
+                        } catch (err) {
+                            console.error('Could not parse daily counters attendance', err);
+                            dailyAttendance = [];
+                        }
+
+                        // Avoid duplicates in daily counters attendance
+                        const alreadyExists = dailyAttendance.some(d => d.date === itemToForward.date && d.shift === itemToForward.shift && d.userId === itemToForward.userId);
+                        if (!alreadyExists) {
+                            dailyAttendance.push(itemToForward);
+                            localStorage.setItem(dailyCountersAttendanceKey, JSON.stringify(dailyAttendance));
+                            showToast(`${itemToForward.name} forwarded to Daily Counters.`);
+                        }
+                        
+                        // 3. Re-render table to update status and remove button
+                        renderAttendanceTable();
+                    }
+                    return; // Stop further processing
+                }
+
                 if (btn.classList.contains('delete-att-btn')) {
                     showSupervisorDeleteModal(1, () => {
                         let data = getAttendanceData();
@@ -2032,7 +2137,6 @@
                         document.getElementById('att-break-in').value = item.breakIn;
                         document.getElementById('att-time-out').value = item.timeOut || '';
                         document.getElementById('att-status').value = item.status || 'Full-time';
-                        document.getElementById('att-notes').value = item.notes || '';
                         attModal.classList.remove('hidden');
                     }
                 }
@@ -2079,6 +2183,110 @@
             });
         }
 
+        // Forward All Logic
+        let undoStack = [];
+        const forwardAllBtn = document.getElementById('forward-all-btn');
+        const undoForwardBtn = document.getElementById('undo-forward-btn');
+
+        if (forwardAllBtn) {
+            forwardAllBtn.addEventListener('click', () => {
+                // Use filtered data to respect current view filters
+                const candidates = getFilteredAttendanceData().filter(item => item.area === 'Cycle Counter' && item.status === 'Full-time');
+                
+                if (candidates.length === 0) {
+                    alert('No unforwarded Cycle Counters found in current view.');
+                    return;
+                }
+
+                if (!confirm(`Forward ${candidates.length} Cycle Counters to Daily Count?`)) return;
+
+                const allData = getAttendanceData();
+                const candidateIds = new Set(candidates.map(c => c.id));
+                
+                const dailyCountersAttendanceKey = 'ims_daily_counters_attendance_v1';
+                let dailyAttendance = [];
+                try { dailyAttendance = JSON.parse(localStorage.getItem(dailyCountersAttendanceKey) || '[]'); } catch (err) { dailyAttendance = []; }
+
+                let count = 0;
+                let forwardedIds = [];
+                let addedToDailyIds = [];
+
+                // Clear any existing undo timeout
+                if (undoTimeout) clearTimeout(undoTimeout);
+
+                allData.forEach(item => {
+                    if (candidateIds.has(item.id)) {
+                        forwardedIds.push(item.id);
+                        item.status = 'Full Counter';
+                        const alreadyExists = dailyAttendance.some(d => d.date === item.date && d.shift === item.shift && d.userId === item.userId);
+                        if (!alreadyExists) {
+                            dailyAttendance.push({ ...item });
+                            dailyAttendance.push({ ...item, jobDescription: 'Cycle Counter', area: '' });
+                            addedToDailyIds.push(item.id);
+                            count++;
+                        }
+                    }
+                });
+
+                saveAttendanceData(allData);
+                localStorage.setItem(dailyCountersAttendanceKey, JSON.stringify(dailyAttendance));
+                renderAttendanceTable();
+                showToast(`${count} Cycle Counters forwarded.`);
+
+                undoStack.push({
+                    type: 'forward_all',
+                    forwardedIds: forwardedIds,
+                    addedToDailyIds: addedToDailyIds
+                });
+                if (undoForwardBtn) undoForwardBtn.style.display = 'inline-flex';
+
+                // Set a timer to hide the undo button
+                undoTimeout = setTimeout(() => {
+                    if (undoForwardBtn) undoForwardBtn.style.display = 'none';
+                }, 10000); // 10 seconds
+            });
+        }
+
+        if (undoForwardBtn) {
+            undoForwardBtn.addEventListener('click', () => {
+                if (undoTimeout) {
+                    clearTimeout(undoTimeout);
+                    undoTimeout = null;
+                }
+                const lastAction = undoStack.pop();
+                if (!lastAction) return;
+
+                if (lastAction.type === 'forward_all') {
+                    const allData = getAttendanceData();
+                    let revertedCount = 0;
+                    
+                    // Revert status in main attendance
+                    allData.forEach(item => {
+                        if (lastAction.forwardedIds.includes(item.id)) {
+                            item.status = 'Full-time';
+                            revertedCount++;
+                        }
+                    });
+                    saveAttendanceData(allData);
+
+                    // Remove from daily attendance
+                    const dailyCountersAttendanceKey = 'ims_daily_counters_attendance_v1';
+                    let dailyAttendance = [];
+                    try { dailyAttendance = JSON.parse(localStorage.getItem(dailyCountersAttendanceKey) || '[]'); } catch (err) { dailyAttendance = []; }
+                    
+                    dailyAttendance = dailyAttendance.filter(item => !lastAction.addedToDailyIds.includes(item.id));
+                    localStorage.setItem(dailyCountersAttendanceKey, JSON.stringify(dailyAttendance));
+
+                    renderAttendanceTable();
+                    showToast(`Undo successful.`);
+                }
+
+                if (undoStack.length === 0) {
+                    undoForwardBtn.style.display = 'none';
+                }
+            });
+        }
+
         function showSupervisorDeleteModal(count, callback) {
             if (!supervisorDeleteModal) return;
             document.getElementById('supervisor-delete-count').textContent = count;
@@ -2101,13 +2309,13 @@
             exportAttBtn.addEventListener('click', () => {
                 const data = getFilteredAttendanceData();
                 if (data.length === 0) { alert('No attendance records to export.'); return; }
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Job Description', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status', 'Notes'];
+                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Job Description', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Duration', 'Status'];
                 const rows = [headers.join(',')];
                 
                 data.forEach(item => {
                     const dur = getDuration(item.breakOut, item.breakIn);
                     const row = [
-                        item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`, `"${item.notes||''}"`
+                        item.date, `"${item.userId||''}"`, `"${item.shift}"`, `"${item.name}"`, item.role || '', item.area || '', item.timeIn || '', item.breakOut || '', item.breakIn || '', item.timeOut || '', dur, `"${item.status||''}"`
                     ];
                     rows.push(row.join(','));
                 });
@@ -2136,7 +2344,7 @@
                 printWindow.document.write('<h2>Attendance Report</h2>');
                 printWindow.document.write(`<p>Generated: ${new Date().toLocaleString()}</p>`);
                 printWindow.document.write('<table><thead><tr>');
-                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Job Description', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Status', 'Notes', 'Signature'];
+                const headers = ['Date', 'User ID', 'Shift', 'Name', 'Role', 'Job Description', 'Time In', 'Break Out', 'Break In', 'Time Out', 'Status', 'Signature'];
                 headers.forEach(h => printWindow.document.write(`<th>${h}</th>`));
                 printWindow.document.write('</tr></thead><tbody>');
 
@@ -2153,7 +2361,6 @@
                     printWindow.document.write(`<td>${item.breakIn || ''}</td>`);
                     printWindow.document.write(`<td>${item.timeOut || ''}</td>`);
                     printWindow.document.write(`<td>${item.status || ''}</td>`);
-                    printWindow.document.write(`<td>${item.notes || ''}</td>`);
                     printWindow.document.write('<td class="sig"></td>');
                     printWindow.document.write('</tr>');
                 });
@@ -2324,7 +2531,7 @@
                         }
                     }
                     localStorage.setItem('ims_att_requirements_v1', JSON.stringify(reqs));
-                    alert(`Imported requirements for ${count} roles.`);
+                    showToast(`Imported requirements for ${count} roles.`);
                     importReqFile.value = '';
                     if(setReqBtn) setReqBtn.click(); // Refresh modal
                 };
@@ -2667,6 +2874,31 @@
         // Filters
         let valFilterAssigned1 = '';
         let valFilterAssigned2 = '';
+        let valFilterSku1 = '';
+        let valFilterSku2 = '';
+
+        function filterValDashboard(type) {
+            if (type === 'total') {
+                if(document.getElementById('val-filter-sku-1')) document.getElementById('val-filter-sku-1').value=''; 
+                if(document.getElementById('val-filter-assigned-1')) document.getElementById('val-filter-assigned-1').value=''; 
+                renderValidationTasks();
+            } else if (type === 'resolved') {
+                const btn = document.querySelector("button[onclick*='tab-val-resolved']");
+                if(btn) btn.click();
+            } else if (type === 'pending') {
+                const btn = document.querySelector("button[onclick*='tab-val-pending']");
+                if(btn) btn.click();
+            } else if (type === 'assigned') {
+                const btn = document.querySelector("button[onclick*='tab-val-assigned']");
+                if(btn) btn.click();
+            } else if (type === 'unresolved') {
+                const btn = document.querySelector("button[onclick*='tab-val-unresolved']");
+                if(btn) btn.click();
+            } else if (type === 'chart') {
+                const chart = document.getElementById('val-status-chart'); 
+                if(chart) chart.scrollIntoView({behavior:'smooth'});
+            }
+        }
 
         function renderValidationTasks() {
             const assignedTasksTbody = document.getElementById('assigned-tasks-tbody');
@@ -2678,22 +2910,25 @@
             unresolvedTasksTbody.innerHTML = '';
             
             let tasks = getValidationTasks();
-            
-            // Get filter values
-            valFilterAssigned1 = document.getElementById('val-filter-assigned-1') ? document.getElementById('val-filter-assigned-1').value.toLowerCase() : '';
-            valFilterAssigned2 = document.getElementById('val-filter-assigned-2') ? document.getElementById('val-filter-assigned-2').value.toLowerCase() : '';
-            
+
             if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
                 if(start) start.setHours(0,0,0,0);
                 const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
                 if(end) end.setHours(23,59,59,999);
-                
+
                 tasks = tasks.filter(t => {
                     const d = new Date(t.timestamp);
                     return (!start || d >= start) && (!end || d <= end);
                 });
             }
+            
+            // Get filter values
+            valFilterAssigned1 = document.getElementById('val-filter-assigned-1') ? document.getElementById('val-filter-assigned-1').value.toLowerCase() : '';
+            valFilterAssigned2 = document.getElementById('val-filter-assigned-2') ? document.getElementById('val-filter-assigned-2').value.toLowerCase() : '';
+            valFilterSku1 = document.getElementById('val-filter-sku-1') ? document.getElementById('val-filter-sku-1').value.toLowerCase() : '';
+            valFilterSku2 = document.getElementById('val-filter-sku-2') ? document.getElementById('val-filter-sku-2').value.toLowerCase() : '';
+            
 
             // Get validators for dropdown
             let attendanceData = getAttendanceData();
@@ -2707,30 +2942,48 @@
             const validators = attendanceData.filter(item => item.area === 'Validator' && !item.timeOut);
             const validatorNames = [...new Set(validators.map(v => v.name))].sort();
 
+            // --- 1. Calculate and Display Summary Stats ---
             const total = tasks.length;
-            const completed = tasks.filter(t => t.status === 'Completed').length;
-            const pending = total - completed;
-            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const resolvedCount = tasks.filter(t => t.status === 'Completed').length;
+            const unresolvedCount = tasks.filter(t => t.status === 'Unresolved').length;
+            
+            const allActive = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved');
+            const assignedCount = allActive.filter(t => t.validator && t.validator !== 'Unassigned').length;
+            const pendingCount = allActive.length - assignedCount;
+
+            const rate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
 
             if(document.getElementById('val-total-tasks')) document.getElementById('val-total-tasks').textContent = total;
-            if(document.getElementById('val-completed-tasks')) document.getElementById('val-completed-tasks').textContent = completed;
-            if(document.getElementById('val-pending-tasks')) document.getElementById('val-pending-tasks').textContent = pending;
+            if(document.getElementById('val-completed-tasks')) document.getElementById('val-completed-tasks').textContent = resolvedCount;
+            if(document.getElementById('val-pending-tasks')) document.getElementById('val-pending-tasks').textContent = pendingCount;
+            if(document.getElementById('val-assigned-tasks')) document.getElementById('val-assigned-tasks').textContent = assignedCount;
+            if(document.getElementById('val-unresolved-tasks')) document.getElementById('val-unresolved-tasks').textContent = unresolvedCount;
             if(document.getElementById('val-completion-rate')) document.getElementById('val-completion-rate').textContent = rate + '%';
 
+            updateValStatusChart(resolvedCount, pendingCount, unresolvedCount, assignedCount);
+            
+            // --- 2. Prepare Data for Tables ---
             tasks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            const allPending = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved');
-            let pendingTasks = allPending.filter(t => !t.validator || t.validator === 'Unassigned');
-            let assignedTasks = allPending.filter(t => t.validator && t.validator !== 'Unassigned');
+            const allActiveForTables = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved');
+            let pendingTasks = allActiveForTables.filter(t => !t.validator || t.validator === 'Unassigned');
+            let assignedTasks = allActiveForTables.filter(t => t.validator && t.validator !== 'Unassigned');
             let resolvedTasks = tasks.filter(t => t.status === 'Completed');
             let unresolvedTasks = tasks.filter(t => t.status === 'Unresolved');
             
-            // Apply Assigned To Filter
+            // Apply Filters for Card 1 (Pending/Assigned)
+            if (valFilterSku1) {
+                pendingTasks = pendingTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku1));
+                assignedTasks = assignedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku1));
+            }
             if (valFilterAssigned1) {
-                // Pending usually has no assignee, but maybe filter by SKU/Desc? Let's filter by Assignee for Assigned tab
                 assignedTasks = assignedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned1));
-                // For pending, maybe filter by SKU?
-                pendingTasks = pendingTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterAssigned1) || (t.desc || '').toLowerCase().includes(valFilterAssigned1));
+            }
+
+            // Apply Filters for Card 2 (Resolved/Unresolved)
+            if (valFilterSku2) {
+                resolvedTasks = resolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku2));
+                unresolvedTasks = unresolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku2));
             }
             if (valFilterAssigned2) {
                 resolvedTasks = resolvedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned2));
@@ -2769,15 +3022,16 @@
                     else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
                     else durationStr = `<span style="color:#2ecc71; font-weight:bold;">${durationStr}</span>`;
 
-                    let validatorSelect = `<select class="task-validator-select" data-id="${t.id}" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px;">`;
-                    validatorSelect += `<option value="Unassigned" ${t.validator === 'Unassigned' ? 'selected' : ''}>Unassigned</option>`;
-                    validatorNames.forEach(vName => {
-                        validatorSelect += `<option value="${vName}" ${t.validator === vName ? 'selected' : ''}>${vName}</option>`;
+                    let options = `<option value="Unassigned">Unassign</option>`;
+                    validatorNames.forEach(v => {
+                        const selected = (t.validator === v) ? 'selected' : '';
+                        options += `<option value="${v}" ${selected}>${v}</option>`;
                     });
-                    if (t.validator !== 'Unassigned' && !validatorNames.includes(t.validator)) {
-                         validatorSelect += `<option value="${t.validator}" selected>${t.validator}</option>`;
+                    // If the assigned validator is not in the active list, add them as an option
+                    if (t.validator && !validatorNames.includes(t.validator)) {
+                        options += `<option value="${t.validator}" selected>${t.validator} (inactive)</option>`;
                     }
-                    validatorSelect += `</select>`;
+                    const validatorInput = `<select class="task-validator-input" data-id="${t.id}" style="width:100%; padding:4px; border:1px solid #e0e0e0; border-radius:4px; font-size:11px; background:#fff; color:#333;">${options}</select>`;
 
                     const actionHtml = `
                         <button class="icon-btn complete-task-btn" data-id="${t.id}" title="Mark Resolved" style="color:#2ecc71; margin-right:5px;">
@@ -2789,7 +3043,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox pending-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorSelect}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox pending-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     pendingTasksTbody.appendChild(tr);
                 });
             }
@@ -2826,15 +3080,16 @@
                     else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
                     else durationStr = `<span style="color:#2ecc71; font-weight:bold;">${durationStr}</span>`;
 
-                    let validatorSelect = `<select class="task-validator-select" data-id="${t.id}" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px;">`;
-                    validatorSelect += `<option value="Unassigned" ${t.validator === 'Unassigned' ? 'selected' : ''}>Unassigned</option>`;
-                    validatorNames.forEach(vName => {
-                        validatorSelect += `<option value="${vName}" ${t.validator === vName ? 'selected' : ''}>${vName}</option>`;
+                    let options = `<option value="Unassigned">Unassign</option>`;
+                  
+                    validatorNames.forEach(v => {
+                        const selected = (t.validator === v) ? 'selected' : '';
+                        options += `<option value="${v}" ${selected}>${v}</option>`;
                     });
-                    if (t.validator !== 'Unassigned' && !validatorNames.includes(t.validator)) {
-                         validatorSelect += `<option value="${t.validator}" selected>${t.validator}</option>`;
+                    if (t.validator && !validatorNames.includes(t.validator)) {
+                        options += `<option value="${t.validator}" selected>${t.validator} (inactive)</option>`;
                     }
-                    validatorSelect += `</select>`;
+                    const validatorInput = `<select class="task-validator-input" data-id="${t.id}" style="width:100%; padding:4px; border:1px solid #e0e0e0; border-radius:4px; font-size:11px; background:#fff; color:#333;">${options}</select>`;
 
                     const actionHtml = `
                         <button class="icon-btn complete-task-btn" data-id="${t.id}" title="Mark Resolved" style="color:#2ecc71; margin-right:5px;">
@@ -2846,7 +3101,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox assigned-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorSelect}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox assigned-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     assignedTasksTbody.appendChild(tr);
                 });
             }
@@ -2869,11 +3124,20 @@
 
             if(paginatedResolved.length === 0) {
                 resolvedTasksTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:10px; color:#999;">No resolved tasks.</td></tr>';
+                resolvedTasksTbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:10px; color:#999;">No resolved tasks.</td></tr>';
             } else {
                 paginatedResolved.forEach(t => {
                     const tr = document.createElement('tr');
                     const assignedTime = new Date(t.timestamp).toLocaleString();
                     const resolvedTime = t.completedAt ? new Date(t.completedAt).toLocaleString() : '-';
+                    
+                    let durationStr = '-';
+                    if (t.completedAt && t.timestamp) {
+                        const diffMs = new Date(t.completedAt) - new Date(t.timestamp);
+                        const diffMins = Math.floor(diffMs / 60000);
+                        durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
+                    }
+
                     const actionHtml = `
                         <button class="icon-btn reopen-task-btn" data-id="${t.id}" title="Reopen (Move to Pending)" style="color:#f39c12; margin-right:5px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/></svg>
@@ -2882,6 +3146,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
                     tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox resolved-cb" value="${t.id}"></td><td>${resolvedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox resolved-cb" value="${t.id}"></td><td>${resolvedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     resolvedTasksTbody.appendChild(tr);
                 });
             }
@@ -2904,10 +3169,21 @@
 
             if(paginatedUnresolved.length === 0) {
                 unresolvedTasksTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:10px; color:#999;">No unresolved tasks.</td></tr>';
+                unresolvedTasksTbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:10px; color:#999;">No unresolved tasks.</td></tr>';
             } else {
+                const now = new Date();
                 paginatedUnresolved.forEach(t => {
                     const tr = document.createElement('tr');
                     const assignedTime = new Date(t.timestamp).toLocaleString();
+                    
+                    const diffMs = now - new Date(t.timestamp);
+                    const diffMins = Math.floor(diffMs / 60000);
+                    let durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
+                    
+                    if(diffMins > 60) durationStr = `<span style="color:#e74c3c; font-weight:bold;">${durationStr}</span>`;
+                    else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
+                    else durationStr = `<span style="color:#2ecc71; font-weight:bold;">${durationStr}</span>`;
+
                     const actionHtml = `
                         <button class="icon-btn complete-task-btn" data-id="${t.id}" title="Mark Resolved" style="color:#2ecc71; margin-right:5px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -2916,10 +3192,59 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
                     tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     unresolvedTasksTbody.appendChild(tr);
                 });
             }
             updateValBulkButtons();
+        }
+
+        let valStatusChart = null;
+        function updateValStatusChart(resolvedCount, pendingCount, unresolvedCount, assignedCount) {
+            const ctx = document.getElementById('val-status-chart');
+            if (!ctx || typeof Chart === 'undefined') return;
+            
+            if (valStatusChart) {
+                valStatusChart.data.labels = ['Resolved', 'Pending', 'Assigned', 'Unresolved'];
+                valStatusChart.data.datasets[0].data = [resolvedCount, pendingCount, assignedCount, unresolvedCount];
+                valStatusChart.update();
+            } else {
+                valStatusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Resolved', 'Pending', 'Assigned', 'Unresolved'],
+                        datasets: [{
+                            data: [resolvedCount, pendingCount, assignedCount, unresolvedCount],
+                            backgroundColor: ['#2e7d32', '#ef6c00', '#3498db', '#d9534f'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
+                        cutout: '60%',
+                        onHover: (event, chartElement) => {
+                            event.native.target.style.cursor = chartElement.length ? 'pointer' : 'default';
+                        },
+                        onClick: (evt, elements, chart) => {
+                            if (elements.length > 0) {
+                                const i = elements[0].index;
+                                const label = chart.data.labels[i];
+                                let tabId = '';
+                                if (label === 'Resolved') tabId = 'tab-val-resolved';
+                                else if (label === 'Pending') tabId = 'tab-val-pending';
+                                else if (label === 'Assigned') tabId = 'tab-val-assigned';
+                                else if (label === 'Unresolved') tabId = 'tab-val-unresolved';
+                                
+                                if (tabId) {
+                                    const btn = document.querySelector(`button[onclick*="'${tabId}'"]`);
+                                    if (btn) btn.click();
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         // Validation Tasks Pagination Listeners
@@ -2966,6 +3291,7 @@
                     tasks = tasks.filter(t => t.id !== id);
                     saveValidationTasks(tasks);
                     renderValidationTasks();
+                    showToast('Task deleted');
                 }
             } else if(btn.classList.contains('complete-task-btn')) {
                 const id = btn.dataset.id;
@@ -3005,7 +3331,7 @@
         if(pendingTasksTbody) {
             pendingTasksTbody.addEventListener('click', handleTaskAction);
             pendingTasksTbody.addEventListener('change', (e) => {
-                if(e.target.classList.contains('task-validator-select')) {
+                if(e.target.classList.contains('task-validator-input')) {
                     const id = e.target.dataset.id;
                     const newValidator = e.target.value;
                     let tasks = getValidationTasks();
@@ -3024,7 +3350,7 @@
         if(assignedTasksTbody) {
             assignedTasksTbody.addEventListener('click', handleTaskAction);
             assignedTasksTbody.addEventListener('change', (e) => {
-                if(e.target.classList.contains('task-validator-select')) {
+                if(e.target.classList.contains('task-validator-input')) {
                     const id = e.target.dataset.id;
                     const newValidator = e.target.value;
                     let tasks = getValidationTasks();
@@ -3097,47 +3423,91 @@
         if(filterInput1) filterInput1.addEventListener('input', renderValidationTasks);
         const filterInput2 = document.getElementById('val-filter-assigned-2');
         if(filterInput2) filterInput2.addEventListener('input', renderValidationTasks);
+        const filterSku1 = document.getElementById('val-filter-sku-1');
+        if(filterSku1) filterSku1.addEventListener('input', renderValidationTasks);
+        const filterSku2 = document.getElementById('val-filter-sku-2');
+        if(filterSku2) filterSku2.addEventListener('input', renderValidationTasks);
 
         // Export CSV
         const exportValCSV = (selector) => {
-            // Export visible rows in the active tab of the card
-            // Find active tab in card 1 or 2
-            let activeTbody = null;
-            if(selector === 1) {
-                if(document.getElementById('tab-val-pending').style.display !== 'none') activeTbody = document.getElementById('pending-tasks-tbody');
-                else activeTbody = document.getElementById('assigned-tasks-tbody');
-            } else {
-                if(document.getElementById('tab-val-resolved').style.display !== 'none') activeTbody = document.getElementById('resolved-tasks-tbody');
-                else activeTbody = document.getElementById('unresolved-tasks-tbody');
+            let tasks = getValidationTasks();
+            
+            // Apply Global Date Filter
+            if (globalStartDate.value || globalEndDate.value) {
+                const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
+                if(end) end.setHours(23,59,59,999);
+                
+                tasks = tasks.filter(t => {
+                    const d = new Date(t.timestamp);
+                    return (!start || d >= start) && (!end || d <= end);
+                });
             }
             
-            if(!activeTbody) return;
-            const rows = Array.from(activeTbody.querySelectorAll('tr'));
-            if(rows.length === 0) { alert('No data to export'); return; }
+            // Sort by timestamp desc
+            tasks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let dataToExport = [];
+            let filename = 'validation_tasks.csv';
             
-            const csv = [];
-            // Header
-            const headerRow = activeTbody.previousElementSibling.querySelector('tr');
-            const headers = Array.from(headerRow.querySelectorAll('th')).map(th => th.innerText.trim()).filter(t => t);
-            csv.push(headers.join(','));
+            if (selector === 1) {
+                // Card 1: Pending or Assigned
+                const isPendingTab = document.getElementById('tab-val-pending').style.display !== 'none';
+                const skuFilter = document.getElementById('val-filter-sku-1').value.toLowerCase();
+                const assignedFilter = document.getElementById('val-filter-assigned-1').value.toLowerCase();
+                
+                let filtered = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved');
+                if (skuFilter) filtered = filtered.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
+                
+                if (isPendingTab) {
+                    dataToExport = filtered.filter(t => !t.validator || t.validator === 'Unassigned');
+                    filename = 'pending_validation_tasks.csv';
+                } else {
+                    dataToExport = filtered.filter(t => t.validator && t.validator !== 'Unassigned');
+                    if (assignedFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(assignedFilter));
+                    filename = 'assigned_validation_tasks.csv';
+                }
+            } else {
+                // Card 2: Resolved or Unresolved
+                const isResolvedTab = document.getElementById('tab-val-resolved').style.display !== 'none';
+                const skuFilter = document.getElementById('val-filter-sku-2').value.toLowerCase();
+                const validatorFilter = document.getElementById('val-filter-assigned-2').value.toLowerCase();
+                
+                let filtered = tasks;
+                if (skuFilter) filtered = filtered.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
+                
+                if (isResolvedTab) {
+                    dataToExport = filtered.filter(t => t.status === 'Completed');
+                    if (validatorFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(validatorFilter));
+                    filename = 'resolved_validation_tasks.csv';
+                } else {
+                    dataToExport = filtered.filter(t => t.status === 'Unresolved');
+                    if (validatorFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(validatorFilter));
+                    filename = 'unresolved_validation_tasks.csv';
+                }
+            }
             
-            rows.forEach(row => {
-                const cols = Array.from(row.querySelectorAll('td')).slice(1); // Skip checkbox
-                const rowData = cols.map(td => {
-                    // Handle select elements
-                    const select = td.querySelector('select');
-                    if(select) return `"${select.value}"`;
-                    return `"${td.innerText.trim()}"`;
-                });
-                // Remove last column (Actions)
-                rowData.pop();
-                csv.push(rowData.join(','));
+            if (dataToExport.length === 0) { alert('No data to export'); return; }
+            
+            const headers = ['Date', 'SKU', 'Description', 'Qty', 'Reason', 'Validator', 'Status', 'Completed At'];
+            const csv = [headers.join(',')];
+            
+            dataToExport.forEach(t => {
+                const date = new Date(t.timestamp).toLocaleString().replace(',', '');
+                const completedAt = t.completedAt ? new Date(t.completedAt).toLocaleString().replace(',', '') : '';
+                const row = [
+                    `"${date}"`, `"${t.sku || ''}"`, `"${(t.desc || '').replace(/"/g, '""')}"`,
+                    `"${t.qty || ''}"`, `"${(t.reason || '').replace(/"/g, '""')}"`,
+                    `"${t.validator || ''}"`, `"${t.status || ''}"`, `"${completedAt}"`
+                ];
+                csv.push(row.join(','));
             });
             
             const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'validation_tasks.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         };
 
         if(document.getElementById('val-export-btn-1')) document.getElementById('val-export-btn-1').addEventListener('click', () => exportValCSV(1));
@@ -3209,7 +3579,7 @@
                         }
                     }
                     localStorage.setItem('ims_master_users_v1', JSON.stringify(users));
-                    alert(`Imported/Updated ${count} users.`);
+                    showToast(`Imported/Updated ${count} users.`);
                     renderIcMaster();
                     icMasterUploadFile.value = '';
                 };
@@ -3244,6 +3614,51 @@
                     localStorage.removeItem('ims_master_desc_v1');
                     showToast('SKU Master List cleared.');
                 }
+            });
+        }
+
+        if(uploadSkuBtn) uploadSkuBtn.addEventListener('click', () => uploadSkuFile.click());
+
+        if(uploadSkuFile) {
+            uploadSkuFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    let text = ev.target.result;
+                    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+                    const lines = text.split(/\r\n|\n/);
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
+                    
+                    let skuIdx = headers.indexOf('item code');
+                    if (skuIdx === -1) skuIdx = headers.indexOf('sku');
+                    const descIdx = headers.indexOf('description');
+                    
+                    if(skuIdx === -1 || descIdx === -1) {
+                        alert('CSV must contain "Item Code" (or "SKU") and "Description" columns.');
+                        return;
+                    }
+
+                    let masterMap = {};
+                    try { masterMap = JSON.parse(localStorage.getItem('ims_master_desc_v1') || '{}'); } catch(e) {}
+                    
+                    let count = 0;
+                    for(let i=1; i<lines.length; i++) {
+                        if(!lines[i].trim()) continue;
+                        const cols = lines[i].split(',').map(c => c.trim().replace(/"/g, ''));
+                        const sku = cols[skuIdx];
+                        const desc = cols[descIdx];
+                        
+                        if(sku) {
+                            masterMap[sku] = desc || '';
+                            count++;
+                        }
+                    }
+                    localStorage.setItem('ims_master_desc_v1', JSON.stringify(masterMap));
+                    showToast(`SKU Master List updated with ${count} items.`);
+                    uploadSkuFile.value = '';
+                };
+                reader.readAsText(file);
             });
         }
 

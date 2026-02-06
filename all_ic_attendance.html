@@ -1044,8 +1044,14 @@
     <div class="modal-overlay"></div>
     <div class="modal-content card" style="width: 98%; height: 95vh; margin: 1vh auto; display:flex; flex-direction:column; max-width: 1800px; background:#f4f6f8;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:#fff; padding:10px; border-radius:8px; border:1px solid #eef2f6;">
-            <h3 style="margin:0">Validators View</h3>
-            <button class="icon-btn close-modal">&times;</button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <h3 style="margin:0">Validators View</h3>
+                <span id="validator-notification" style="display:none; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; transition: opacity 0.3s;"></span>
+            </div>
+            <div style="display:flex; align-items:center;">
+                <button id="go-to-timestamp-btn" class="icon-btn" title="Go to Timestamp (Daily Cycle Count)" style="margin-right:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
+                <button class="icon-btn close-modal">&times;</button>
+            </div>
         </div>
 
         <!-- 1. Top Center: Dashboard -->
@@ -1117,6 +1123,8 @@
                         <div class="att-tabs" style="margin-bottom:0; border-bottom:none;">
                             <button class="att-tab active" onclick="openValTab(event, 'tab-val-pending')">Pending</button>
                             <button class="att-tab" onclick="openValTab(event, 'tab-val-assigned')">Assigned</button>
+                            <button class="att-tab" onclick="openValTab(event, 'tab-val-resolved')">Resolved</button>
+                            <button class="att-tab" onclick="openValTab(event, 'tab-val-unresolved')">Unresolved</button>
                         </div>
                         <div style="display:flex; gap:5px; align-items:center;">
                             <input type="text" id="val-filter-sku-1" placeholder="Filter SKU..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:100px;">
@@ -1198,26 +1206,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Table 2: Resolved / Unresolved Tabs -->
-                <div class="card" style="flex:1; display:flex; flex-direction:column; margin:0; padding:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div class="att-tabs" style="margin-bottom:0; border-bottom:none;">
-                            <button class="att-tab active" onclick="openValTab(event, 'tab-val-resolved')">Resolved</button>
-                            <button class="att-tab" onclick="openValTab(event, 'tab-val-unresolved')">Unresolved</button>
-                        </div>
-                        <div style="display:flex; gap:5px; align-items:center;">
-                            <input type="text" id="val-filter-sku-2" placeholder="Filter SKU..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:100px;">
-                            <input type="text" id="val-filter-assigned-2" placeholder="Filter Validator..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:120px;">
-                            <button class="icon-btn" id="val-print-btn-2" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
-                            <button class="icon-btn" id="val-export-btn-2" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
-                            <button class="icon-btn" id="val-bulk-delete-btn-2" title="Delete Selected" style="color:#d9534f; display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button>
-                        </div>
-                    </div>
                     
                     <!-- Resolved Tab -->
-                    <div id="tab-val-resolved" class="val-tab-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                    <div id="tab-val-resolved" class="val-tab-content" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
                         <div style="flex:1; overflow:auto; position:relative;">
                         <table class="report-table" style="width:100%; table-layout: auto; white-space: nowrap; font-size: 11px;">
                             <thead>
@@ -1266,6 +1257,7 @@
                                         <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                         <th style="position:sticky; top:0; z-index:1;">Reason</th>
                                         <th style="position:sticky; top:0; z-index:1;">Validator</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Unresolved Time</th>
                                         <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                         <th style="position:sticky; top:0; z-index:1;">Action</th>
                                     </tr>
@@ -1290,6 +1282,27 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Analytics Overview -->
+                <div class="card" style="margin:0; padding:10px; min-height: 200px; display:flex; flex-direction:column;">
+                    <h4 style="margin:0 0 10px 0; color:#2752a7;">Analytics Overview</h4>
+                    <div class="att-tabs" style="margin-bottom:5px; border-bottom:1px solid #eee;">
+                        <button class="att-tab active" onclick="openValAnalyticsTab(event, 'tab-val-top-sku')" style="padding:4px 8px; font-size:11px;">Top SKUs</button>
+                        <button class="att-tab" onclick="openValAnalyticsTab(event, 'tab-val-top-validator')" style="padding:4px 8px; font-size:11px;">Top Validators</button>
+                    </div>
+                    <div id="tab-val-top-sku" class="val-analytics-tab-content" style="flex:1; overflow:auto; max-height:150px;">
+                        <table class="report-table" style="width:100%; font-size:10px;">
+                            <thead><tr><th>SKU</th><th>Description</th><th>Count</th></tr></thead>
+                            <tbody id="val-analytics-sku-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div id="tab-val-top-validator" class="val-analytics-tab-content" style="display:none; flex:1; overflow:auto; max-height:150px;">
+                        <table class="report-table" style="width:100%; font-size:10px;">
+                            <thead><tr><th>Validator</th><th>Resolved</th></tr></thead>
+                            <tbody id="val-analytics-validator-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- 3. Right Side (40%) -->
@@ -1298,7 +1311,7 @@
                 <!-- Top: Add Task Form -->
                 <div class="card" style="margin:0; padding:15px; overflow-y:auto;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:#2752a7;">Add Validation Task</h4>
+                        <h4 style="margin:0; color:#2752a7;">Add Validation Task <span id="sku-master-status" style="font-size:11px; font-weight:normal; margin-left:5px;"></span></h4>
                         <div style="display:flex; gap:5px;">
                             <button id="download-sku-template-btn" class="icon-btn" title="Download Template">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -1320,34 +1333,60 @@
                             <input type="file" id="upload-bulk-tasks-file" accept=".csv" style="display:none;">
                         </div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <div style="grid-column: span 1;">
-                            <label style="font-size:11px; font-weight:bold;">SKU Code</label>
-                            <input type="text" id="assign-sku" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                    <div style="display:grid; grid-template-columns: 1fr 0.6fr 1.5fr; gap:8px; align-items:end;">
+                        <div>
+                            <label style="font-size:10px; font-weight:bold;">SKU Code</label>
+                            <input type="text" id="assign-sku" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
                         </div>
-                        <div style="grid-column: span 1;">
-                            <label style="font-size:11px; font-weight:bold;">Qty</label>
-                            <input type="number" id="assign-qty" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                        <div>
+                            <label style="font-size:10px; font-weight:bold;">Qty</label>
+                            <input type="number" id="assign-qty" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:bold;">Reason</label>
+                            <select id="assign-reason" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+                                <option value="">Select Reason</option>
+                                <option value="Missing">Missing</option>
+                                <option value="Oversell">Oversell</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Near Expiry">Near Expiry</option>
+                                <option value="Website Issue">Website Issue</option>
+                                <option value="Supplier Issue">Supplier Issue</option>
+                                <option value="Others">Others</option>
+                            </select>
                         </div>
                         <div style="grid-column: span 2;">
-                            <label style="font-size:11px; font-weight:bold;">Description</label>
-                            <input type="text" id="assign-desc" readonly style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px; background:#eee;">
+                            <label style="font-size:10px; font-weight:bold;">Description</label>
+                            <input type="text" id="assign-desc" readonly style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; background:#eee; font-size:11px;">
                         </div>
-                        <div style="grid-column: span 2;">
-                            <label style="font-size:11px; font-weight:bold;">Reason for Validation</label>
-                            <input type="text" id="assign-reason" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g. Variance, Damage check">
-                        </div>
-                        <div style="grid-column: span 2; text-align:right;">
-                            <button id="btn-assign-task" class="icon-btn" style="background:#2752a7; color:white; padding:8px 16px;">Add Task</button>
+                        <div style="text-align:right;">
+                            <button id="btn-assign-task" class="icon-btn" style="background:#2752a7; color:white; padding:4px 12px; font-size:11px;">Add</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Middle: Status Chart -->
-                <div class="card" style="margin:0; padding:10px; min-height: 200px;">
-                    <h4 style="margin:0 0 10px 0; color:#2752a7;">Task Status Distribution</h4>
-                    <div style="position:relative; height:160px; width:100%;">
-                        <canvas id="val-status-chart"></canvas>
+                <div class="card" style="margin:0; padding:10px; min-height: 220px; display:flex; flex-direction:column;">
+                    <div style="display:flex; gap:15px; flex:1;">
+                        <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+                            <h4 style="margin:0 0 5px 0; color:#2752a7; font-size:13px;">Task Status</h4>
+                            <div style="position:relative; flex:1; min-height:0;">
+                                <canvas id="val-status-chart"></canvas>
+                            </div>
+                        </div>
+                        <div style="width:1px; background:#eee;"></div>
+                        <div style="flex:1.2; display:flex; flex-direction:column; min-width:0;">
+                            <h4 style="margin:0 0 5px 0; color:#e74c3c; font-size:13px;">Overdue (>1h)</h4>
+                            <div style="flex:1; overflow-y:auto; border:1px solid #eee; border-radius:4px; background:#fff;">
+                                <table class="report-table" style="width:100%; font-size:10px;">
+                                    <thead style="position:sticky; top:0; background:#f9f9f9; z-index:1;">
+                                        <tr><th style="padding:4px;">SKU</th><th style="padding:4px;">Validator</th><th style="padding:4px;">Time</th></tr>
+                                    </thead>
+                                    <tbody id="val-overdue-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1500,12 +1539,33 @@
         function saveTimestamps(data) {
             localStorage.setItem(STORAGE_KEY_TIMESTAMPS, JSON.stringify(data));
         }
-        function showToast(message) {
-            const toast = document.getElementById('toast-notification');
-            if (toast) {
-                toast.textContent = message;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
+        function showToast(message, type = 'success') {
+            const validatorsModal = document.getElementById('validators-modal');
+            const isValidatorView = validatorsModal && !validatorsModal.classList.contains('hidden');
+
+            if (isValidatorView) {
+                const notification = document.getElementById('validator-notification');
+                if (notification) {
+                    notification.textContent = message;
+                    notification.style.backgroundColor = type === 'error' ? '#ffebee' : '#e8f5e9';
+                    notification.style.color = type === 'error' ? '#d9534f' : '#2ecc71';
+                    notification.style.display = 'inline-block';
+                    notification.style.opacity = 1;
+
+                    if (notification.hideTimeout) clearTimeout(notification.hideTimeout);
+                    notification.hideTimeout = setTimeout(() => {
+                        notification.style.opacity = 0;
+                        setTimeout(() => { notification.style.display = 'none'; }, 300);
+                    }, 3000);
+                }
+            } else {
+                const toast = document.getElementById('toast-notification');
+                if (toast) {
+                    toast.textContent = message;
+                    toast.style.backgroundColor = type === 'error' ? '#e74c3c' : '#2ecc71';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 3000);
+                }
             }
         }
         function getDuration(start, end) {
@@ -2873,9 +2933,7 @@
         
         // Filters
         let valFilterAssigned1 = '';
-        let valFilterAssigned2 = '';
         let valFilterSku1 = '';
-        let valFilterSku2 = '';
 
         function filterValDashboard(type) {
             if (type === 'total') {
@@ -2925,9 +2983,7 @@
             
             // Get filter values
             valFilterAssigned1 = document.getElementById('val-filter-assigned-1') ? document.getElementById('val-filter-assigned-1').value.toLowerCase() : '';
-            valFilterAssigned2 = document.getElementById('val-filter-assigned-2') ? document.getElementById('val-filter-assigned-2').value.toLowerCase() : '';
             valFilterSku1 = document.getElementById('val-filter-sku-1') ? document.getElementById('val-filter-sku-1').value.toLowerCase() : '';
-            valFilterSku2 = document.getElementById('val-filter-sku-2') ? document.getElementById('val-filter-sku-2').value.toLowerCase() : '';
             
 
             // Get validators for dropdown
@@ -2962,6 +3018,43 @@
 
             updateValStatusChart(resolvedCount, pendingCount, unresolvedCount, assignedCount);
             
+            // Populate Overdue Table
+            const overdueTbody = document.getElementById('val-overdue-tbody');
+            if (overdueTbody) {
+                overdueTbody.innerHTML = '';
+                const now = new Date();
+                const activeAssigned = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved' && t.validator && t.validator !== 'Unassigned');
+                const overdueTasks = activeAssigned.filter(t => {
+                    const diffMs = now - new Date(t.timestamp);
+                    return diffMs > 3600000; // > 1 hour
+                });
+                overdueTasks.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                if (overdueTasks.length === 0) {
+                    overdueTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:10px;">No overdue tasks</td></tr>';
+                } else {
+                    overdueTasks.forEach(t => {
+                        const diffMs = now - new Date(t.timestamp);
+                        const diffMins = Math.floor(diffMs / 60000);
+                        const durStr = `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
+                        const tr = document.createElement('tr');
+                        tr.style.cursor = 'pointer';
+                        tr.title = 'Click to filter by SKU';
+                        tr.onclick = () => {
+                            const skuInput = document.getElementById('val-filter-sku-1');
+                            if(skuInput) {
+                                skuInput.value = t.sku;
+                                const btn = document.querySelector("button[onclick*='tab-val-assigned']");
+                                if(btn) btn.click();
+                                renderValidationTasks();
+                            }
+                        };
+                        tr.innerHTML = `<td style="padding:4px;">${t.sku}</td><td style="padding:4px;">${t.validator}</td><td style="padding:4px; color:#e74c3c; font-weight:bold;">${durStr}</td>`;
+                        overdueTbody.appendChild(tr);
+                    });
+                }
+            }
+
             // --- 2. Prepare Data for Tables ---
             tasks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
@@ -2981,13 +3074,13 @@
             }
 
             // Apply Filters for Card 2 (Resolved/Unresolved)
-            if (valFilterSku2) {
-                resolvedTasks = resolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku2));
-                unresolvedTasks = unresolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku2));
+            if (valFilterSku1) {
+                resolvedTasks = resolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku1));
+                unresolvedTasks = unresolvedTasks.filter(t => (t.sku || '').toLowerCase().includes(valFilterSku1));
             }
-            if (valFilterAssigned2) {
-                resolvedTasks = resolvedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned2));
-                unresolvedTasks = unresolvedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned2));
+            if (valFilterAssigned1) {
+                resolvedTasks = resolvedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned1));
+                unresolvedTasks = unresolvedTasks.filter(t => (t.validator || '').toLowerCase().includes(valFilterAssigned1));
             }
 
             // Pagination for Pending (Unassigned)
@@ -3017,6 +3110,11 @@
                     const diffMs = now - new Date(t.timestamp);
                     const diffMins = Math.floor(diffMs / 60000);
                     let durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
+                    
+                    if (diffMs > 3600000) {
+                        tr.style.boxShadow = "inset 4px 0 0 #e74c3c";
+                        tr.style.backgroundColor = "#fff5f5";
+                    }
                     
                     if(diffMins > 60) durationStr = `<span style="color:#e74c3c; font-weight:bold;">${durationStr}</span>`;
                     else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
@@ -3168,15 +3266,16 @@
             if(unresolvedNext) unresolvedNext.disabled = valUnresolvedPage >= totalUnresolvedPages;
 
             if(paginatedUnresolved.length === 0) {
-                unresolvedTasksTbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:10px; color:#999;">No unresolved tasks.</td></tr>';
-                unresolvedTasksTbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:10px; color:#999;">No unresolved tasks.</td></tr>';
+                unresolvedTasksTbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:10px; color:#999;">No unresolved tasks.</td></tr>';
             } else {
                 const now = new Date();
                 paginatedUnresolved.forEach(t => {
                     const tr = document.createElement('tr');
                     const assignedTime = new Date(t.timestamp).toLocaleString();
+                    const unresolvedTime = t.unresolvedAt ? new Date(t.unresolvedAt).toLocaleString() : '-';
                     
-                    const diffMs = now - new Date(t.timestamp);
+                    const endTime = t.unresolvedAt ? new Date(t.unresolvedAt) : now;
+                    const diffMs = endTime - new Date(t.timestamp);
                     const diffMins = Math.floor(diffMs / 60000);
                     let durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
                     
@@ -3191,12 +3290,12 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${actionHtml}</td>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${unresolvedTime}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     unresolvedTasksTbody.appendChild(tr);
                 });
             }
             updateValBulkButtons();
+            renderValAnalytics();
         }
 
         let valStatusChart = null;
@@ -3221,8 +3320,9 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } },
-                        cutout: '60%',
+                        layout: { padding: 60 },
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+                        cutout: '75%',
                         onHover: (event, chartElement) => {
                             event.native.target.style.cursor = chartElement.length ? 'pointer' : 'default';
                         },
@@ -3246,6 +3346,71 @@
                 });
             }
         }
+
+        function renderValAnalytics() {
+            let tasks = getValidationTasks();
+            
+            // Apply Global Date Filter (same as renderValidationTasks)
+            if (globalStartDate.value || globalEndDate.value) {
+                const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
+                if(end) end.setHours(23,59,59,999);
+
+                tasks = tasks.filter(t => {
+                    const d = new Date(t.timestamp);
+                    return (!start || d >= start) && (!end || d <= end);
+                });
+            }
+
+            // Top SKUs
+            const skuCounts = {};
+            tasks.forEach(t => {
+                const sku = t.sku || 'Unknown';
+                skuCounts[sku] = (skuCounts[sku] || 0) + 1;
+            });
+            const sortedSkus = Object.entries(skuCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            
+            // Get Master Descriptions
+            let masterMap = {};
+            try { masterMap = JSON.parse(localStorage.getItem('ims_master_desc_v1') || '{}'); } catch(e) {}
+
+            const skuTbody = document.getElementById('val-analytics-sku-tbody');
+            if(skuTbody) {
+                skuTbody.innerHTML = '';
+                if(sortedSkus.length === 0) skuTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No data</td></tr>';
+                sortedSkus.forEach(([sku, count]) => {
+                    const desc = masterMap[sku] || '-';
+                    skuTbody.innerHTML += `<tr><td>${sku}</td><td>${desc}</td><td>${count}</td></tr>`;
+                });
+            }
+
+            // Top Validators (Resolved count)
+            const valCounts = {};
+            tasks.forEach(t => {
+                if(t.status === 'Completed' && t.validator && t.validator !== 'Unassigned') {
+                    valCounts[t.validator] = (valCounts[t.validator] || 0) + 1;
+                }
+            });
+            const sortedVals = Object.entries(valCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            
+            const valTbody = document.getElementById('val-analytics-validator-tbody');
+            if(valTbody) {
+                valTbody.innerHTML = '';
+                if(sortedVals.length === 0) valTbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">No data</td></tr>';
+                sortedVals.forEach(([val, count]) => {
+                    valTbody.innerHTML += `<tr><td>${val}</td><td>${count}</td></tr>`;
+                });
+            }
+        }
+
+        window.openValAnalyticsTab = function(evt, tabId) {
+            const parent = evt.target.closest('.card');
+            parent.querySelectorAll('.val-analytics-tab-content').forEach(c => c.style.display = 'none');
+            parent.querySelectorAll('.att-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'block';
+            evt.target.classList.add('active');
+        };
 
         // Validation Tasks Pagination Listeners
         const valPendingPrev = document.getElementById('val-pending-prev');
@@ -3305,11 +3470,13 @@
                     showToast('Task completed');
                 }
             } else if(btn.classList.contains('mark-unresolved-btn')) {
+                if(!confirm('Are you sure you want to mark this task as Unresolved?')) return;
                 const id = btn.dataset.id;
                 let tasks = getValidationTasks();
                 const taskIndex = tasks.findIndex(t => t.id === id);
                 if(taskIndex > -1) {
                     tasks[taskIndex].status = 'Unresolved';
+                    tasks[taskIndex].unresolvedAt = new Date().toISOString();
                     saveValidationTasks(tasks);
                     renderValidationTasks();
                     showToast('Task marked as Unresolved');
@@ -3321,6 +3488,7 @@
                 if(taskIndex > -1) {
                     tasks[taskIndex].status = 'Pending';
                     delete tasks[taskIndex].completedAt;
+                    delete tasks[taskIndex].unresolvedAt;
                     saveValidationTasks(tasks);
                     renderValidationTasks();
                     showToast('Task reopened (Pending)');
@@ -3378,9 +3546,7 @@
             
             const btn1 = document.getElementById('val-bulk-delete-btn-1');
             if(btn1) btn1.style.display = (pCount + aCount) > 0 ? 'inline-flex' : 'none';
-            
-            const btn2 = document.getElementById('val-bulk-delete-btn-2');
-            if(btn2) btn2.style.display = (rCount + uCount) > 0 ? 'inline-flex' : 'none';
+            if(btn1 && (rCount + uCount) > 0) btn1.style.display = 'inline-flex';
         }
 
         // Select All Listeners
@@ -3413,23 +3579,16 @@
         };
 
         const btnBulkDel1 = document.getElementById('val-bulk-delete-btn-1');
-        if(btnBulkDel1) btnBulkDel1.addEventListener('click', () => handleBulkDelete('.pending-cb, .assigned-cb'));
-        
-        const btnBulkDel2 = document.getElementById('val-bulk-delete-btn-2');
-        if(btnBulkDel2) btnBulkDel2.addEventListener('click', () => handleBulkDelete('.resolved-cb, .unresolved-cb'));
+        if(btnBulkDel1) btnBulkDel1.addEventListener('click', () => handleBulkDelete('.pending-cb, .assigned-cb, .resolved-cb, .unresolved-cb'));
 
         // Filter Inputs
         const filterInput1 = document.getElementById('val-filter-assigned-1');
         if(filterInput1) filterInput1.addEventListener('input', renderValidationTasks);
-        const filterInput2 = document.getElementById('val-filter-assigned-2');
-        if(filterInput2) filterInput2.addEventListener('input', renderValidationTasks);
         const filterSku1 = document.getElementById('val-filter-sku-1');
         if(filterSku1) filterSku1.addEventListener('input', renderValidationTasks);
-        const filterSku2 = document.getElementById('val-filter-sku-2');
-        if(filterSku2) filterSku2.addEventListener('input', renderValidationTasks);
 
         // Export CSV
-        const exportValCSV = (selector) => {
+        const exportValCSV = () => {
             let tasks = getValidationTasks();
             
             // Apply Global Date Filter
@@ -3451,9 +3610,11 @@
             let dataToExport = [];
             let filename = 'validation_tasks.csv';
             
-            if (selector === 1) {
-                // Card 1: Pending or Assigned
+            // Determine which tab is active
                 const isPendingTab = document.getElementById('tab-val-pending').style.display !== 'none';
+                const isAssignedTab = document.getElementById('tab-val-assigned').style.display !== 'none';
+                const isResolvedTab = document.getElementById('tab-val-resolved').style.display !== 'none';
+                
                 const skuFilter = document.getElementById('val-filter-sku-1').value.toLowerCase();
                 const assignedFilter = document.getElementById('val-filter-assigned-1').value.toLowerCase();
                 
@@ -3463,30 +3624,23 @@
                 if (isPendingTab) {
                     dataToExport = filtered.filter(t => !t.validator || t.validator === 'Unassigned');
                     filename = 'pending_validation_tasks.csv';
-                } else {
+                } else if (isAssignedTab) {
                     dataToExport = filtered.filter(t => t.validator && t.validator !== 'Unassigned');
                     if (assignedFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(assignedFilter));
                     filename = 'assigned_validation_tasks.csv';
-                }
-            } else {
-                // Card 2: Resolved or Unresolved
-                const isResolvedTab = document.getElementById('tab-val-resolved').style.display !== 'none';
-                const skuFilter = document.getElementById('val-filter-sku-2').value.toLowerCase();
-                const validatorFilter = document.getElementById('val-filter-assigned-2').value.toLowerCase();
-                
-                let filtered = tasks;
-                if (skuFilter) filtered = filtered.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
-                
-                if (isResolvedTab) {
-                    dataToExport = filtered.filter(t => t.status === 'Completed');
-                    if (validatorFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(validatorFilter));
+                } else if (isResolvedTab) {
+                    let filteredRes = tasks.filter(t => t.status === 'Completed');
+                    if (skuFilter) filteredRes = filteredRes.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
+                    if (assignedFilter) filteredRes = filteredRes.filter(t => (t.validator || '').toLowerCase().includes(assignedFilter));
+                    dataToExport = filteredRes;
                     filename = 'resolved_validation_tasks.csv';
                 } else {
-                    dataToExport = filtered.filter(t => t.status === 'Unresolved');
-                    if (validatorFilter) dataToExport = dataToExport.filter(t => (t.validator || '').toLowerCase().includes(validatorFilter));
+                    let filteredUnres = tasks.filter(t => t.status === 'Unresolved');
+                    if (skuFilter) filteredUnres = filteredUnres.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
+                    if (assignedFilter) filteredUnres = filteredUnres.filter(t => (t.validator || '').toLowerCase().includes(assignedFilter));
+                    dataToExport = filteredUnres;
                     filename = 'unresolved_validation_tasks.csv';
                 }
-            }
             
             if (dataToExport.length === 0) { alert('No data to export'); return; }
             
@@ -3510,11 +3664,9 @@
             a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
         };
 
-        if(document.getElementById('val-export-btn-1')) document.getElementById('val-export-btn-1').addEventListener('click', () => exportValCSV(1));
-        if(document.getElementById('val-export-btn-2')) document.getElementById('val-export-btn-2').addEventListener('click', () => exportValCSV(2));
+        if(document.getElementById('val-export-btn-1')) document.getElementById('val-export-btn-1').addEventListener('click', () => exportValCSV());
         // Print buttons can just call window.print() or a specific print function, for now simple alert or print
         if(document.getElementById('val-print-btn-1')) document.getElementById('val-print-btn-1').addEventListener('click', () => window.print());
-        if(document.getElementById('val-print-btn-2')) document.getElementById('val-print-btn-2').addEventListener('click', () => window.print());
 
         // Tab switching for Validator View
         window.openValTab = function(evt, tabId) {
@@ -3587,6 +3739,24 @@
             });
         }
 
+        function updateSkuMasterStatus() {
+            const statusEl = document.getElementById('sku-master-status');
+            if(!statusEl) return;
+            let count = 0;
+            try {
+                const masterMap = JSON.parse(localStorage.getItem('ims_master_desc_v1') || '{}');
+                count = Object.keys(masterMap).length;
+            } catch(e) {}
+            
+            if(count > 0) {
+                statusEl.textContent = `(Master List: ${count} items loaded)`;
+                statusEl.style.color = '#2ecc71';
+            } else {
+                statusEl.textContent = '(No Master List loaded)';
+                statusEl.style.color = '#e74c3c';
+            }
+        }
+
         // SKU Master Template & Clear
         const downloadSkuTemplateBtn = document.getElementById('download-sku-template-btn');
         const clearSkuMasterBtn = document.getElementById('clear-sku-master-btn');
@@ -3613,6 +3783,7 @@
                 if(confirm('Are you sure you want to clear the SKU Master List?')) {
                     localStorage.removeItem('ims_master_desc_v1');
                     showToast('SKU Master List cleared.');
+                    updateSkuMasterStatus();
                 }
             });
         }
@@ -3656,6 +3827,7 @@
                     }
                     localStorage.setItem('ims_master_desc_v1', JSON.stringify(masterMap));
                     showToast(`SKU Master List updated with ${count} items.`);
+                    updateSkuMasterStatus();
                     uploadSkuFile.value = '';
                 };
                 reader.readAsText(file);
@@ -3767,8 +3939,30 @@
                 const sku = assignSku.value.trim();
                 const qty = assignQty.value.trim();
                 const reason = assignReason.value.trim();
-                if(!sku || !qty) { alert('Please fill in SKU and Qty.'); return; }
+                if(!sku || !qty) { showToast('Please fill in SKU and Qty.', 'error'); return; }
                 
+                // Validate SKU against Master List
+                let masterMap = {};
+                try { masterMap = JSON.parse(localStorage.getItem('ims_master_desc_v1') || '{}'); } catch(e) {}
+                
+                if (Object.keys(masterMap).length > 0 && !masterMap[sku]) {
+                    showToast('Invalid SKU: Not found in Master List.', 'error');
+                    return;
+                }
+                
+                // Check for duplicates within the same day
+                const tasks = getValidationTasks();
+                const today = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+                const isDuplicate = tasks.some(task => {
+                    const taskDate = new Date(task.timestamp).toISOString().split('T')[0];
+                    return task.sku === sku && taskDate === today;
+                });
+
+                if (isDuplicate) {
+                    showToast(`SKU ${sku} has already been added for validation today.`, 'error');
+                    return;
+                }
+
                 const newTask = {
                     id: Date.now().toString(),
                     timestamp: new Date().toISOString(),
@@ -3779,11 +3973,10 @@
                     validator: 'Unassigned',
                     status: 'Pending'
                 };
-                const tasks = getValidationTasks();
                 tasks.push(newTask);
                 saveValidationTasks(tasks);
                 renderValidationTasks();
-                showToast('Task assigned');
+                showToast('Task successfully assigned!');
                 
                 assignSku.value = ''; assignDesc.value = ''; assignQty.value = ''; assignReason.value = '';
             });
@@ -3796,6 +3989,7 @@
                     validatorsModal.classList.remove('hidden');
                     renderValidatorsModal();
                     renderValidationTasks();
+                    updateSkuMasterStatus();
                 }
             });
         }
@@ -4224,6 +4418,21 @@
                 a.click();
                 document.body.removeChild(a);
             });
+        }
+
+        // Shortcut to Timestamp
+        const goToTimestampBtn = document.getElementById('go-to-timestamp-btn');
+        if(goToTimestampBtn) {
+            goToTimestampBtn.addEventListener('click', () => {
+                sessionStorage.setItem('ims_timestamp_modal_open', 'true');
+                window.location.href = 'daily_cycle_count.html';
+            });
+        }
+
+        // Check for auto-open validators modal
+        if (sessionStorage.getItem('ims_open_validators_modal') === 'true') {
+            sessionStorage.removeItem('ims_open_validators_modal');
+            if(validatorsViewBtn) validatorsViewBtn.click();
         }
     });
   </script>

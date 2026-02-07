@@ -24,9 +24,11 @@
     /* Fix tooltips inside modal */
     .modal-content .icon-btn[data-tooltip]::after { top: 100%; bottom: auto; margin-top: 8px; margin-bottom: 0; }
     .modal-content .icon-btn[data-tooltip]::before { top: 100%; bottom: auto; margin-top: 3px; margin-bottom: 0; border-top-color: transparent; border-bottom-color: #2c3e50; }
+    .modal-content .icon-btn[data-tooltip]:hover { z-index: 10002; }
     .modal-content .icon-btn[data-tooltip]:hover::after,
     .modal-content .icon-btn[data-tooltip]:hover::before {
         transform: translateX(-50%) translateY(4px);
+        z-index: 10003;
     }
     /* Add hover effect for action icons in modal */
     .modal-content .icon-btn:hover {
@@ -1045,10 +1047,23 @@
     <div class="modal-content card" style="width: 98%; height: 95vh; margin: 1vh auto; display:flex; flex-direction:column; max-width: 1800px; background:#f4f6f8;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:#fff; padding:10px; border-radius:8px; border:1px solid #eef2f6;">
             <div style="display:flex; align-items:center; gap:15px;">
-                <h3 style="margin:0">Validators View</h3>
+                <h3 style="margin:0">Validators View <span id="sku-master-status" style="font-size:11px; font-weight:normal; margin-left:5px;"></span></h3>
                 <span id="validator-notification" style="display:none; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; transition: opacity 0.3s;"></span>
             </div>
-            <div style="display:flex; align-items:center;">
+            <div style="display:flex; align-items:center; gap: 5px;">
+                <button id="toggle-add-task-widget-btn" class="icon-btn" title="Open Add Task Widget" style="background:#2752a7; color:white;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                <div style="width:1px; height:20px; background:#ddd; margin:0 2px;"></div>
+                <input type="date" id="val-view-date" title="Filter Date" style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px; color:#333;">
+                <button id="download-sku-template-btn" class="icon-btn" title="Download SKU Template"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                <button id="upload-sku-desc-btn" class="icon-btn" title="Upload SKU Master List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></button>
+                <button id="clear-sku-master-btn" class="icon-btn" title="Clear SKU Master List" style="color:#d9534f;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button>
+                <input type="file" id="upload-sku-desc-file" accept=".csv" style="display:none;">
+                <div style="width:1px; height:20px; background:#ddd; margin:0 2px;"></div>
+                <button id="download-task-template-btn" class="icon-btn" title="Download Task Template"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></button>
+                <button id="upload-bulk-tasks-btn" class="icon-btn" title="Bulk Assign Tasks (CSV)" style="color:#2752a7;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></button>
+                <button id="clear-val-tasks-btn" class="icon-btn" title="Clear Tasks" style="color:#d9534f;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                <input type="file" id="upload-bulk-tasks-file" accept=".csv" style="display:none;">
+                <div style="width:1px; height:20px; background:#ddd; margin:0 2px;"></div>
                 <button id="go-to-timestamp-btn" class="icon-btn" title="Go to Timestamp (Daily Cycle Count)" style="margin-right:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></button>
                 <button class="icon-btn close-modal">&times;</button>
             </div>
@@ -1065,15 +1080,7 @@
                     <div class="stat-label">Total Tasks</div>
                 </div>
             </div>
-        <div class="stat-card" style="padding:15px; border-left: 4px solid #2e7d32;" onclick="filterValDashboard('resolved')">
-                <div class="stat-icon" style="background: #e8f5e9; color: #2e7d32;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-value" id="val-completed-tasks">0</div>
-                <div class="stat-label">Resolved</div>
-                </div>
-            </div>
+    
         <div class="stat-card" style="padding:15px; border-left: 4px solid #ef6c00;" onclick="filterValDashboard('pending')">
                 <div class="stat-icon" style="background: #fff3e0; color: #ef6c00;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -1092,6 +1099,15 @@
                 <div class="stat-label">Assigned</div>
             </div>
         </div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #2e7d32;" onclick="filterValDashboard('resolved')">
+                <div class="stat-icon" style="background: #e8f5e9; color: #2e7d32;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-completed-tasks">0</div>
+                <div class="stat-label">Resolved</div>
+                </div>
+            </div>
         <div class="stat-card" style="padding:15px; border-left: 4px solid #d9534f;" onclick="filterValDashboard('unresolved')">
                 <div class="stat-icon" style="background: #ffebee; color: #d9534f;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
@@ -1108,6 +1124,24 @@
                 <div class="stat-info">
                     <div class="stat-value" id="val-completion-rate">0%</div>
                     <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #009688;" onclick="filterValDashboard('resolved')">
+                <div class="stat-icon" style="background: #e0f2f1; color: #009688;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-pct-resolved">0%</div>
+                    <div class="stat-label">% by Resolved</div>
+                </div>
+            </div>
+        <div class="stat-card" style="padding:15px; border-left: 4px solid #e91e63;" onclick="filterValDashboard('unresolved')">
+                <div class="stat-icon" style="background: #fce4ec; color: #e91e63;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="val-pct-unresolved">0%</div>
+                    <div class="stat-label">% by Unresolved</div>
                 </div>
             </div>
         </div>
@@ -1132,6 +1166,7 @@
                             <input type="text" id="val-filter-assigned-1" placeholder="Filter Assigned To..." style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px; width:120px;">
                             <button class="icon-btn" id="val-print-btn-1" title="Print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
                             <button class="icon-btn" id="val-export-btn-1" title="Export CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+                            <button class="icon-btn" id="val-bulk-reassign-btn-1" title="Bulk Reassign" style="color:#f39c12; display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button>
                             <button class="icon-btn" id="val-bulk-delete-btn-1" title="Delete Selected" style="color:#d9534f; display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button>
                         </div>
                     </div>
@@ -1147,6 +1182,7 @@
                                     <th style="position:sticky; top:0; z-index:1;">Description</th>
                                     <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                     <th style="position:sticky; top:0; z-index:1;">Reason</th>
+                                    <th style="position:sticky; top:0; z-index:1;">Expiry Date</th>
                                     <th style="position:sticky; top:0; z-index:1;">Assigned To</th>
                                     <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                     <th style="position:sticky; top:0; z-index:1;">Action</th>
@@ -1183,6 +1219,7 @@
                                         <th style="position:sticky; top:0; z-index:1;">Description</th>
                                         <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                         <th style="position:sticky; top:0; z-index:1;">Reason</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Expiry Date</th>
                                         <th style="position:sticky; top:0; z-index:1;">Assigned To</th>
                                         <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                         <th style="position:sticky; top:0; z-index:1;">Action</th>
@@ -1220,6 +1257,7 @@
                                     <th style="position:sticky; top:0; z-index:1;">Description</th>
                                     <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                     <th style="position:sticky; top:0; z-index:1;">Reason</th>
+                                    <th style="position:sticky; top:0; z-index:1;">Expiry Date</th>
                                     <th style="position:sticky; top:0; z-index:1;">Validator</th>
                                     <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                     <th style="position:sticky; top:0; z-index:1;">Action</th>
@@ -1257,6 +1295,7 @@
                                         <th style="position:sticky; top:0; z-index:1;">Description</th>
                                         <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                         <th style="position:sticky; top:0; z-index:1;">Reason</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Expiry Date</th>
                                         <th style="position:sticky; top:0; z-index:1;">Validator</th>
                                         <th style="position:sticky; top:0; z-index:1;">Unresolved Time</th>
                                         <th style="position:sticky; top:0; z-index:1;">Duration</th>
@@ -1295,8 +1334,10 @@
                                         <th style="position:sticky; top:0; z-index:1;">Description</th>
                                         <th style="position:sticky; top:0; z-index:1;">Qty</th>
                                         <th style="position:sticky; top:0; z-index:1;">Reason</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Expiry Date</th>
                                         <th style="position:sticky; top:0; z-index:1;">Validator</th>
                                         <th style="position:sticky; top:0; z-index:1;">Status</th>
+                                        <th style="position:sticky; top:0; z-index:1;">Sub Status</th>
                                         <th style="position:sticky; top:0; z-index:1;">Duration</th>
                                         <th style="position:sticky; top:0; z-index:1;">Action</th>
                                     </tr>
@@ -1361,68 +1402,6 @@
             <!-- 3. Right Side (40%) -->
             <div style="flex:4; display:flex; flex-direction:column; gap:15px; overflow:hidden;">
                 
-                <!-- Top: Add Task Form -->
-                <div class="card" style="margin:0; padding:15px; overflow-y:auto;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:#2752a7;">Add Validation Task <span id="sku-master-status" style="font-size:11px; font-weight:normal; margin-left:5px;"></span></h4>
-                        <div style="display:flex; gap:5px;">
-                            <button id="download-sku-template-btn" class="icon-btn" title="Download Template">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            </button>
-                            <button id="upload-sku-desc-btn" class="icon-btn" title="Upload SKU Master List">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                            </button>
-                            <button id="clear-sku-master-btn" class="icon-btn" title="Clear SKU Master List" style="color:#d9534f;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
-                            </button>
-                            <input type="file" id="upload-sku-desc-file" accept=".csv" style="display:none;">
-                            <div style="width:1px; background:#ddd; margin:0 5px;"></div>
-                            <button id="download-task-template-btn" class="icon-btn" title="Download Task Template">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            </button>
-                            <button id="upload-bulk-tasks-btn" class="icon-btn" title="Bulk Assign Tasks (CSV)" style="color:#2752a7;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                            </button>
-                            <input type="file" id="upload-bulk-tasks-file" accept=".csv" style="display:none;">
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 0.6fr 1fr 1fr; gap:8px; align-items:end;">
-                        <div>
-                            <label style="font-size:10px; font-weight:bold;">SKU Code</label>
-                            <input type="text" id="assign-sku" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
-                        </div>
-                        <div>
-                            <label style="font-size:10px; font-weight:bold;">Qty</label>
-                            <input type="number" id="assign-qty" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
-                        </div>
-                        <div>
-                            <label style="font-size:10px; font-weight:bold;">Reason</label>
-                            <select id="assign-reason" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
-                                <option value="">Select Reason</option>
-                                <option value="Missing">Missing</option>
-                                <option value="Oversell">Oversell</option>
-                                <option value="Damaged">Damaged</option>
-                                <option value="Expired">Expired</option>
-                                <option value="Near Expiry">Near Expiry</option>
-                                <option value="Website Issue">Website Issue</option>
-                                <option value="Supplier Issue">Supplier Issue</option>
-                                <option value="Others">Others</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:10px; font-weight:bold;">Assign To (Opt)</label>
-                            <select id="assign-validator" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;"><option value="">Unassigned</option></select>
-                        </div>
-                        <div style="grid-column: span 3;">
-                            <label style="font-size:10px; font-weight:bold;">Description</label>
-                            <input type="text" id="assign-desc" readonly style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; background:#eee; font-size:11px;">
-                        </div>
-                        <div style="text-align:right;">
-                            <button id="btn-assign-task" class="icon-btn" style="background:#2752a7; color:white; padding:4px 12px; font-size:11px;">Add</button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Middle: Status Chart -->
                 <div class="card" style="margin:0; padding:10px; min-height: 220px; display:flex; flex-direction:column;">
                     <div style="display:flex; gap:15px; flex:1;">
@@ -1469,6 +1448,55 @@
         </div>
     </div>
   </div>
+
+  <!-- Floating Add Task Widget -->
+  <div id="add-task-widget" class="card hidden" style="position:fixed; top:100px; right:20px; width:320px; z-index:10002; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding:0; border:1px solid #ccc;">
+        <div id="add-task-header" style="padding:10px; background:#f1f1f1; cursor:move; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; border-radius: 8px 8px 0 0;">
+            <span style="font-weight:bold; font-size:13px; color:#333;">Add Validation Task</span>
+            <button class="icon-btn close-widget-btn" style="padding:2px; width:20px; height:20px;">&times;</button>
+        </div>
+        <div style="padding:10px;">
+             <div style="display:grid; grid-template-columns: 1fr 0.6fr; gap:8px; align-items:end; margin-bottom:8px;">
+                <div>
+                    <label style="font-size:10px; font-weight:bold;">SKU Code</label>
+                    <input type="text" id="assign-sku" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+                </div>
+                <div>
+                    <label style="font-size:10px; font-weight:bold;">Qty</label>
+                    <input type="number" id="assign-qty" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+                </div>
+            </div>
+            <div style="margin-bottom:8px;">
+                 <label style="font-size:10px; font-weight:bold;">Description</label>
+                 <input type="text" id="assign-desc" readonly style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; background:#eee; font-size:11px;">
+            </div>
+            <div style="margin-bottom:8px;">
+                <label style="font-size:10px; font-weight:bold;">Reason</label>
+                <select id="assign-reason" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+                    <option value="">Select Reason</option>
+                    <option value="Missing">Missing</option>
+                    <option value="Oversell">Oversell</option>
+                    <option value="Damaged">Damaged</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Near Expiry">Near Expiry</option>
+                    <option value="Website Issue">Website Issue</option>
+                    <option value="Supplier Issue">Supplier Issue</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+            <div id="assign-expiry-container" style="margin-bottom:8px; display:none;">
+                 <label style="font-size:10px; font-weight:bold;">Expiry Date</label>
+                 <input type="date" id="assign-expiry" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;">
+            </div>
+            <div style="margin-bottom:8px;">
+                <label style="font-size:10px; font-weight:bold;">Assign To (Opt)</label>
+                <select id="assign-validator" style="width:100%; padding:4px; border:1px solid #ccc; border-radius:4px; font-size:11px;"><option value="">Unassigned</option></select>
+            </div>
+            <div style="text-align:right;">
+                <button id="btn-assign-task" class="icon-btn" style="background:#2752a7; color:white; padding:6px 12px; font-size:11px;">Add Task</button>
+            </div>
+        </div>
+    </div>
 
   <div id="toast-notification" class="toast"></div>
   <script src="app.js"></script>
@@ -2911,6 +2939,7 @@
         const assignDesc = document.getElementById('assign-desc');
         const assignQty = document.getElementById('assign-qty');
         const assignReason = document.getElementById('assign-reason');
+        const assignExpiry = document.getElementById('assign-expiry');
         const assignValidator = document.getElementById('assign-validator');
         const btnAssignTask = document.getElementById('btn-assign-task');
         const pendingTasksTbody = document.getElementById('pending-tasks-tbody');
@@ -2924,7 +2953,10 @@
             
             let data = getAttendanceData();
             
-            if (globalStartDate.value || globalEndDate.value) {
+            const valViewDate = document.getElementById('val-view-date');
+            if (valViewDate && valViewDate.value) {
+                data = data.filter(item => item.date === valViewDate.value);
+            } else if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value;
                 const end = globalEndDate.value;
                 data = data.filter(item => {
@@ -2934,6 +2966,9 @@
             
             let validators = data.filter(item => item.area === 'Validator' && !item.timeOut);
             let tasks = getValidationTasks();
+            if (valViewDate && valViewDate.value) {
+                tasks = tasks.filter(t => t.timestamp.startsWith(valViewDate.value));
+            }
 
             validators.sort((a, b) => {
                 if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
@@ -3036,7 +3071,11 @@
             
             let tasks = getValidationTasks();
 
-            if (globalStartDate.value || globalEndDate.value) {
+            const valViewDate = document.getElementById('val-view-date');
+            if (valViewDate && valViewDate.value) {
+                const filterDate = valViewDate.value;
+                tasks = tasks.filter(t => t.timestamp.startsWith(filterDate));
+            } else if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
                 if(start) start.setHours(0,0,0,0);
                 const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
@@ -3055,7 +3094,9 @@
 
             // Get validators for dropdown
             let attendanceData = getAttendanceData();
-            if (globalStartDate.value || globalEndDate.value) {
+            if (valViewDate && valViewDate.value) {
+                attendanceData = attendanceData.filter(item => item.date === valViewDate.value);
+            } else if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value;
                 const end = globalEndDate.value;
                 attendanceData = attendanceData.filter(item => {
@@ -3075,6 +3116,10 @@
             const pendingCount = allActive.length - assignedCount;
 
             const rate = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+            const processedCount = resolvedCount + unresolvedCount;
+            const completionRate = total > 0 ? Math.round((processedCount / total) * 100) : 0;
+            const pctResolved = total > 0 ? Math.round((resolvedCount / total) * 100) : 0;
+            const pctUnresolved = total > 0 ? Math.round((unresolvedCount / total) * 100) : 0;
 
             if(document.getElementById('val-total-tasks')) document.getElementById('val-total-tasks').textContent = total;
             if(document.getElementById('val-completed-tasks')) document.getElementById('val-completed-tasks').textContent = resolvedCount;
@@ -3082,6 +3127,9 @@
             if(document.getElementById('val-assigned-tasks')) document.getElementById('val-assigned-tasks').textContent = assignedCount;
             if(document.getElementById('val-unresolved-tasks')) document.getElementById('val-unresolved-tasks').textContent = unresolvedCount;
             if(document.getElementById('val-completion-rate')) document.getElementById('val-completion-rate').textContent = rate + '%';
+            if(document.getElementById('val-completion-rate')) document.getElementById('val-completion-rate').textContent = completionRate + '%';
+            if(document.getElementById('val-pct-resolved')) document.getElementById('val-pct-resolved').textContent = pctResolved + '%';
+            if(document.getElementById('val-pct-unresolved')) document.getElementById('val-pct-unresolved').textContent = pctUnresolved + '%';
 
             updateValStatusChart(resolvedCount, pendingCount, unresolvedCount, assignedCount);
             
@@ -3125,7 +3173,7 @@
             // --- 2. Prepare Data for Tables ---
             tasks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
-            const allActiveForTables = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved');
+            const allActiveForTables = tasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved' && t.status !== 'Reassigned');
             let pendingTasks = allActiveForTables.filter(t => !t.validator || t.validator === 'Unassigned');
             let assignedTasks = allActiveForTables.filter(t => t.validator && t.validator !== 'Unassigned');
             
@@ -3143,13 +3191,16 @@
             let resolvedTasks = [];
             let unresolvedTasks = [];
             let historyTasks = [];
+            let reassignedTasks = tasks.filter(t => t.status === 'Reassigned');
 
             allResolved.forEach(t => {
                 if (new Date(t.completedAt || t.timestamp) < cutoff) historyTasks.push(t); else resolvedTasks.push(t);
             });
             allUnresolved.forEach(t => {
-                if (new Date(t.unresolvedAt || t.timestamp) < cutoff) historyTasks.push(t); else unresolvedTasks.push(t);
+                if (t.subStatus === 'Reassigned' || new Date(t.unresolvedAt || t.timestamp) < cutoff) historyTasks.push(t); else unresolvedTasks.push(t);
             });
+            historyTasks.push(...reassignedTasks);
+            historyTasks.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             // Apply Filters for Card 1 (Pending/Assigned)
             if (valFilterSku1) {
@@ -3204,6 +3255,7 @@
                     const diffMins = Math.floor(diffMs / 60000);
                     let durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
                     
+                    const expiryStr = t.expiryDate || '-';
                     if (diffMs > 3600000) {
                         tr.style.boxShadow = "inset 4px 0 0 #e74c3c";
                         tr.style.backgroundColor = "#fff5f5";
@@ -3234,7 +3286,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox pending-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox pending-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${expiryStr}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     pendingTasksTbody.appendChild(tr);
                 });
             }
@@ -3267,6 +3319,7 @@
                     const diffMins = Math.floor(diffMs / 60000);
                     let durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
                     
+                    const expiryStr = t.expiryDate || '-';
                     if(diffMins > 60) durationStr = `<span style="color:#e74c3c; font-weight:bold;">${durationStr}</span>`;
                     else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
                     else durationStr = `<span style="color:#2ecc71; font-weight:bold;">${durationStr}</span>`;
@@ -3292,7 +3345,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox assigned-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox assigned-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${expiryStr}</td><td>${validatorInput}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     assignedTasksTbody.appendChild(tr);
                 });
             }
@@ -3321,6 +3374,7 @@
                     const tr = document.createElement('tr');
                     const assignedTime = new Date(t.timestamp).toLocaleString();
                     const resolvedTime = t.completedAt ? new Date(t.completedAt).toLocaleString() : '-';
+                    const expiryStr = t.expiryDate || '-';
                     
                     let durationStr = '-';
                     if (t.completedAt && t.timestamp) {
@@ -3336,8 +3390,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox resolved-cb" value="${t.id}"></td><td>${resolvedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${actionHtml}</td>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox resolved-cb" value="${t.id}"></td><td>${resolvedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox resolved-cb" value="${t.id}"></td><td>${resolvedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${expiryStr}</td><td>${t.validator}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     resolvedTasksTbody.appendChild(tr);
                 });
             }
@@ -3366,6 +3419,7 @@
                     const tr = document.createElement('tr');
                     const assignedTime = new Date(t.timestamp).toLocaleString();
                     const unresolvedTime = t.unresolvedAt ? new Date(t.unresolvedAt).toLocaleString() : '-';
+                    const expiryStr = t.expiryDate || '-';
                     
                     const endTime = t.unresolvedAt ? new Date(t.unresolvedAt) : now;
                     const diffMs = endTime - new Date(t.timestamp);
@@ -3376,6 +3430,17 @@
                     else if(diffMins > 30) durationStr = `<span style="color:#f39c12; font-weight:bold;">${durationStr}</span>`;
                     else durationStr = `<span style="color:#2ecc71; font-weight:bold;">${durationStr}</span>`;
 
+                    let options = `<option value="Unassigned">Unassign</option>`;
+                    validatorNames.forEach(v => {
+                        const selected = (t.validator === v) ? 'selected' : '';
+                        options += `<option value="${v}" ${selected}>${v}</option>`;
+                    });
+                    if (t.validator && !validatorNames.includes(t.validator)) {
+                        options += `<option value="${t.validator}" selected>${t.validator} (inactive)</option>`;
+                    }
+                    // Dropdown for reassignment
+                    const validatorInput = `<select class="task-validator-input" data-id="${t.id}" style="width:100%; padding:4px; border:1px solid #e0e0e0; border-radius:4px; font-size:11px; background:#fff; color:#333;">${options}</select>`;
+
                     const actionHtml = `
                         <button class="icon-btn complete-task-btn" data-id="${t.id}" title="Mark Resolved" style="color:#2ecc71; margin-right:5px;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -3383,7 +3448,7 @@
                         <button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
                         </button>`;
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${unresolvedTime}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox unresolved-cb" value="${t.id}"></td><td>${assignedTime}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${expiryStr}</td><td>${validatorInput}</td><td>${unresolvedTime}</td><td>${durationStr}</td><td>${actionHtml}</td>`;
                     unresolvedTasksTbody.appendChild(tr);
                 });
             }
@@ -3404,11 +3469,12 @@
             if(historyNext) historyNext.disabled = valHistoryPage >= totalHistoryPages;
 
             if(paginatedHistory.length === 0) {
-                historyTasksTbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:10px; color:#999;">No history tasks.</td></tr>';
+                historyTasksTbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:10px; color:#999;">No history tasks.</td></tr>';
             } else {
                 paginatedHistory.forEach(t => {
                     const tr = document.createElement('tr');
                     const dateStr = new Date(t.timestamp).toLocaleString();
+                    const expiryStr = t.expiryDate || '-';
                     
                     let durationStr = '-';
                     const endTime = t.completedAt ? new Date(t.completedAt) : (t.unresolvedAt ? new Date(t.unresolvedAt) : null);
@@ -3418,7 +3484,15 @@
                         durationStr = diffMins < 60 ? `${diffMins}m` : `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
                     }
 
-                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox history-cb" value="${t.id}"></td><td>${dateStr}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${t.validator}</td><td>${t.status}</td><td>${durationStr}</td><td><button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button></td>`;
+                    let displayStatus = t.status;
+                    let displaySubStatus = t.subStatus || '';
+
+                    if (t.status === 'Reassigned') {
+                        displayStatus = 'Unresolved';
+                        displaySubStatus = 'Reassigned';
+                    }
+
+                    tr.innerHTML = `<td><input type="checkbox" class="val-row-checkbox history-cb" value="${t.id}"></td><td>${dateStr}</td><td>${t.sku}</td><td>${t.desc}</td><td>${t.qty}</td><td>${t.reason || '-'}</td><td>${expiryStr}</td><td>${t.validator}</td><td>${displayStatus}</td><td>${displaySubStatus}</td><td>${durationStr}</td><td><button class="icon-btn delete-task-btn" data-id="${t.id}" title="Delete" style="color:#d9534f;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button></td>`;
                     historyTasksTbody.appendChild(tr);
                 });
             }
@@ -3476,12 +3550,23 @@
             }
         }
 
+        const valViewDate = document.getElementById('val-view-date');
+        if(valViewDate) {
+            valViewDate.value = new Date().toISOString().split('T')[0];
+            valViewDate.addEventListener('change', () => {
+                renderValidationTasks();
+                renderValidatorsModal();
+            });
+        }
+
         function renderValAnalytics() {
             let tasks = getValidationTasks();
             const rawTasks = [...tasks]; // Keep raw for specific period overrides
             
-            // Apply Global Date Filter (same as renderValidationTasks)
-            if (globalStartDate.value || globalEndDate.value) {
+            const valViewDate = document.getElementById('val-view-date');
+            if (valViewDate && valViewDate.value) {
+                tasks = tasks.filter(t => t.timestamp.startsWith(valViewDate.value));
+            } else if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
                 if(start) start.setHours(0,0,0,0);
                 const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
@@ -3602,7 +3687,10 @@
 
             // Recalculate data
             let tasks = getValidationTasks();
-            if (globalStartDate.value || globalEndDate.value) {
+            const valViewDate = document.getElementById('val-view-date');
+            if (valViewDate && valViewDate.value) {
+                tasks = tasks.filter(t => t.timestamp.startsWith(valViewDate.value));
+            } else if (globalStartDate.value || globalEndDate.value) {
                 const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
                 if(start) start.setHours(0,0,0,0);
                 const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
@@ -3862,7 +3950,48 @@
         }
         if(resolvedTasksTbody) resolvedTasksTbody.addEventListener('click', handleTaskAction);
         const unresolvedTasksTbody = document.getElementById('unresolved-tasks-tbody');
-        if(unresolvedTasksTbody) unresolvedTasksTbody.addEventListener('click', handleTaskAction);
+        if(unresolvedTasksTbody) {
+            unresolvedTasksTbody.addEventListener('click', handleTaskAction);
+            unresolvedTasksTbody.addEventListener('change', (e) => {
+                if(e.target.classList.contains('task-validator-input')) {
+                    const id = e.target.dataset.id;
+                    const newValidator = e.target.value;
+                    if(confirm(`Reassign this unresolved task to ${newValidator}? This will create a new task entry with reset duration.`)) {
+                        let tasks = getValidationTasks();
+                        const taskIndex = tasks.findIndex(t => t.id === id);
+                        if(taskIndex > -1) {
+                            const oldTask = tasks[taskIndex];
+                            // Create new task
+                            const newTask = {
+                                ...oldTask,
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                timestamp: new Date().toISOString(),
+                                validator: newValidator,
+                                status: 'Pending', // Will move to Assigned automatically
+                                completedAt: undefined,
+                                unresolvedAt: undefined,
+                                reassignedTo: undefined,
+                                reassignedAt: undefined
+                            };
+                            tasks.push(newTask);
+
+                            // Update old task
+                            oldTask.status = 'Unresolved';
+                            oldTask.subStatus = 'Reassigned';
+                            oldTask.reassignedTo = newValidator;
+                            oldTask.reassignedAt = new Date().toISOString();
+                            
+                            saveValidationTasks(tasks);
+                            renderValidationTasks();
+                            renderValidatorsModal();
+                            showToast(`Task reassigned to ${newValidator}`);
+                        }
+                    } else {
+                        renderValidationTasks(); // Revert selection
+                    }
+                }
+            });
+        }
         const historyTasksTbody = document.getElementById('history-tasks-tbody');
         if(historyTasksTbody) historyTasksTbody.addEventListener('click', handleTaskAction);
 
@@ -3876,6 +4005,9 @@
             
             const btn1 = document.getElementById('val-bulk-delete-btn-1');
             if(btn1) btn1.style.display = (pCount + aCount + rCount + uCount + hCount) > 0 ? 'inline-flex' : 'none';
+
+            const btnReassign = document.getElementById('val-bulk-reassign-btn-1');
+            if(btnReassign) btnReassign.style.display = uCount > 0 ? 'inline-flex' : 'none';
         }
 
         // Select All Listeners
@@ -3909,6 +4041,44 @@
 
         const btnBulkDel1 = document.getElementById('val-bulk-delete-btn-1');
         if(btnBulkDel1) btnBulkDel1.addEventListener('click', () => handleBulkDelete('.pending-cb, .assigned-cb, .resolved-cb, .unresolved-cb, .history-cb'));
+
+        const btnBulkReassign = document.getElementById('val-bulk-reassign-btn-1');
+        if(btnBulkReassign) {
+            btnBulkReassign.addEventListener('click', () => {
+                const selected = Array.from(document.querySelectorAll('.unresolved-cb:checked')).map(cb => cb.value);
+                if(selected.length === 0) return;
+                
+                const newValidator = prompt(`Reassign ${selected.length} tasks to validator:`);
+                if(!newValidator) return;
+
+                if(confirm(`Confirm reassigning ${selected.length} tasks to "${newValidator}"?`)) {
+                    let tasks = getValidationTasks();
+                    let count = 0;
+                    
+                    selected.forEach(id => {
+                        const taskIndex = tasks.findIndex(t => t.id === id);
+                        if(taskIndex > -1) {
+                            const oldTask = tasks[taskIndex];
+                            if(oldTask.status === 'Unresolved') {
+                                const newTask = { ...oldTask, id: Date.now().toString() + Math.random().toString(36).substr(2, 5), timestamp: new Date().toISOString(), validator: newValidator, status: 'Pending', completedAt: undefined, unresolvedAt: undefined, reassignedTo: undefined, reassignedAt: undefined };
+                                tasks.push(newTask);
+
+                                oldTask.status = 'Unresolved';
+                                oldTask.subStatus = 'Reassigned';
+                                oldTask.reassignedTo = newValidator;
+                                oldTask.reassignedAt = new Date().toISOString();
+                                count++;
+                            }
+                        }
+                    });
+                    
+                    saveValidationTasks(tasks);
+                    renderValidationTasks();
+                    renderValidatorsModal();
+                    showToast(`${count} tasks reassigned to ${newValidator}`);
+                }
+            });
+        }
 
         // Filter Inputs
         const filterInput1 = document.getElementById('val-filter-assigned-1');
@@ -3971,7 +4141,7 @@
                     if (now.getHours() < 6) cutoff.setDate(cutoff.getDate() - 1);
                     cutoff.setHours(6, 0, 0, 0);
                     
-                    let hist = tasks.filter(t => (t.status === 'Completed' && new Date(t.completedAt || t.timestamp) < cutoff) || (t.status === 'Unresolved' && new Date(t.unresolvedAt || t.timestamp) < cutoff));
+                    let hist = tasks.filter(t => t.status === 'Reassigned' || (t.status === 'Completed' && new Date(t.completedAt || t.timestamp) < cutoff) || (t.status === 'Unresolved' && new Date(t.unresolvedAt || t.timestamp) < cutoff));
                     if (skuFilter) hist = hist.filter(t => (t.sku || '').toLowerCase().includes(skuFilter));
                     if (assignedFilter) hist = hist.filter(t => (t.validator || '').toLowerCase().includes(assignedFilter));
                     dataToExport = hist;
@@ -4265,6 +4435,27 @@
             });
         }
 
+        const clearValTasksBtn = document.getElementById('clear-val-tasks-btn');
+        if(clearValTasksBtn) {
+            clearValTasksBtn.addEventListener('click', () => {
+                const dateVal = document.getElementById('val-view-date').value;
+                let msg = 'Are you sure you want to clear ALL validation tasks? This cannot be undone.';
+                if (dateVal) {
+                    msg = `Are you sure you want to clear validation tasks for ${dateVal}? This cannot be undone.`;
+                }
+                
+                if(confirm(msg)) {
+                    let tasks = getValidationTasks();
+                    if (dateVal) tasks = tasks.filter(t => !t.timestamp.startsWith(dateVal));
+                    else tasks = [];
+                    saveValidationTasks(tasks);
+                    renderValidationTasks();
+                    renderValidatorsModal();
+                    showToast('Validation tasks cleared.');
+                }
+            });
+        }
+
         if(assignSku && assignDesc){
             assignSku.addEventListener('input', () => {
                 const code = assignSku.value.trim();
@@ -4276,12 +4467,32 @@
             });
         }
 
+        if(assignReason && document.getElementById('assign-expiry-container')) {
+            assignReason.addEventListener('change', () => {
+                const val = assignReason.value;
+                const container = document.getElementById('assign-expiry-container');
+                if(val === 'Expired' || val === 'Near Expiry') {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                    if(assignExpiry) assignExpiry.value = '';
+                }
+            });
+        }
+
         if(btnAssignTask) {
             btnAssignTask.addEventListener('click', () => {
                 const sku = assignSku.value.trim();
                 const qty = assignQty.value.trim();
                 const reason = assignReason.value.trim();
+                
                 if(!sku || !qty) { showToast('Please fill in SKU and Qty.', 'error'); return; }
+                if(!reason) { showToast('Please select a Reason.', 'error'); return; }
+
+                if ((reason === 'Expired' || reason === 'Near Expiry') && (!assignExpiry || !assignExpiry.value)) {
+                    showToast('Please enter Expiry Date.', 'error');
+                    return;
+                }
                 
                 // Validate SKU against Master List
                 let masterMap = {};
@@ -4312,6 +4523,7 @@
                     desc: assignDesc.value,
                     qty: qty,
                     reason: reason,
+                    expiryDate: assignExpiry ? assignExpiry.value : '',
                     validator: assignValidator.value || 'Unassigned',
                     status: 'Pending'
                 };
@@ -4321,6 +4533,8 @@
                 showToast('Task successfully assigned!');
                 
                 assignSku.value = ''; assignDesc.value = ''; assignQty.value = ''; assignReason.value = ''; assignValidator.value = '';
+                if(assignExpiry) assignExpiry.value = '';
+                if(document.getElementById('assign-expiry-container')) document.getElementById('assign-expiry-container').style.display = 'none';
             });
         }
 
@@ -4662,6 +4876,55 @@
             }
         }, 15000);
 
+        // Auto Refresh Validators View (5s)
+        setInterval(() => {
+            const valModal = document.getElementById('validators-modal');
+            if (valModal && !valModal.classList.contains('hidden')) {
+                if (document.activeElement && valModal.contains(document.activeElement) && 
+                   (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA')) {
+                    return;
+                }
+                renderValidatorsModal();
+                renderValidationTasks();
+            }
+        }, 5000);
+
+        // Floating Widget Logic
+        const addTaskWidget = document.getElementById('add-task-widget');
+        const toggleAddTaskBtn = document.getElementById('toggle-add-task-widget-btn');
+        const closeWidgetBtn = document.querySelector('.close-widget-btn');
+        const widgetHeader = document.getElementById('add-task-header');
+
+        if(toggleAddTaskBtn && addTaskWidget) {
+            toggleAddTaskBtn.addEventListener('click', () => {
+                addTaskWidget.classList.toggle('hidden');
+            });
+        }
+        if(closeWidgetBtn && addTaskWidget) {
+            closeWidgetBtn.addEventListener('click', () => {
+                addTaskWidget.classList.add('hidden');
+            });
+        }
+
+        // Drag Logic
+        if(addTaskWidget && widgetHeader) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            widgetHeader.onmousedown = dragMouseDown;
+            function dragMouseDown(e) {
+                e = e || window.event; e.preventDefault();
+                pos3 = e.clientX; pos4 = e.clientY;
+                document.onmouseup = closeDragElement; document.onmousemove = elementDrag;
+            }
+            function elementDrag(e) {
+                e = e || window.event; e.preventDefault();
+                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
+                addTaskWidget.style.top = (addTaskWidget.offsetTop - pos2) + "px";
+                addTaskWidget.style.left = (addTaskWidget.offsetLeft - pos1) + "px";
+            }
+            function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
+        }
+
         // Initial Render
         renderAttendanceTable();
 
@@ -4785,3 +5048,5 @@
   </script>
 </body>
 </html>
+            
+            

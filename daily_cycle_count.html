@@ -500,11 +500,11 @@
           </div>
           <div>
               <label for="counter-rate">Standard Rate</label>
-              <input type="number" id="counter-rate" min="1" placeholder="Per Person" style="width:100%">
+              <input type="number" id="counter-rate" min="1" placeholder="Per Person" style="width:100%" title="Items per person. Used to calculate Target Output (Required * Rate).">
           </div>
           <div>
               <label for="counter-target">Target Output</label>
-              <input type="number" id="counter-target" min="0" placeholder="Optional" style="width:100%">
+              <input type="number" id="counter-target" min="0" placeholder="Optional" style="width:100%" title="Total items target. Auto-calculated if Rate is set, or enter manually.">
           </div>
           <div>
               <label for="counter-note">Note (Optional)</label>
@@ -782,6 +782,7 @@
                 <button id="hourly-back-timestamp-btn" class="icon-btn" title="Back to Timestamp" style="margin-right:5px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 </button>
+                <button id="hourly-chart-toggle-btn" class="icon-btn" title="Toggle View" style="font-size:12px; padding:2px 8px; margin-right:5px; border:1px solid #ccc; background:#f9f9f9;">View: Hourly</button>
                 <button id="email-hourly-btn" class="icon-btn" title="Email Report (Text)" style="margin-right:5px;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </button>
@@ -1004,7 +1005,10 @@
     <div class="modal-content card" style="width: 100%; height: 100%; max-width: none; margin: 0; border-radius: 0; display:flex; flex-direction:column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <h3 style="margin:0">Counter Timestamp</h3>
-            <button class="icon-btn close-modal">&times;</button>
+            <div>
+                <button id="go-to-validators-btn" class="icon-btn" title="Go to Validators View (All IC Attendance)" style="margin-right:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></button>
+                <button class="icon-btn close-modal">&times;</button>
+            </div>
         </div>
         
         <div class="dashboard-stats-grid" style="margin-bottom:15px;">
@@ -1248,7 +1252,10 @@
                 <div class="card" style="margin:0; padding:10px; display:flex; flex-direction:column; border:1px solid #eee; box-shadow:none; flex-shrink:0; max-height:380px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <h4 style="margin:0; font-size:13px; color:#2752a7;" id="ts-hourly-chart-title">Hourly Output (Today)</h4>
-                        <button id="ts-view-hourly-full-btn" class="icon-btn" title="View Full Report" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Full Report</button>
+                        <div style="display:flex; gap:5px;">
+                            <button id="ts-hourly-chart-toggle-btn" class="icon-btn" title="Toggle View" style="font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer; border:1px solid #ccc; background:#f9f9f9;">View: Hourly</button>
+                            <button id="ts-view-hourly-full-btn" class="icon-btn" title="View Full Report" style="background:#2752a7; color:white; font-size:10px; padding:3px 6px; border-radius:3px; cursor:pointer;">Full Report</button>
+                        </div>
                     </div>
                     <div style="display:flex; justify-content:center; gap:10px; margin-bottom:5px; font-size:10px;">
                         <div style="display:flex; align-items:center;"><span style="width:8px; height:8px; background:rgba(54, 185, 204, 0.8); display:inline-block; margin-right:3px;"></span> 1st Shift</div>
@@ -1315,6 +1322,32 @@
             </div>
         </div>
         <button id="cancel-warehouse-area-btn" class="icon-btn" style="margin-top:20px; border:1px solid #ccc;">Back</button>
+    </div>
+  </div>
+
+  <!-- Clear Logs Modal -->
+  <div id="clear-logs-modal" class="modal hidden" style="z-index: 10030;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content card" style="max-width: 400px; margin: 150px auto;">
+        <h3 style="margin-top:0">Clear Logs</h3>
+        <p class="muted">Select Date and Shift to clear logs.</p>
+        <div style="margin-bottom:15px;">
+            <label for="clear-logs-date" style="font-weight:bold; display:block; margin-bottom:5px;">Date</label>
+            <input type="date" id="clear-logs-date" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label for="clear-logs-shift" style="font-weight:bold; display:block; margin-bottom:5px;">Shift</label>
+            <select id="clear-logs-shift" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                <option value="All">All Shifts</option>
+                <option value="1st Shift">1st Shift</option>
+                <option value="2nd Shift">2nd Shift</option>
+                <option value="3rd Shift">3rd Shift</option>
+            </select>
+        </div>
+        <div style="text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+            <button id="cancel-clear-logs-btn" class="icon-btn" style="border:1px solid #ccc;">Cancel</button>
+            <button id="confirm-clear-logs-btn" class="icon-btn" style="background:#d9534f; color:white;">Clear</button>
+        </div>
     </div>
   </div>
 
@@ -1881,13 +1914,47 @@
         }
 
         const tsClearLogsBtn = document.getElementById('ts-clear-logs-btn');
+        const clearLogsModal = document.getElementById('clear-logs-modal');
+        const cancelClearLogsBtn = document.getElementById('cancel-clear-logs-btn');
+        const confirmClearLogsBtn = document.getElementById('confirm-clear-logs-btn');
+        const clearLogsDateInput = document.getElementById('clear-logs-date');
+        const clearLogsShiftSelect = document.getElementById('clear-logs-shift');
+
         if(tsClearLogsBtn) {
             tsClearLogsBtn.addEventListener('click', () => {
-                if(confirm('Are you sure you want to clear ALL timestamp logs? This cannot be undone.')) {
-                    saveTimestamps([]);
-                    renderTimestamps();
-                    showToast('All logs cleared.');
+                if (clearLogsModal) {
+                    clearLogsDateInput.value = new Date().toISOString().split('T')[0];
+                    clearLogsModal.classList.remove('hidden');
                 }
+            });
+        }
+
+        if (cancelClearLogsBtn) {
+            cancelClearLogsBtn.addEventListener('click', () => {
+                clearLogsModal.classList.add('hidden');
+            });
+        }
+
+        if (confirmClearLogsBtn) {
+            confirmClearLogsBtn.addEventListener('click', () => {
+                const dateVal = clearLogsDateInput.value;
+                const shiftVal = clearLogsShiftSelect.value;
+                if (!dateVal) { alert('Please select a date.'); return; }
+                if (!confirm(`Are you sure you want to clear logs for ${dateVal} (${shiftVal})? This cannot be undone.`)) return;
+
+                let data = getTimestamps();
+                const initialCount = data.length;
+                data = data.filter(log => {
+                    const info = getShiftFromTimestamp(log.timestamp);
+                    if (info.date !== dateVal) return true;
+                    if (shiftVal !== 'All' && !info.shift.includes(shiftVal)) return true;
+                    return false;
+                });
+                const deletedCount = initialCount - data.length;
+                saveTimestamps(data);
+                renderTimestamps();
+                showToast(`Cleared ${deletedCount} logs.`);
+                clearLogsModal.classList.add('hidden');
             });
         }
 
@@ -1896,6 +1963,16 @@
             tsViewHourlyFullBtn.addEventListener('click', () => {
                 const date = document.getElementById('ts-analytics-date-filter').value || new Date().toISOString().split('T')[0];
                 openHourlyModal(date, "1st Shift-(6am-2pm)");
+            });
+        }
+
+        const tsHourlyChartToggleBtn = document.getElementById('ts-hourly-chart-toggle-btn');
+        if (tsHourlyChartToggleBtn) {
+            tsHourlyChartToggleBtn.addEventListener('click', () => {
+                tsHourlyChartViewMode = tsHourlyChartViewMode === 'hourly' ? 'cumulative' : 'hourly';
+                tsHourlyChartToggleBtn.textContent = tsHourlyChartViewMode === 'hourly' ? 'View: Hourly' : 'View: Cumulative';
+                const date = document.getElementById('ts-analytics-date-filter').value || new Date().toISOString().split('T')[0];
+                renderTsHourlyChart(date);
             });
         }
         
@@ -2743,6 +2820,8 @@
             });
         }
 
+        let hourlyChartViewMode = 'hourly';
+
         function openHourlyModal(dateStr, shift) {
              const tsModal = document.getElementById('timestamp-modal');
              if(tsModal) {
@@ -2754,6 +2833,10 @@
              hourlyModal.classList.remove('hidden');
              document.getElementById('hourly-date-val').value = dateStr;
              document.getElementById('hourly-shift-val').value = shift;
+
+             // Update toggle button text
+             const toggleBtn = document.getElementById('hourly-chart-toggle-btn');
+             if(toggleBtn) toggleBtn.textContent = hourlyChartViewMode === 'hourly' ? 'View: Hourly' : 'View: Cumulative';
              
              // Find the counter entry to get the main target
              const counters = getCountersData();
@@ -2914,6 +2997,14 @@
              }
 
              const targetLineData = Object.values(hourlyTargets);
+
+             // Calculate Glide Path (Cumulative Target)
+             const glidePathData = [];
+             let targetSum = 0;
+             for (const val of targetLineData) {
+                 targetSum += val;
+                 glidePathData.push(targetSum);
+             }
  
              const ctx = document.getElementById('hourly-chart');
              if (typeof Chart !== 'undefined') {
@@ -2923,9 +3014,10 @@
                  data: {
                      labels: Object.keys(hourlyData),
                     datasets: [
-                        { label: 'Hourly Output', data: hourlyValues, backgroundColor: '#36b9cc', order: 2 },
-                        { label: 'Cumulative Total', data: cumulativeData, type: 'line', borderColor: '#e74c3c', backgroundColor: 'transparent', tension: 0.1, yAxisID: 'y', order: 1 },
-                        { label: 'Target', data: targetLineData, type: 'line', borderColor: '#27ae60', backgroundColor: 'transparent', tension: 0.1, yAxisID: 'y', borderDash: [5, 5], order: 0 }
+                        { label: 'Hourly Output', data: hourlyValues, backgroundColor: '#36b9cc', order: 3, hidden: hourlyChartViewMode !== 'hourly' },
+                        { label: 'Total Output', data: cumulativeData, type: 'line', borderColor: '#e74c3c', backgroundColor: 'transparent', tension: 0.1, yAxisID: 'y', order: 1, hidden: hourlyChartViewMode !== 'cumulative' },
+                        { label: 'Glide Path', data: glidePathData, type: 'line', borderColor: '#27ae60', backgroundColor: 'transparent', tension: 0.1, yAxisID: 'y', borderDash: [5, 5], order: 2, hidden: hourlyChartViewMode !== 'cumulative' },
+                        { label: 'Hourly Target', data: targetLineData, type: 'line', borderColor: '#3498db', backgroundColor: 'transparent', tension: 0.1, yAxisID: 'y', borderDash: [2, 2], borderWidth: 1, order: 4, hidden: hourlyChartViewMode !== 'hourly' }
                     ]
                  },
                  options: { 
@@ -2936,6 +3028,24 @@
              }
         }
         window.openHourlyModal = openHourlyModal;
+
+        const hourlyChartToggleBtn = document.getElementById('hourly-chart-toggle-btn');
+        if (hourlyChartToggleBtn) {
+            hourlyChartToggleBtn.addEventListener('click', () => {
+                hourlyChartViewMode = hourlyChartViewMode === 'hourly' ? 'cumulative' : 'hourly';
+                hourlyChartToggleBtn.textContent = hourlyChartViewMode === 'hourly' ? 'View: Hourly' : 'View: Cumulative';
+                
+                if (hourlyChart) {
+                    // Toggle visibility based on mode
+                    // 0: Hourly Output, 1: Total Output, 2: Glide Path, 3: Hourly Target
+                    hourlyChart.getDatasetMeta(0).hidden = hourlyChartViewMode !== 'hourly';
+                    hourlyChart.getDatasetMeta(3).hidden = hourlyChartViewMode !== 'hourly';
+                    hourlyChart.getDatasetMeta(1).hidden = hourlyChartViewMode !== 'cumulative';
+                    hourlyChart.getDatasetMeta(2).hidden = hourlyChartViewMode !== 'cumulative';
+                    hourlyChart.update();
+                }
+            });
+        }
 
         // Daily Output Modal Logic
         const dailyOutputModal = document.getElementById('daily-output-modal');
@@ -3184,8 +3294,10 @@
                         const rows = document.querySelectorAll('#hourly-details .hourly-row');
                         const actuals = [];
                         const targets = [];
-                        let cumulative = [];
-                        let sum = 0;
+                        const cumulative = [];
+                        const glidePath = [];
+                        let actSum = 0;
+                        let tgtSum = 0;
                         
                         rows.forEach(r => {
                             const aIn = r.querySelector('.hourly-actual-input');
@@ -3195,14 +3307,17 @@
                                 const tVal = parseInt(tIn.value) || 0;
                                 actuals.push(aVal);
                                 targets.push(tVal);
-                                sum += aVal;
-                                cumulative.push(sum);
+                                actSum += aVal;
+                                tgtSum += tVal;
+                                cumulative.push(actSum);
+                                glidePath.push(tgtSum);
                             }
                         });
                         
                         if (hourlyChart.data.datasets[0]) hourlyChart.data.datasets[0].data = actuals;
                         if (hourlyChart.data.datasets[1]) hourlyChart.data.datasets[1].data = cumulative;
-                        if (hourlyChart.data.datasets[2]) hourlyChart.data.datasets[2].data = targets;
+                        if (hourlyChart.data.datasets[2]) hourlyChart.data.datasets[2].data = glidePath;
+                        if (hourlyChart.data.datasets[3]) hourlyChart.data.datasets[3].data = targets;
                         hourlyChart.update('none');
                     }
                 }
@@ -6374,6 +6489,7 @@
             document.getElementById('history-break-table').addEventListener('change', (e) => { if(e.target.classList.contains('break-row-checkbox')) updateBreakDeleteButton(); });
         }
 
+        let tsHourlyChartViewMode = 'hourly'; // 'hourly' or 'cumulative'
 
         function renderTsHourlyChart(date) {
             const ctx = document.getElementById('ts-hourly-chart');
@@ -6467,45 +6583,72 @@
                 sum += val;
                 cumulativeData.push(sum);
             }
+
+            // Calculate Glide Path (Cumulative Target)
+            const glidePathData = [];
+            let targetSum = 0;
+            for (const val of targetValues) {
+                targetSum += val;
+                glidePathData.push(targetSum);
+            }
             
             if (window.tsHourlyChart) window.tsHourlyChart.destroy();
             
+            let datasets = [];
+            if (tsHourlyChartViewMode === 'hourly') {
+                datasets = [
+                    { 
+                        label: 'Hourly Output', 
+                        data: values, 
+                        backgroundColor: backgroundColors, 
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        order: 2 
+                    },
+                    { 
+                        label: 'Hourly Target', 
+                        data: targetValues, 
+                        type: 'line',
+                        borderColor: '#3498db', 
+                        backgroundColor: 'transparent', 
+                        tension: 0.2,
+                        borderDash: [2, 2],
+                        borderWidth: 1,
+                        order: 1 
+                    }
+                ];
+            } else {
+                datasets = [
+                    { 
+                        label: 'Total Output', 
+                        data: cumulativeData, 
+                        type: 'line',
+                        borderColor: '#e74c3c', 
+                        backgroundColor: 'transparent', 
+                        tension: 0.2,
+                        borderWidth: 2,
+                        order: 1 
+                    },
+                    { 
+                        label: 'Glide Path', 
+                        data: glidePathData, 
+                        type: 'line',
+                        borderColor: '#27ae60', 
+                        backgroundColor: 'transparent', 
+                        tension: 0.2,
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        order: 2 
+                    }
+                ];
+            }
+
             try {
                 window.tsHourlyChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
-                        datasets: [
-                            { 
-                                label: 'Hourly Output', 
-                                data: values, 
-                                backgroundColor: backgroundColors, 
-                                borderColor: borderColors,
-                                borderWidth: 1,
-                                order: 2 
-                            },
-                            { 
-                                label: 'Cumulative', 
-                                data: cumulativeData, 
-                                type: 'line',
-                                borderColor: '#e74c3c', 
-                                backgroundColor: 'transparent', 
-                                tension: 0.2,
-                                borderWidth: 2,
-                                order: 1 
-                            },
-                            { 
-                                label: 'Target', 
-                                data: targetValues, 
-                                type: 'line',
-                                borderColor: '#27ae60', 
-                                backgroundColor: 'transparent', 
-                                tension: 0.2,
-                                borderDash: [5, 5],
-                                borderWidth: 2,
-                                order: 0 
-                            }
-                        ]
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
@@ -7846,56 +7989,14 @@
                 renderTimestamps();
             }
         }
-    });
-  </script>
-</body>
-</html>             
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                const content = card.querySelector('.section-content');
-                if (content) {
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
 
-        // Restore Timestamp Modal State
-        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
-            const tm = document.getElementById('timestamp-modal');
-            if (tm) {
-                tm.classList.remove('hidden');
-                renderTimestamps();
-            }
+        // Shortcut to Validators
+        const goToValidatorsBtn = document.getElementById('go-to-validators-btn');
+        if(goToValidatorsBtn) {
+            goToValidatorsBtn.addEventListener('click', () => {
+                sessionStorage.setItem('ims_open_validators_modal', 'true');
+                window.location.href = 'all_ic_attendance.html';
+            });
         }
     });
   </script>
@@ -7948,107 +8049,14 @@
                 renderTimestamps();
             }
         }
-    });
-  </script>
-</body>
-</html>             
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                const content = card.querySelector('.section-content');
-                if (content) {
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
 
-        // Restore Timestamp Modal State
-        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
-            const tm = document.getElementById('timestamp-modal');
-            if (tm) {
-                tm.classList.remove('hidden');
-                renderTimestamps();
-            }
-        }
-    });
-  </script>
-</body>
-</html>             
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-    });
-  </script>
-</body>
-</html>             
-                const content = card.querySelector('.section-content');
-                if (content) {
-                    content.classList.toggle('hidden');
-                    const isHidden = content.classList.contains('hidden');
-                    btn.innerHTML = isHidden 
-                        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>' 
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-                    
-                    // Adjust card flex/height when collapsed
-                    card.style.flex = isHidden ? '0 0 auto' : '';
-                    card.style.minHeight = isHidden ? 'auto' : '';
-                }
-            }
-        });
-
-        // Restore Timestamp Modal State
-        if (sessionStorage.getItem('ims_timestamp_modal_open') === 'true') {
-            const tm = document.getElementById('timestamp-modal');
-            if (tm) {
-                tm.classList.remove('hidden');
-                renderTimestamps();
-            }
+        // Shortcut to Validators
+        const goToValidatorsBtn = document.getElementById('go-to-validators-btn');
+        if(goToValidatorsBtn) {
+            goToValidatorsBtn.addEventListener('click', () => {
+                sessionStorage.setItem('ims_open_validators_modal', 'true');
+                window.location.href = 'all_ic_attendance.html';
+            });
         }
     });
   </script>

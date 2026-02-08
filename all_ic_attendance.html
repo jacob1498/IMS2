@@ -1044,6 +1044,9 @@
             </div>
         </div>
     </div>
+    <button id="fab-add-task-btn" class="fab-btn" title="Open Add Task Widget" style="z-index:10005;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
   </div>
 
   <!-- Validators Modal -->
@@ -1378,20 +1381,24 @@
                         <button class="att-tab active" onclick="openValAnalyticsTab(event, 'tab-val-top-sku')" style="padding:4px 8px; font-size:11px;">Top SKUs</button>
                         <button class="att-tab" onclick="openValAnalyticsTab(event, 'tab-val-top-validator')" style="padding:4px 8px; font-size:11px;">Top Validators</button>
                         <button class="att-tab" onclick="openValAnalyticsTab(event, 'tab-val-reason-analysis')" style="padding:4px 8px; font-size:11px;">Reason Analysis</button>
+                        <button class="att-tab" onclick="openValAnalyticsTab(event, 'tab-val-trend')" style="padding:4px 8px; font-size:11px;">Trend Analysis</button>
                     </div>
                     <div id="tab-val-top-sku" class="val-analytics-tab-content" style="flex:1; overflow:auto; max-height:150px;">
                         <table class="report-table" style="width:100%; font-size:10px;">
-                            <thead><tr><th>SKU</th><th>Description</th><th>Count</th></tr></thead>
+                            <thead><tr><th style="width:30px;">#</th><th>Most Tasks</th><th>Most Resolved</th><th>Most Unresolved</th></tr></thead>
                             <tbody id="val-analytics-sku-tbody"></tbody>
                         </table>
                     </div>
                     <div id="tab-val-top-validator" class="val-analytics-tab-content" style="display:none; flex:1; overflow:auto; max-height:150px;">
                         <table class="report-table" style="width:100%; font-size:10px;">
-                            <thead><tr><th>Validator</th><th>Resolved</th></tr></thead>
+                            <thead><tr><th style="width:30px;">#</th><th>Most Resolved</th><th>Most Unresolved</th><th>Most Total Tasks</th><th>Most Present</th></tr></thead>
                             <tbody id="val-analytics-validator-tbody"></tbody>
                         </table>
                     </div>
                     <div id="tab-val-reason-analysis" class="val-analytics-tab-content" style="display:none; flex:1; overflow:hidden;">
+                        <div style="height:120px; margin-bottom:5px; position:relative; width:100%;">
+                            <canvas id="val-reason-chart"></canvas>
+                        </div>
                         <div style="margin-bottom:5px; text-align:right;">
                             <select id="val-analytics-reason-period" style="font-size:10px; padding:2px; border:1px solid #ccc; border-radius:3px;">
                                 <option value="global">Global Filter</option>
@@ -1404,6 +1411,11 @@
                                 <thead><tr><th>SKU</th><th>Desc</th><th>Reason</th><th>Count</th></tr></thead>
                                 <tbody id="val-analytics-reason-tbody"></tbody>
                             </table>
+                        </div>
+                    </div>
+                    <div id="tab-val-trend" class="val-analytics-tab-content" style="display:none; flex:1; overflow:hidden;">
+                        <div style="position:relative; height:100%; width:100%; padding:5px;">
+                            <canvas id="val-trend-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -3040,6 +3052,8 @@
         let valUnresolvedRows = 10;
         let valHistoryPage = 1;
         let valHistoryRows = 10;
+        let valReasonChart = null;
+        let valTrendChart = null;
         
         // Filters
         let valFilterAssigned1 = '';
@@ -3064,6 +3078,9 @@
                 if(btn) btn.click();
             } else if (type === 'history') {
                 const btn = document.querySelector("button[onclick*='tab-val-history']");
+                if(btn) btn.click();
+            } else if (type === 'trend') {
+                const btn = document.querySelector("button[onclick*='tab-val-trend']");
                 if(btn) btn.click();
             } else if (type === 'chart') {
                 const chart = document.getElementById('val-status-chart'); 
@@ -3592,12 +3609,20 @@
             }
 
             // Top SKUs
-            const skuCounts = {};
+            const skuTotal = {};
+            const skuResolved = {};
+            const skuUnresolved = {};
+
             tasks.forEach(t => {
                 const sku = t.sku || 'Unknown';
-                skuCounts[sku] = (skuCounts[sku] || 0) + 1;
+                skuTotal[sku] = (skuTotal[sku] || 0) + 1;
+                if (t.status === 'Completed') skuResolved[sku] = (skuResolved[sku] || 0) + 1;
+                if (t.status === 'Unresolved') skuUnresolved[sku] = (skuUnresolved[sku] || 0) + 1;
             });
-            const sortedSkus = Object.entries(skuCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+
+            const topTotal = Object.entries(skuTotal).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const topResolved = Object.entries(skuResolved).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const topUnresolved = Object.entries(skuUnresolved).sort((a,b) => b[1] - a[1]).slice(0, 10);
             
             // Get Master Descriptions
             let masterMap = {};
@@ -3606,29 +3631,89 @@
             const skuTbody = document.getElementById('val-analytics-sku-tbody');
             if(skuTbody) {
                 skuTbody.innerHTML = '';
-                if(sortedSkus.length === 0) skuTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">No data</td></tr>';
-                sortedSkus.forEach(([sku, count]) => {
-                    const desc = masterMap[sku] || '-';
-                    skuTbody.innerHTML += `<tr><td>${sku}</td><td>${desc}</td><td>${count}</td></tr>`;
-                });
+                const maxLen = Math.max(topTotal.length, topResolved.length, topUnresolved.length);
+                
+                if(maxLen === 0) skuTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">No data</td></tr>';
+                
+                for(let i=0; i<maxLen; i++) {
+                    const renderCell = (arr) => {
+                        if(!arr[i]) return '-';
+                        const [k, v] = arr[i];
+                        const desc = masterMap[k] || '';
+                        return `<span title="${desc}">${k} - ${desc} - (${v})</span>`;
+                    };
+                    
+                    skuTbody.innerHTML += `<tr>
+                        <td>${i+1}</td>
+                        <td>${renderCell(topTotal)}</td>
+                        <td>${renderCell(topResolved)}</td>
+                        <td>${renderCell(topUnresolved)}</td>
+                    </tr>`;
+                }
             }
 
             // Top Validators (Resolved count)
-            const valCounts = {};
+            const valResolved = {};
+            const valUnresolved = {};
+            const valTotal = {};
+            
             tasks.forEach(t => {
-                if(t.status === 'Completed' && t.validator && t.validator !== 'Unassigned') {
-                    valCounts[t.validator] = (valCounts[t.validator] || 0) + 1;
+                if (t.validator && t.validator !== 'Unassigned') {
+                    valTotal[t.validator] = (valTotal[t.validator] || 0) + 1;
+                    if (t.status === 'Completed') valResolved[t.validator] = (valResolved[t.validator] || 0) + 1;
+                    if (t.status === 'Unresolved') valUnresolved[t.validator] = (valUnresolved[t.validator] || 0) + 1;
                 }
             });
-            const sortedVals = Object.entries(valCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+
+            // Attendance for "Most Present"
+            let attendanceData = getAttendanceData();
+            if (valViewDate && valViewDate.value) {
+                attendanceData = attendanceData.filter(item => item.date === valViewDate.value);
+            } else if (globalStartDate.value || globalEndDate.value) {
+                const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
+                if(start) start.setHours(0,0,0,0);
+                const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
+                if(end) end.setHours(23,59,59,999);
+                attendanceData = attendanceData.filter(item => {
+                    const d = new Date(item.date);
+                    return (!start || d >= start) && (!end || d <= end);
+                });
+            }
+
+            const valPresent = {};
+            attendanceData.forEach(a => {
+                if (a.area === 'Validator' && a.name) {
+                    valPresent[a.name] = (valPresent[a.name] || 0) + 1;
+                }
+            });
+
+            const topResolvedVal = Object.entries(valResolved).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const topUnresolvedVal = Object.entries(valUnresolved).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const topTotalVal = Object.entries(valTotal).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const topPresentVal = Object.entries(valPresent).sort((a,b) => b[1] - a[1]).slice(0, 10);
             
             const valTbody = document.getElementById('val-analytics-validator-tbody');
             if(valTbody) {
                 valTbody.innerHTML = '';
-                if(sortedVals.length === 0) valTbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">No data</td></tr>';
-                sortedVals.forEach(([val, count]) => {
-                    valTbody.innerHTML += `<tr><td>${val}</td><td>${count}</td></tr>`;
-                });
+                const maxLen = Math.max(topResolvedVal.length, topUnresolvedVal.length, topTotalVal.length, topPresentVal.length);
+                
+                if(maxLen === 0) valTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">No data</td></tr>';
+                
+                for(let i=0; i<maxLen; i++) {
+                    const renderCell = (arr) => {
+                        if(!arr[i]) return '-';
+                        const [k, v] = arr[i];
+                        return `${k} (${v})`;
+                    };
+                    
+                    valTbody.innerHTML += `<tr>
+                        <td>${i+1}</td>
+                        <td>${renderCell(topResolvedVal)}</td>
+                        <td>${renderCell(topUnresolvedVal)}</td>
+                        <td>${renderCell(topTotalVal)}</td>
+                        <td>${renderCell(topPresentVal)}</td>
+                    </tr>`;
+                }
             }
 
             // Reason Analysis
@@ -3685,6 +3770,84 @@
                     const shortDesc = desc.length > 15 ? desc.substring(0, 15) + '...' : desc;
                     reasonTbody.innerHTML += `<tr><td>${item.sku}</td><td title="${desc}">${shortDesc}</td><td>${item.topReason}</td><td>${item.totalCount}</td></tr>`;
                 });
+
+                // Render Reason Chart
+                const reasonCounts = {};
+                reasonTasks.forEach(t => {
+                    const r = t.reason || 'Unknown';
+                    reasonCounts[r] = (reasonCounts[r] || 0) + 1;
+                });
+                const sortedReasons = Object.entries(reasonCounts).sort((a,b) => b[1] - a[1]).slice(0, 8);
+                
+                const ctxReason = document.getElementById('val-reason-chart');
+                if(ctxReason) {
+                    if(valReasonChart) valReasonChart.destroy();
+                    valReasonChart = new Chart(ctxReason, {
+                        type: 'bar',
+                        data: {
+                            labels: sortedReasons.map(x => x[0]),
+                            datasets: [{
+                                label: 'Count',
+                                data: sortedReasons.map(x => x[1]),
+                                backgroundColor: '#f1c40f',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            plugins: { legend: { display: false }, title: { display: true, text: 'Top Reasons', font: { size: 10 } } },
+                            scales: { x: { beginAtZero: true, ticks: { font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } }
+                        }
+                    });
+                }
+            }
+
+            // Trend Analysis
+            const ctxTrend = document.getElementById('val-trend-chart');
+            if(ctxTrend) {
+                let trendTasks = rawTasks;
+                if (globalStartDate.value || globalEndDate.value) {
+                    const start = globalStartDate.value ? new Date(globalStartDate.value) : null;
+                    if(start) start.setHours(0,0,0,0);
+                    const end = globalEndDate.value ? new Date(globalEndDate.value) : null;
+                    if(end) end.setHours(23,59,59,999);
+                    trendTasks = trendTasks.filter(t => {
+                        const d = new Date(t.timestamp);
+                        return (!start || d >= start) && (!end || d <= end);
+                    });
+                }
+
+                const trendData = {};
+                trendTasks.forEach(t => {
+                    const d = t.timestamp.split('T')[0];
+                    if(!trendData[d]) trendData[d] = { total: 0, resolved: 0, unresolved: 0 };
+                    trendData[d].total++;
+                    if(t.status === 'Completed') trendData[d].resolved++;
+                    if(t.status === 'Unresolved') trendData[d].unresolved++;
+                });
+
+                const sortedDates = Object.keys(trendData).sort();
+                // Limit to last 30 days if too many
+                const displayDates = sortedDates.length > 30 ? sortedDates.slice(-30) : sortedDates;
+
+                if(valTrendChart) valTrendChart.destroy();
+                valTrendChart = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: displayDates,
+                        datasets: [
+                            { label: 'Total', data: displayDates.map(d => trendData[d].total), borderColor: '#3498db', backgroundColor: 'transparent', tension: 0.1, borderWidth: 2 },
+                            { label: 'Resolved', data: displayDates.map(d => trendData[d].resolved), borderColor: '#2ecc71', backgroundColor: 'transparent', tension: 0.1, borderWidth: 2 },
+                            { label: 'Unresolved', data: displayDates.map(d => trendData[d].unresolved), borderColor: '#e74c3c', backgroundColor: 'transparent', tension: 0.1, borderWidth: 2 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { font: { size: 10 } } } }
+                    }
+                });
             }
         }
 
@@ -3693,10 +3856,12 @@
             const skuTab = document.getElementById('tab-val-top-sku');
             const valTab = document.getElementById('tab-val-top-validator');
             const reasonTab = document.getElementById('tab-val-reason-analysis');
+            const trendTab = document.getElementById('tab-val-trend');
 
             let activeTab = 'sku';
             if (valTab && valTab.style.display !== 'none') activeTab = 'validator';
             if (reasonTab && reasonTab.style.display !== 'none') activeTab = 'reason';
+            if (trendTab && trendTab.style.display !== 'none') activeTab = 'trend';
 
             // Recalculate data
             let tasks = getValidationTasks();
@@ -3801,6 +3966,24 @@
                 skuReasonList.forEach(item => {
                     const desc = masterMap[item.sku] || '-';
                     rows.push([`"${item.sku}"`, `"${desc.replace(/"/g, '""')}"`, `"${item.topReason}"`, item.totalCount]);
+                });
+            } else if (activeTab === 'trend') {
+                headers = ['Date', 'Total Tasks', 'Resolved', 'Unresolved'];
+                filename = 'trend_analysis.csv';
+                
+                const trendData = {};
+                tasks.forEach(t => {
+                    const d = t.timestamp.split('T')[0];
+                    if(!trendData[d]) trendData[d] = { total: 0, resolved: 0, unresolved: 0 };
+                    trendData[d].total++;
+                    if(t.status === 'Completed') trendData[d].resolved++;
+                    if(t.status === 'Unresolved') trendData[d].unresolved++;
+                });
+                
+                const sortedDates = Object.keys(trendData).sort();
+                sortedDates.forEach(d => {
+                    const item = trendData[d];
+                    rows.push([d, item.total, item.resolved, item.unresolved]);
                 });
             }
 
@@ -4919,11 +5102,31 @@
                 addTaskWidget.classList.toggle('hidden');
             });
         }
+        if(fabAddTaskBtn && addTaskWidget) {
+            fabAddTaskBtn.addEventListener('click', () => {
+                addTaskWidget.classList.toggle('hidden');
+            });
+        }
         if(closeWidgetBtn && addTaskWidget) {
             closeWidgetBtn.addEventListener('click', () => {
                 addTaskWidget.classList.add('hidden');
             });
         }
+
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+                e.preventDefault();
+                const widget = document.getElementById('add-task-widget');
+                if (widget) {
+                    widget.classList.toggle('hidden');
+                    if (!widget.classList.contains('hidden')) {
+                        const input = document.getElementById('assign-sku');
+                        if (input) input.focus();
+                    }
+                }
+            }
+        });
 
         // Drag Logic
         if(addTaskWidget && widgetHeader) {

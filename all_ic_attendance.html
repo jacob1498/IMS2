@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     /* Dark Mode Header */
     body.dark-mode header { background: #1a252f; border-bottom: 1px solid #2c3e50; }
@@ -190,6 +191,25 @@
     #val-analytics-card.expanded { flex: 1; }
     #val-analytics-card.expanded .val-analytics-tab-content { max-height: none !important; }
     #val-analytics-card.expanded #tab-val-reason-analysis > div:last-child { max-height: none !important; }
+
+    /* Search Preview Styles */
+    .search-preview-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 300px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 10000;
+        margin-top: 4px;
+    }
+    .search-preview-item { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+    .search-preview-item:hover { background-color: #f5f9ff; }
+    .search-preview-item:last-child { border-bottom: none; }
   </style>
 </head>
 <body class="inventory-mode">
@@ -1059,6 +1079,10 @@
                 <button id="toggle-add-task-widget-btn" class="icon-btn" title="Open Add Task Widget" style="background:#2752a7; color:white;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
                 <div style="width:1px; height:20px; background:#ddd; margin:0 2px;"></div>
                 <button onclick="window.openUniversalSearch && window.openUniversalSearch(['Cycle Count', 'Attendance', 'Daily Counter', 'Validation Task'])" class="icon-btn" title="Universal Search (Ctrl+K)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                <div style="position:relative;">
+                    <input type="text" id="val-global-search" placeholder="Search SKU, Desc, Validator..." style="padding:4px 8px; border:1px solid #ccc; border-radius:4px; font-size:12px; width:180px;">
+                    <div id="val-search-preview" class="search-preview-dropdown" style="display:none;"></div>
+                </div>
                 <input type="date" id="val-view-date" title="Filter Date" style="padding:4px; border:1px solid #ccc; border-radius:4px; font-size:12px; color:#333;">
                 <button id="download-sku-template-btn" class="icon-btn" title="Download SKU Template"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
                 <button id="upload-sku-desc-btn" class="icon-btn" title="Upload SKU Master List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></button>
@@ -1475,6 +1499,28 @@
                         </tr>
                     </thead>
                     <tbody id="validators-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bottom: Timeout Validators -->
+        <div class="card" style="flex:1; display:flex; flex-direction:column; margin:0; padding:10px;">
+            <h4 style="margin:0 0 10px 0; color:#e74c3c;">Timeout Validators</h4>
+            <div style="flex:1; overflow:auto;">
+                <table class="report-table" style="width:100%; table-layout: auto; white-space: nowrap; font-size: 11px;">
+                    <thead>
+                        <tr>
+                            <th style="position:sticky; top:0; z-index:1;">User ID</th>
+                            <th style="position:sticky; top:0; z-index:1;">Name</th>
+                            <th style="position:sticky; top:0; z-index:1;">Shift</th>
+                            <th style="position:sticky; top:0; z-index:1;">Pending</th>
+                            <th style="position:sticky; top:0; z-index:1;">Resolved</th>
+                            <th style="position:sticky; top:0; z-index:1;">Unresolved</th>
+                            <th style="position:sticky; top:0; z-index:1;">Total</th>
+                            <th style="position:sticky; top:0; z-index:1;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timeout-validators-tbody"></tbody>
                 </table>
             </div>
         </div>
@@ -2912,8 +2958,10 @@
             icMasterPage++; renderIcMaster();
         });
         if(icMasterRows) icMasterRows.addEventListener('change', () => {
+            const oldRows = icMasterRowsPerPage;
             icMasterRowsPerPage = parseInt(icMasterRows.value);
-            icMasterPage = 1;
+            const firstItem = (icMasterPage - 1) * oldRows;
+            icMasterPage = Math.floor(firstItem / icMasterRowsPerPage) + 1;
             renderIcMaster();
         });
 
@@ -2991,9 +3039,229 @@
         const uploadSkuBtn = document.getElementById('upload-sku-desc-btn');
         const uploadSkuFile = document.getElementById('upload-sku-desc-file');
 
+        function printValidatorSignOff(validator, validatorTasks) {
+            const printWindow = window.open('', '_blank');
+            const dateStr = new Date().toLocaleDateString();
+            
+            // Stats
+            const pending = validatorTasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved').length;
+            const resolved = validatorTasks.filter(t => t.status === 'Completed').length;
+            const unresolved = validatorTasks.filter(t => t.status === 'Unresolved').length;
+            const total = validatorTasks.length;
+
+            let tasksHtml = '';
+            validatorTasks.forEach(t => {
+                tasksHtml += `
+                    <tr>
+                        <td>${t.sku}</td>
+                        <td>${t.desc || ''}</td>
+                        <td>${t.qty}</td>
+                        <td>${t.reason || ''}</td>
+                        <td>${t.status}</td>
+                        <td>${new Date(t.timestamp).toLocaleTimeString()}</td>
+                    </tr>
+                `;
+            });
+
+            const html = `
+                <html>
+                <head>
+                    <title>Validator Sign-Off - ${validator.name}</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; }
+                        h2 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        .info-section { margin-bottom: 20px; }
+                        .info-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+                        .stats-table, .tasks-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
+                        .stats-table th, .stats-table td, .tasks-table th, .tasks-table td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+                        .stats-table th, .tasks-table th { background-color: #f0f0f0; }
+                        .sign-off-section { margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; }
+                        .signature-row { display: flex; justify-content: space-between; margin-top: 40px; }
+                        .signature-box { width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Validator Sign-Off Form</h2>
+                    
+                    <div class="info-section">
+                        <div class="info-row"><strong>Validator Name:</strong> ${validator.name}</div>
+                        <div class="info-row"><strong>User ID:</strong> ${validator.userId || '-'}</div>
+                        <div class="info-row"><strong>Shift:</strong> ${validator.shift}</div>
+                        <div class="info-row"><strong>Date:</strong> ${dateStr}</div>
+                    </div>
+
+                    <h3>Task Summary</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr><th>Total Tasks</th><th>Resolved</th><th>Unresolved</th><th>Pending</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${total}</td>
+                                <td>${resolved}</td>
+                                <td>${unresolved}</td>
+                                <td>${pending}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Task Details</h3>
+                    <table class="tasks-table">
+                        <thead>
+                            <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Reason</th><th>Status</th><th>Time</th></tr>
+                        </thead>
+                        <tbody>
+                            ${tasksHtml || '<tr><td colspan="6" style="text-align:center">No tasks found</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <div class="sign-off-section">
+                        <p>I confirm that the validation tasks listed above have been attended to according to the standard operating procedures.</p>
+                        
+                        <div class="signature-row">
+                            <div class="signature-box">
+                                <strong>${validator.name}</strong><br>
+                                Validator Signature
+                            </div>
+                            <div class="signature-box">
+                                <strong>Supervisor / Manager</strong><br>
+                                Signature
+                            </div>
+                        </div>
+                        <div class="signature-row">
+                            <div class="signature-box" style="border-top:0;"></div>
+                            <div class="signature-box">
+                                <strong>Date</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    <\/script>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+
+        async function exportValidatorSignOffPDF(validator, validatorTasks) {
+            const container = document.getElementById('pdf-generator-container');
+            if (!container) return;
+            
+            const dateStr = new Date().toLocaleDateString();
+            const pending = validatorTasks.filter(t => t.status !== 'Completed' && t.status !== 'Unresolved').length;
+            const resolved = validatorTasks.filter(t => t.status === 'Completed').length;
+            const unresolved = validatorTasks.filter(t => t.status === 'Unresolved').length;
+            const total = validatorTasks.length;
+
+            let tasksHtml = '';
+            validatorTasks.forEach(t => {
+                tasksHtml += `
+                    <tr>
+                        <td style="border:1px solid #ccc; padding:6px;">${t.sku}</td>
+                        <td style="border:1px solid #ccc; padding:6px;">${t.desc || ''}</td>
+                        <td style="border:1px solid #ccc; padding:6px;">${t.qty}</td>
+                        <td style="border:1px solid #ccc; padding:6px;">${t.reason || ''}</td>
+                        <td style="border:1px solid #ccc; padding:6px;">${t.status}</td>
+                        <td style="border:1px solid #ccc; padding:6px;">${new Date(t.timestamp).toLocaleTimeString()}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div style="font-family: sans-serif; padding: 20px; color: #000;">
+                    <h2 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">Validator Sign-Off Form</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><strong>Validator Name:</strong> ${validator.name}</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><strong>User ID:</strong> ${validator.userId || '-'}</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><strong>Shift:</strong> ${validator.shift}</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;"><strong>Date:</strong> ${dateStr}</div>
+                    </div>
+
+                    <h3>Task Summary</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                        <thead>
+                            <tr><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Total Tasks</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Resolved</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Unresolved</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Pending</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border:1px solid #ccc; padding:6px;">${total}</td>
+                                <td style="border:1px solid #ccc; padding:6px;">${resolved}</td>
+                                <td style="border:1px solid #ccc; padding:6px;">${unresolved}</td>
+                                <td style="border:1px solid #ccc; padding:6px;">${pending}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Task Details</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                        <thead>
+                            <tr><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">SKU</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Description</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Qty</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Reason</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Status</th><th style="border:1px solid #ccc; padding:6px; background-color:#f0f0f0;">Time</th></tr>
+                        </thead>
+                        <tbody>
+                            ${tasksHtml || '<tr><td colspan="6" style="text-align:center; border:1px solid #ccc; padding:6px;">No tasks found</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
+                        <p>I confirm that the validation tasks listed above have been attended to according to the standard operating procedures.</p>
+                        
+                        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+                            <div style="width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px;">
+                                <strong>${validator.name}</strong><br>
+                                Validator Signature
+                            </div>
+                            <div style="width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px;">
+                                <strong>Supervisor / Manager</strong><br>
+                                Signature
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+                            <div style="width: 45%; border-top: 0;"></div>
+                            <div style="width: 45%; border-top: 1px solid #000; text-align: center; padding-top: 5px;">
+                                <strong>Date</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const canvas = await html2canvas(container, { scale: 2 });
+                const imgData = canvas.toDataURL('image/png');
+                
+                if (!window.jspdf) {
+                    alert('jsPDF library not loaded.');
+                    return;
+                }
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'pt', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                
+                const safeName = (validator.name || 'Validator').replace(/[^a-z0-9]/gi, '_');
+                const safeDate = dateStr.replace(/[^a-z0-9]/gi, '-');
+                pdf.save(`Validator_SignOff_${safeName}_${safeDate}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert('Failed to generate PDF.');
+            } finally {
+                container.innerHTML = '';
+            }
+        }
+
         function renderValidatorsModal() {
             if (!validatorsTbody) return;
             validatorsTbody.innerHTML = '';
+            const timeoutTbody = document.getElementById('timeout-validators-tbody');
+            if (timeoutTbody) timeoutTbody.innerHTML = '';
             
             let data = getAttendanceData();
             
@@ -3009,19 +3277,26 @@
             }
             
             let validators = data.filter(item => item.area === 'Validator' && !item.timeOut);
+            let timeoutValidators = data.filter(item => item.area === 'Validator' && item.timeOut);
+
             let tasks = getValidationTasks();
             if (valViewDate && valViewDate.value) {
                 tasks = tasks.filter(t => t.timestamp.startsWith(valViewDate.value));
             }
 
-            validators.sort((a, b) => {
-                if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
-                return a.shift.localeCompare(b.shift);
-            });
+            const sortValidators = (list) => {
+                list.sort((a, b) => {
+                    if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
+                    return a.shift.localeCompare(b.shift);
+                });
+            };
+
+            sortValidators(validators);
+            sortValidators(timeoutValidators);
 
             updateValidatorDropdown(data);
 
-            validators.forEach(v => {
+            const renderRow = (v, tbody, isTimeout = false) => {
                 // Calculate stats for this validator
                 const pendingCount = tasks.filter(t => t.validator === v.name && t.status !== 'Completed' && t.status !== 'Unresolved').length;
                 const completedCount = tasks.filter(t => t.validator === v.name && t.status === 'Completed').length;
@@ -3029,9 +3304,30 @@
                 const totalCount = pendingCount + completedCount + unresolvedCount;
 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${v.userId || '-'}</td><td>${v.name}</td><td>${v.shift}</td><td>${pendingCount}</td><td>${completedCount}</td><td>${unresolvedCount}</td><td>${totalCount}</td>`;
-                validatorsTbody.appendChild(tr);
-            });
+                let actionHtml = '';
+                if (isTimeout) {
+                    actionHtml = `<td>
+                        <button class="icon-btn print-signoff-btn" title="Print Sign-off Form" style="color:#2752a7; margin-right:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></button>
+                        <button class="icon-btn export-pdf-btn" title="Export PDF" style="color:#e74c3c;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg></button>
+                    </td>`;
+                }
+                tr.innerHTML = `<td>${v.userId || '-'}</td><td>${v.name}</td><td>${v.shift}</td><td>${pendingCount}</td><td>${completedCount}</td><td>${unresolvedCount}</td><td>${totalCount}</td>${actionHtml}`;
+                
+                if (isTimeout) {
+                    const btn = tr.querySelector('.print-signoff-btn');
+                    if(btn) {
+                        btn.addEventListener('click', () => printValidatorSignOff(v, tasks.filter(t => t.validator === v.name)));
+                    }
+                    const pdfBtn = tr.querySelector('.export-pdf-btn');
+                    if(pdfBtn) {
+                        pdfBtn.addEventListener('click', () => exportValidatorSignOffPDF(v, tasks.filter(t => t.validator === v.name)));
+                    }
+                }
+                tbody.appendChild(tr);
+            };
+
+            validators.forEach(v => renderRow(v, validatorsTbody));
+            if (timeoutTbody) timeoutValidators.forEach(v => renderRow(v, timeoutTbody, true));
         }
 
         function updateValidatorDropdown(data) {
@@ -3141,6 +3437,15 @@
             valFilterAssigned1 = document.getElementById('val-filter-assigned-1') ? document.getElementById('val-filter-assigned-1').value.toLowerCase() : '';
             valFilterSku1 = document.getElementById('val-filter-sku-1') ? document.getElementById('val-filter-sku-1').value.toLowerCase() : '';
             const valFilterPriority1 = document.getElementById('val-filter-priority-1') ? document.getElementById('val-filter-priority-1').value : '';
+            const valGlobalSearchTerm = document.getElementById('val-global-search') ? document.getElementById('val-global-search').value.toLowerCase() : '';
+
+            if (valGlobalSearchTerm) {
+                tasks = tasks.filter(t => 
+                    (t.sku || '').toLowerCase().includes(valGlobalSearchTerm) ||
+                    (t.desc || '').toLowerCase().includes(valGlobalSearchTerm) ||
+                    (t.validator || '').toLowerCase().includes(valGlobalSearchTerm)
+                );
+            }
             
 
             // Get validators for dropdown
@@ -4089,7 +4394,13 @@
 
         if(valPendingPrev) valPendingPrev.addEventListener('click', () => { if(valPendingPage > 1) { valPendingPage--; renderValidationTasks(); } });
         if(valPendingNext) valPendingNext.addEventListener('click', () => { valPendingPage++; renderValidationTasks(); });
-        if(valPendingRowsSel) valPendingRowsSel.addEventListener('change', () => { valPendingRows = parseInt(valPendingRowsSel.value); valPendingPage = 1; renderValidationTasks(); });
+        if(valPendingRowsSel) valPendingRowsSel.addEventListener('change', () => { 
+            const oldRows = valPendingRows;
+            valPendingRows = parseInt(valPendingRowsSel.value); 
+            const firstItem = (valPendingPage - 1) * oldRows;
+            valPendingPage = Math.floor(firstItem / valPendingRows) + 1;
+            renderValidationTasks(); 
+        });
 
         const valAssignedPrev = document.getElementById('val-assigned-prev');
         const valAssignedNext = document.getElementById('val-assigned-next');
@@ -4097,7 +4408,13 @@
 
         if(valAssignedPrev) valAssignedPrev.addEventListener('click', () => { if(valAssignedPage > 1) { valAssignedPage--; renderValidationTasks(); } });
         if(valAssignedNext) valAssignedNext.addEventListener('click', () => { valAssignedPage++; renderValidationTasks(); });
-        if(valAssignedRowsSel) valAssignedRowsSel.addEventListener('change', () => { valAssignedRows = parseInt(valAssignedRowsSel.value); valAssignedPage = 1; renderValidationTasks(); });
+        if(valAssignedRowsSel) valAssignedRowsSel.addEventListener('change', () => { 
+            const oldRows = valAssignedRows;
+            valAssignedRows = parseInt(valAssignedRowsSel.value); 
+            const firstItem = (valAssignedPage - 1) * oldRows;
+            valAssignedPage = Math.floor(firstItem / valAssignedRows) + 1;
+            renderValidationTasks(); 
+        });
 
         const valResolvedPrev = document.getElementById('val-resolved-prev');
         const valResolvedNext = document.getElementById('val-resolved-next');
@@ -4105,7 +4422,13 @@
 
         if(valResolvedPrev) valResolvedPrev.addEventListener('click', () => { if(valResolvedPage > 1) { valResolvedPage--; renderValidationTasks(); } });
         if(valResolvedNext) valResolvedNext.addEventListener('click', () => { valResolvedPage++; renderValidationTasks(); });
-        if(valResolvedRowsSel) valResolvedRowsSel.addEventListener('change', () => { valResolvedRows = parseInt(valResolvedRowsSel.value); valResolvedPage = 1; renderValidationTasks(); });
+        if(valResolvedRowsSel) valResolvedRowsSel.addEventListener('change', () => { 
+            const oldRows = valResolvedRows;
+            valResolvedRows = parseInt(valResolvedRowsSel.value); 
+            const firstItem = (valResolvedPage - 1) * oldRows;
+            valResolvedPage = Math.floor(firstItem / valResolvedRows) + 1;
+            renderValidationTasks(); 
+        });
 
         const valUnresolvedPrev = document.getElementById('val-unresolved-prev');
         const valUnresolvedNext = document.getElementById('val-unresolved-next');
@@ -4113,14 +4436,26 @@
 
         if(valUnresolvedPrev) valUnresolvedPrev.addEventListener('click', () => { if(valUnresolvedPage > 1) { valUnresolvedPage--; renderValidationTasks(); } });
         if(valUnresolvedNext) valUnresolvedNext.addEventListener('click', () => { valUnresolvedPage++; renderValidationTasks(); });
-        if(valUnresolvedRowsSel) valUnresolvedRowsSel.addEventListener('change', () => { valUnresolvedRows = parseInt(valUnresolvedRowsSel.value); valUnresolvedPage = 1; renderValidationTasks(); });
+        if(valUnresolvedRowsSel) valUnresolvedRowsSel.addEventListener('change', () => { 
+            const oldRows = valUnresolvedRows;
+            valUnresolvedRows = parseInt(valUnresolvedRowsSel.value); 
+            const firstItem = (valUnresolvedPage - 1) * oldRows;
+            valUnresolvedPage = Math.floor(firstItem / valUnresolvedRows) + 1;
+            renderValidationTasks(); 
+        });
 
         const valHistoryPrev = document.getElementById('val-history-prev');
         const valHistoryNext = document.getElementById('val-history-next');
         const valHistoryRowsSel = document.getElementById('val-history-rows');
         if(valHistoryPrev) valHistoryPrev.addEventListener('click', () => { if(valHistoryPage > 1) { valHistoryPage--; renderValidationTasks(); } });
         if(valHistoryNext) valHistoryNext.addEventListener('click', () => { valHistoryPage++; renderValidationTasks(); });
-        if(valHistoryRowsSel) valHistoryRowsSel.addEventListener('change', () => { valHistoryRows = parseInt(valHistoryRowsSel.value); valHistoryPage = 1; renderValidationTasks(); });
+        if(valHistoryRowsSel) valHistoryRowsSel.addEventListener('change', () => { 
+            const oldRows = valHistoryRows;
+            valHistoryRows = parseInt(valHistoryRowsSel.value); 
+            const firstItem = (valHistoryPage - 1) * oldRows;
+            valHistoryPage = Math.floor(firstItem / valHistoryRows) + 1;
+            renderValidationTasks(); 
+        });
 
         function handleTaskAction(e) {
             const btn = e.target.closest('.icon-btn');
@@ -5118,7 +5453,10 @@
             const attRowsPerPageSelect = document.getElementById('att-rows-per-page');
             if (attRowsPerPageSelect) {
                 attRowsPerPageSelect.addEventListener('change', () => {
-                    attCurrentPage = 1;
+                    const oldPerPage = attItemsPerPage;
+                    const newPerPage = parseInt(attRowsPerPageSelect.value, 10);
+                    const firstItem = (attCurrentPage - 1) * oldPerPage;
+                    attCurrentPage = Math.floor(firstItem / newPerPage) + 1;
                     renderAttendanceTable();
                 });
             }
@@ -5212,6 +5550,54 @@
             }
         });
 
+        // Global Search Preview Logic
+        const valGlobalSearchInput = document.getElementById('val-global-search');
+        const valSearchPreview = document.getElementById('val-search-preview');
+
+        if (valGlobalSearchInput && valSearchPreview) {
+            valGlobalSearchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (!query) {
+                    valSearchPreview.style.display = 'none';
+                    renderValidationTasks();
+                    return;
+                }
+
+                // Get current view tasks (filtered by date)
+                let tasks = getValidationTasks();
+                const valViewDate = document.getElementById('val-view-date');
+                if (valViewDate && valViewDate.value) {
+                    tasks = tasks.filter(t => t.timestamp.startsWith(valViewDate.value));
+                }
+
+                const matches = tasks.filter(t => 
+                    (t.sku || '').toLowerCase().includes(query) ||
+                    (t.desc || '').toLowerCase().includes(query) ||
+                    (t.validator || '').toLowerCase().includes(query)
+                ).slice(0, 10);
+
+                if (matches.length > 0) {
+                    valSearchPreview.innerHTML = '';
+                    matches.forEach(t => {
+                        const div = document.createElement('div');
+                        div.className = 'search-preview-item';
+                        div.innerHTML = `<div style="font-weight:bold; font-size:12px;">${t.sku}</div><div style="color:#666; font-size:11px;">${t.desc || 'No Desc'}</div><div style="font-size:10px; color:#999;">${t.validator || 'Unassigned'} • ${t.status}</div>`;
+                        div.addEventListener('click', () => {
+                            valGlobalSearchInput.value = t.sku;
+                            valSearchPreview.style.display = 'none';
+                            renderValidationTasks();
+                        });
+                        valSearchPreview.appendChild(div);
+                    });
+                    valSearchPreview.style.display = 'block';
+                } else {
+                    valSearchPreview.style.display = 'none';
+                }
+                renderValidationTasks();
+            });
+            document.addEventListener('click', (e) => { if (!valGlobalSearchInput.contains(e.target) && !valSearchPreview.contains(e.target)) valSearchPreview.style.display = 'none'; });
+        }
+
         // Drag Logic
         if(addTaskWidget && widgetHeader) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -5254,8 +5640,10 @@
             modalCurrentPage++; renderModalTable();
         });
         if(modalRowsSelect) modalRowsSelect.addEventListener('change', () => {
+            const oldRows = modalRowsPerPage;
             modalRowsPerPage = parseInt(modalRowsSelect.value);
-            modalCurrentPage = 1;
+            const firstItem = (modalCurrentPage - 1) * oldRows;
+            modalCurrentPage = Math.floor(firstItem / modalRowsPerPage) + 1;
             renderModalTable();
         });
 
